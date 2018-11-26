@@ -1,0 +1,20 @@
+{
+    "modules": {
+        "pkg": {
+            "path" : "vhdl",
+            "files": "kyber_pkg.vhdl"
+        },
+        "barret": {
+            "path":"vhdl",
+            "top": "barret_reduce",
+            "tb_top": "barret_reduce_tb",
+            "files": ["barret_reduce.vhdl", "ConstMult*.vhdl"],
+            "tb_files": ["barret_reduce_tb.vhdl"],
+            "depends": ["pkg"],
+            "tb_configs": [
+                { "G_IN_WIDTH": 26}, 
+                { "G_IN_WIDTH": 27} 
+            ]
+        }
+    }
+}
