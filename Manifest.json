@@ -4,6 +4,20 @@
             "path" : "vhdl",
             "files": "kyber_pkg.vhdl"
         },
+        "polyvec_mult": {
+            "path":"vhdl",
+            "top": "polyvec_mult",
+            "tb_top": "polyvec_mult_tb",
+            "files": ["polyvec_mult.vhdl"],
+            "tb_files": ["polyvec_mult_tb.vhdl"],
+            "depends": ["pkg", "barret", "poc"],
+            "tb_configs": []
+        },
+        "poc": {
+            "path": "vhdl/PoC",
+            "files": ["*/*.vhdl"],
+            "library_name": "PoC"
+        },
         "barret": {
             "path":"vhdl",
             "top": "barret_reduce",

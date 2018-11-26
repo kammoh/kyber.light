@@ -4,9 +4,9 @@ set VHDL_SRCS "$env(VHDL_SRCS)"
 set TOP_MODULE $env(TOP_MODULE)
 
 set timestamp [clock format [clock seconds] -format {%y-%m-%d-%H:%M:%S}]
-set outputDir ./vivado-synth-${TOP_MODULE}-${timestamp}/
-set REPORTS_DIR ${outputDir}/reports
-set CHECKPOINTS_DIR ${outputDir}/checkpoints
+set OUTPUT_DIR output/vivado-synth-${TOP_MODULE}-${timestamp}/
+set REPORTS_DIR ${OUTPUT_DIR}/reports
+set CHECKPOINTS_DIR ${OUTPUT_DIR}/checkpoints
 
 set parts [get_parts]
 
@@ -20,7 +20,7 @@ if { $argc != 2 } {
         puts "[lindex $argv 0] [lindex $argv 1]"
 }
 
-file mkdir $outputDir
+file mkdir $OUTPUT_DIR
 file mkdir $REPORTS_DIR
 file mkdir $CHECKPOINTS_DIR
 #------------------------------------------------------------------------
@@ -76,9 +76,9 @@ read_vhdl -vhdl2008 "$VHDL_SRCS"
 #
 # STEP#2: run synthesis, report utilization and timing estimates, write checkpoint design
 #
-synth_design -top $TOP_MODULE -part $PART -directive AreaOptimized_high -max_dsp 0  -flatten_hierarchy full
+synth_design -top $TOP_MODULE -part $PART -directive AreaOptimized_high -max_dsp 0  -flatten_hierarchy rebuilt
 # -retiming  -assert  -resource_sharing on -max_dsp 0
-# write_checkpoint -force $outputDir/post_synth
+# write_checkpoint -force $OUTPUT_DIR/post_synth
 report_timing_summary -file $REPORTS_DIR/post_synth_timing_summary.rpt
 report_utilization -file $REPORTS_DIR/post_synth_util.rpt
 reportCriticalPaths $REPORTS_DIR/post_synth_critpath_report.csv
@@ -107,9 +107,9 @@ report_clock_utilization -file $REPORTS_DIR/clock_util.rpt
 report_utilization -file $REPORTS_DIR/post_route_util.rpt
 report_power -file $REPORTS_DIR/post_route_power.rpt
 report_drc -file $REPORTS_DIR/post_imp_drc.rpt
-write_verilog -force $outputDir/${TOP_MODULE}_impl_netlist.v
-write_xdc -no_fixed_only -force $outputDir/${TOP_MODULE}_impl.xdc
+write_verilog -force $OUTPUT_DIR/${TOP_MODULE}_impl_netlist.v
+write_xdc -no_fixed_only -force $OUTPUT_DIR/${TOP_MODULE}_impl.xdc
 #
 # STEP#5: generate a bitstream
 # 
-write_bitstream -force $outputDir/$TOP_MODULE.bit
+write_bitstream -force $OUTPUT_DIR/$TOP_MODULE.bit

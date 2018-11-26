@@ -116,6 +116,6 @@ begin
 		wait;
 	end process;
 
-	--	test_runner_watchdog(runner, 10 ms);
+		test_runner_watchdog(runner, 100 ms);
 
 end architecture TB;
