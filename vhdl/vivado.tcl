@@ -3,10 +3,10 @@
 set VHDL_SRCS "$env(VHDL_SRCS)"
 set TOP_MODULE $env(TOP_MODULE)
 
-set timestamp [clock format [clock seconds] -format {%H:%M:%S-%d-%m-%y}]
-set outputDir ./synth_output
-set REPORTS_DIR outputDir/reports${timestamp}
-set CHECKPOINTS_DIR outputDir/checkpoints
+set timestamp [clock format [clock seconds] -format {%y-%m-%d-%H:%M:%S}]
+set outputDir ./vivado-synth-${TOP_MODULE}-${timestamp}/
+set REPORTS_DIR ${outputDir}/reports
+set CHECKPOINTS_DIR ${outputDir}/checkpoints
 
 set parts [get_parts]
 
@@ -76,7 +76,7 @@ read_vhdl -vhdl2008 "$VHDL_SRCS"
 #
 # STEP#2: run synthesis, report utilization and timing estimates, write checkpoint design
 #
-synth_design -top $TOP_MODULE -part $PART -directive AreaOptimized_high -max_dsp 0
+synth_design -top $TOP_MODULE -part $PART -directive AreaOptimized_high -max_dsp 0  -flatten_hierarchy full
 # -retiming  -assert  -resource_sharing on -max_dsp 0
 # write_checkpoint -force $outputDir/post_synth
 report_timing_summary -file $REPORTS_DIR/post_synth_timing_summary.rpt
