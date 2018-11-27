@@ -52,7 +52,7 @@ begin                                   -- Rtl
 			r2_out <= (others => '0');
 			r3_out <= (others => '0');
 
-		elsif clk'event and clk = '1' then -- rising clk edge
+		elsif rising_edge(clk) then -- rising clk edge
 
 			r1_out <= r1_in;
 			r2_out <= r2_in;

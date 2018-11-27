@@ -52,15 +52,18 @@ class Manifest:
         return self.modules[mod_name]
     
     def add_module(self, vu, module, libname, add_tb=True):
-        print("add_moduke ", module.name)
+        logger.info("add_module %s" % module.name)
         lib_name = libname
         if module.library_name:
             lib_name = module.library_name
         lib = vu.add_library(lib_name, allow_duplicate=True)
         
         for file in module.files:
-            logger.info("adding file %s", file)
-            lib.add_source_files(file)
+            if not file in module.tb_files:
+                logger.info("adding file %s", file)
+                lib.add_source_files(file)
+            else:
+                logger.info("skipping file %s as it's provided as a testbench", file)
 
 
         
@@ -93,7 +96,7 @@ class Manifest:
     
 
 def synth_vivado(srcs, top):
-    tcl = join('vhdl', 'vivado.tcl')
+    tcl = join('vivado', 'vivado.tcl')
     
     cmd = ["vivado", "-mode", "tcl", "-nojournal", "-source", tcl, "-tclargs", "3", "4"]
     

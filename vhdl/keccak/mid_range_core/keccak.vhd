@@ -1,5 +1,5 @@
 -- The Keccak sponge function, designed by Guido Bertoni, Joan Daemen,
--- Michaël Peeters and Gilles Van Assche. For more information, feedback or
+-- Michaï¿½l Peeters and Gilles Van Assche. For more information, feedback or
 -- questions, please refer to our website: http://keccak.noekeon.org/
 
 -- Implementation by the designers,
@@ -13,8 +13,9 @@ library work;
 	use work.keccak_globals.all;
 	
 library ieee;
-use ieee.std_logic_1164.all;
-use ieee.std_logic_arith.all;
+
+use ieee.numeric_std.all;
+use ieee.numeric_std_unsigned.all;
 
 
 

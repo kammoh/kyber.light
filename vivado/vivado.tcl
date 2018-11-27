@@ -71,6 +71,11 @@ proc reportCriticalPaths { fileName } {
 #read_vhdl -library $TOP_MODULELib [ glob ./Sources/hdl/$TOP_MODULELib/*.vhdl ]         
 
 read_vhdl -vhdl2008 "$VHDL_SRCS"
+
+read_xdc "vivado/clock.xdc"
+synth_design -top $TOP_MODULE -rtl -name rtl_1 
+#create_clock -period 10.000 -name clk -waveform {0.000 5.000} [get_ports clk]
+
 #read_verilog  [ glob ./Sources/hdl/*.v ]
 #read_xdc ./Sources/part.xdc
 #
@@ -83,6 +88,9 @@ report_timing_summary -file $REPORTS_DIR/post_synth_timing_summary.rpt
 report_utilization -file $REPORTS_DIR/post_synth_util.rpt
 reportCriticalPaths $REPORTS_DIR/post_synth_critpath_report.csv
 report_power -file $REPORTS_DIR/post_synth_power.rpt
+
+report_methodology  -file $REPORTS_DIR/post_synth_methodology.rpt
+
 
 write_schematic -format pdf $TOP_MODULE.pdf -orientation landscape
 
@@ -106,8 +114,11 @@ report_timing -sort_by group -max_paths 100 -path_type summary -file $REPORTS_DI
 report_clock_utilization -file $REPORTS_DIR/clock_util.rpt
 report_utilization -file $REPORTS_DIR/post_route_util.rpt
 report_power -file $REPORTS_DIR/post_route_power.rpt
-report_drc -file $REPORTS_DIR/post_imp_drc.rpt
+report_drc -file $REPORTS_DIR/post_impl_drc.rpt
+report_methodology  -file $REPORTS_DIR/post_impl_methodology.rpt
+
 write_verilog -force $OUTPUT_DIR/${TOP_MODULE}_impl_netlist.v
+write_vhdl -force $OUTPUT_DIR/${TOP_MODULE}_impl_netlist.vhdl
 write_xdc -no_fixed_only -force $OUTPUT_DIR/${TOP_MODULE}_impl.xdc
 #
 # STEP#5: generate a bitstream
