@@ -29,6 +29,13 @@
                 { "G_IN_WIDTH": 26}, 
                 { "G_IN_WIDTH": 27} 
             ]
+        },
+        "keccak": {
+            "path": "vhdl/keccak/low_area_coproc",
+            "top": "keccak_copro",
+            "tb_top": "keccak_coproc_tb",
+            "files": "*.vhd",
+            "tb_files": "tb_keccak_copro.vhd"
         }
     }
 }

@@ -68,11 +68,14 @@ class Manifest:
             for tb in module.tb_files:
                 logger.info("adding testbench file %s", tb)
                 lib.add_source_files(tb)
-                
-            testbench = lib.entity(module.tb_top)
-            if module.tb_configs:
-                for cfg in module.tb_configs:
-                    testbench.add_config(str(cfg), cfg)
+            
+            try:
+                testbench = lib.entity(module.tb_top)
+                if module.tb_configs:
+                    for cfg in module.tb_configs:
+                        testbench.add_config(str(cfg), cfg)
+            except:
+                logger.warning("Failed to get or configure testbench {} from VUnit".format(module.tb_top))
         
         if module.depends != None:
             for dep in module.depends:
@@ -158,7 +161,7 @@ if __name__ == '__main__':
                 
 
                     
-                vu.set_sim_option("ghdl.elab_flags", ["-O3", "-Wbinding", "-Wreserved", "-Wlibrary", "-Wvital-generic", "-Wdelayed-checks", "-Wbody", "-Wspecs", "-Wunused"] + ghdl_flags)
+                vu.set_sim_option("ghdl.elab_flags", ["-O3", "-Wbinding", "-Wreserved", "-Wlibrary", "-Wvital-generic", "-Wdelayed-checks", "-Wbody", "-Wspecs", "-Wunused"] + ghdl_flags, allow_empty=True)
                 vu.main()
         else:
             logger.warning("top_module: {} does not have tb_files or tb_top set.. skipping".format(top_module.name))
