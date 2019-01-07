@@ -55,6 +55,19 @@ architecture RTL of polyvec_mac is
 	signal red_mac : std_logic_vector(COEF_W - 1 downto 0);
 
 begin
+	
+	ploymac_dp_inst: entity work.polymac_dp
+		port map(
+			clk    => clk,
+			rst    => rst,
+			nega   => nega,
+			r_en   => r_en,
+			r_load => r_load,
+			a      => a,
+			b      => b,
+			rin    => rin,
+			rout   => rout
+		);
 
 	regs_proc : process(clk, rst)
 	begin

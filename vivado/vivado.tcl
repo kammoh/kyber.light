@@ -73,7 +73,9 @@ proc reportCriticalPaths { fileName } {
 read_vhdl -vhdl2008 "$VHDL_SRCS"
 
 read_xdc "vivado/clock.xdc"
-synth_design -top $TOP_MODULE -rtl -name rtl_1 
+#synth_design -top $TOP_MODULE -rtl -name rtl_1 
+#write_verilog -force $OUTPUT_DIR/${TOP_MODULE}_rtl.v
+#write_vhdl -force $OUTPUT_DIR/${TOP_MODULE}_rtl.vhdl
 #create_clock -period 10.000 -name clk -waveform {0.000 5.000} [get_ports clk]
 
 #read_verilog  [ glob ./Sources/hdl/*.v ]
@@ -81,7 +83,8 @@ synth_design -top $TOP_MODULE -rtl -name rtl_1
 #
 # STEP#2: run synthesis, report utilization and timing estimates, write checkpoint design
 #
-synth_design -top $TOP_MODULE -part $PART -directive AreaOptimized_high -max_dsp 0  -flatten_hierarchy rebuilt
+#synth_design -mode out_of_context -resource_sharing on -top $TOP_MODULE -part $PART -directive AreaOptimized_high -max_dsp 0  -flatten_hierarchy rebuilt
+synth_design -resource_sharing on -top $TOP_MODULE -part $PART -directive AreaOptimized_high -max_dsp 0  -flatten_hierarchy rebuilt
 # -retiming  -assert  -resource_sharing on -max_dsp 0
 # write_checkpoint -force $OUTPUT_DIR/post_synth
 report_timing_summary -file $REPORTS_DIR/post_synth_timing_summary.rpt
@@ -98,7 +101,8 @@ write_schematic -format pdf $TOP_MODULE.pdf -orientation landscape
 # STEP#3: run placement and logic optimzation, report utilization and timing estimates, write checkpoint design
 #
 # directive: Default, RuntimeOptimized, ExploreArea, Explore, etc
-opt_design -directive ExploreArea
+opt_design -directive ExploreArea 
+# OR # -merge_equivalent_drivers -control_set_merge -resynth_area -remap  -propconst 
 
 place_design
 phys_opt_design -retime -hold_fix  -rewire
@@ -113,6 +117,7 @@ report_timing_summary -file $REPORTS_DIR/post_route_timing_summary.rpt
 report_timing -sort_by group -max_paths 100 -path_type summary -file $REPORTS_DIR/post_route_timing.rpt
 report_clock_utilization -file $REPORTS_DIR/clock_util.rpt
 report_utilization -file $REPORTS_DIR/post_route_util.rpt
+report_utilization -hierarchical  -file   $REPORTS_DIR/post_route_util_hier.rpt
 report_power -file $REPORTS_DIR/post_route_power.rpt
 report_drc -file $REPORTS_DIR/post_impl_drc.rpt
 report_methodology  -file $REPORTS_DIR/post_impl_methodology.rpt

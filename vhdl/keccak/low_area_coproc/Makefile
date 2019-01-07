@@ -6,8 +6,9 @@
 GHDL=ghdl
 GHDLFLAGS= --std=08
 
+TB_TOP := keccak_coproc_tb
 # Default target
-all: keccak_coproc_tb
+all: $(TB_TOP)
 
 # Elaboration target
 keccak_coproc_tb: keccak_globals.o tb_keccak_copro.o keccak_copro.o system_mem.o pe.o fsm.o
@@ -32,17 +33,13 @@ fsm.o: fsm.vhd
 	$(GHDL) -a $(GHDLFLAGS) $<
 
 # Files dependences
-/usr/local/lib/ghdl/std/v08/textio.o: 
-/usr/local/lib/ghdl/std/v08/textio_body.o:  /usr/local/lib/ghdl/std/v08/textio.o
-/usr/local/lib/ghdl/ieee/v08/std_logic_1164.o:  /usr/local/lib/ghdl/std/v08/textio.o /usr/local/lib/ghdl/std/v08/textio_body.o
-/usr/local/lib/ghdl/ieee/v08/std_logic_1164-body.o:  /usr/local/lib/ghdl/ieee/v08/std_logic_1164.o
-/usr/local/lib/ghdl/ieee/v08/numeric_std.o:  /usr/local/lib/ghdl/std/v08/textio.o /usr/local/lib/ghdl/ieee/v08/std_logic_1164.o
-/usr/local/lib/ghdl/ieee/v08/numeric_std-body.o:  /usr/local/lib/ghdl/ieee/v08/numeric_std.o
-/usr/local/lib/ghdl/ieee/v08/numeric_std_unsigned.o:  /usr/local/lib/ghdl/ieee/v08/std_logic_1164.o
-/usr/local/lib/ghdl/ieee/v08/numeric_std_unsigned-body.o:  /usr/local/lib/ghdl/ieee/v08/numeric_std.o /usr/local/lib/ghdl/ieee/v08/numeric_std_unsigned.o
-keccak_globals.o:  /usr/local/lib/ghdl/ieee/v08/std_logic_1164.o /usr/local/lib/ghdl/ieee/v08/numeric_std.o /usr/local/lib/ghdl/ieee/v08/numeric_std_unsigned.o
-tb_keccak_copro.o:  /usr/local/lib/ghdl/ieee/v08/std_logic_1164.o /usr/local/lib/ghdl/ieee/v08/std_logic_1164-body.o /usr/local/lib/ghdl/ieee/v08/numeric_std.o /usr/local/lib/ghdl/ieee/v08/numeric_std-body.o /usr/local/lib/ghdl/ieee/v08/numeric_std_unsigned.o /usr/local/lib/ghdl/ieee/v08/numeric_std_unsigned-body.o /usr/local/lib/ghdl/std/v08/textio.o keccak_globals.o
-keccak_copro.o:  /usr/local/lib/ghdl/ieee/v08/std_logic_1164.o /usr/local/lib/ghdl/ieee/v08/numeric_std.o /usr/local/lib/ghdl/ieee/v08/numeric_std_unsigned.o keccak_globals.o
-system_mem.o:  /usr/local/lib/ghdl/ieee/v08/std_logic_1164.o /usr/local/lib/ghdl/ieee/v08/numeric_std.o /usr/local/lib/ghdl/ieee/v08/numeric_std_unsigned.o keccak_globals.o
-pe.o:  /usr/local/lib/ghdl/ieee/v08/std_logic_1164.o /usr/local/lib/ghdl/ieee/v08/numeric_std.o /usr/local/lib/ghdl/ieee/v08/numeric_std_unsigned.o keccak_globals.o
-fsm.o:  /usr/local/lib/ghdl/ieee/v08/std_logic_1164.o /usr/local/lib/ghdl/ieee/v08/numeric_std.o /usr/local/lib/ghdl/ieee/v08/numeric_std_unsigned.o keccak_globals.o
+keccak_globals.o:    
+tb_keccak_copro.o:         keccak_globals.o
+keccak_copro.o:     keccak_globals.o
+system_mem.o:     keccak_globals.o
+pe.o:     keccak_globals.o
+fsm.o:     keccak_globals.o
+
+clean:
+	$(GHDL) --clean
+	$(RM) -rf *.o $(TB_TOP)

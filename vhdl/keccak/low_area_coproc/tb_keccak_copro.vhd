@@ -9,8 +9,6 @@
 -- and related or neighboring rights to the source code in this file.
 -- http://creativecommons.org/publicdomain/zero/1.0/
 
-
-
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -18,19 +16,22 @@ use ieee.numeric_std_unsigned.all;
 
 use std.textio.all;
 
---library vunit_lib;
---context vunit_lib.vunit_context;
-----context vunit_lib.vc_context;
---
---library osvvm;
---use osvvm.RandomPkg.all;
---use osvvm.CoveragePkg.all;
+library vunit_lib;
+context vunit_lib.vunit_context;
+--context vunit_lib.vc_context;
+
+library osvvm;
+use osvvm.RandomPkg.all;
+use osvvm.CoveragePkg.all;
 
 use work.keccak_globals.all;
 
 entity keccak_coproc_tb is
 	generic(
-		runner_cfg   : string := ""
+		runner_cfg   : string := "";
+		BASE_PATH    : string := "/Users/kamyar/source/pqc/kyber.hw/vhdl/keccak/";
+		IN_FILENAME  : string := BASE_PATH & "test_vectors/perm_in.txt";
+		OUT_FILENAME : string := BASE_PATH & "test_vectors/perm_out_copro_vhdl.txt"
 	);
 end keccak_coproc_tb;
 
@@ -79,11 +80,43 @@ architecture tb of keccak_coproc_tb is
 begin                                   -- Rtl
 
 	-- port map
+	
+	coprocessor_map: keccak_copro
+		port map(
+			clk           => clk,
+			rst_n         => rst_n,
+			start         => start,
+			addr          => addr_mem,
+			enR           => enR_mem,
+			enW           => enW_mem,
+			data_from_mem => data_from_mem,
+			data_to_mem   => data_to_mem_copro,
+			done          => done
+		);
+		
+	mem0: system_mem
+		port map(
+			clk        => clk,
+			rst_n      => rst_n,
+			enR        => enR_mem,
+			enW        => enW_mem,
+			addr       => addr_mem,
+			mem_input  => data_to_mem_mem,
+			mem_output => data_from_mem
+		);
 
-	coprocessor_map : keccak_copro port map(clk, rst_n, start, addr_copro, enR_copro, enW_copro, data_from_mem, data_to_mem_copro, done);
-	mem_map : system_mem port map(clk, rst_n, enR_mem, enW_mem, addr_mem, data_to_mem_mem, data_from_mem);
+--	coprocessor_map : keccak_copro port map(clk, rst_n, start, addr_copro, enR_copro, enW_copro, data_from_mem, data_to_mem_copro, done);
+--	mem_map : system_mem port map(clk, rst_n, enR_mem, enW_mem, addr_mem, data_to_mem_mem, data_from_mem);
 
 	rst_n <= '0', '1' after 19 ns;
+	
+	vu_proc : process
+	begin
+		test_runner_setup(runner, runner_cfg);
+		wait until st = STOP;
+		test_runner_cleanup(runner);
+		wait;
+	end process vu_proc;
 
 	--main process
 
@@ -91,12 +124,12 @@ begin                                   -- Rtl
 		variable line_in  : line;
 		variable line_out : line;
 
---		variable datain0 : std_logic_vector(15 downto 0);
-		variable temp    : std_logic_vector(63 downto 0);
---		variable temp2   : std_logic_vector(63 downto 0);
+		--		variable datain0 : std_logic_vector(15 downto 0);
+		variable temp : std_logic_vector(63 downto 0);
+		--		variable temp2   : std_logic_vector(63 downto 0);
 
-		file filein  : text open read_mode is "../test_vectors/perm_in.txt";
-		file fileout : text open write_mode is "../test_vectors/perm_out_copro_vhdl.txt";
+		file filein  : text open read_mode is IN_FILENAME;
+		file fileout : text open write_mode is OUT_FILENAME;
 
 	begin
 		if (rst_n = '0') then
@@ -112,31 +145,30 @@ begin                                   -- Rtl
 			case st is
 				when st0 =>
 					--continue to read up to the end of file marker.
-					readline(filein, line_in);
-					if (line_in(1) = '.') then
-						FILE_CLOSE(filein);
-						FILE_CLOSE(fileout);
-						assert false report "Simulation completed" severity failure;
+					if endfile(filein) then
 						st <= STOP;
 					else
-						if (line_in(1) = '-') then
-							st    <= st1;
-							start <= '1';
-						--direct memory to copro
-
+						readline(filein, line_in);
+						if (line_in(1) = '.') then
+							FILE_CLOSE(filein);
+							FILE_CLOSE(fileout);
+							st <= STOP;
 						else
+							if (line_in(1) = '-') then
+								st    <= st1;
+								start <= '1';
+							--direct memory to copro
+							else
+								enW_tb <= '1';
+								enR_tb <= '0';
 
-							enW_tb <= '1';
-							enR_tb <= '0';
-
-							hread(line_in, temp);
-							data_to_mem_tb <= temp;
-							counter        <= counter + 1;
-
-							addr_tb <= counter;
+								hread(line_in, temp);
+								data_to_mem_tb <= temp;
+								counter        <= counter + 1;
+								addr_tb <= counter;
+							end if;
 
 						end if;
-
 					end if;
 				when st1 =>
 					start <= '0';

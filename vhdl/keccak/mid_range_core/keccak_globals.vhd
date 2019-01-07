@@ -8,15 +8,14 @@
 -- To the extent possible under law, the implementer has waived all copyright
 -- and related or neighboring rights to the source code in this file.
 -- http://creativecommons.org/publicdomain/zero/1.0/
-library STD;
-use STD.textio.all;
 
 library IEEE;
+
 use IEEE.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.numeric_std_unsigned.all;
 
-library work;
+use STD.textio.all;
 
 package keccak_globals is
 
@@ -25,7 +24,7 @@ package keccak_globals is
 	constant logD      : integer := 4;
 	constant N         : integer := 64;
 
-	-- the following 5 blocks of declaration are used for parametrize the core
+	-- the following 5 blocks of declaration are used to parameterize the core
 
 	-- uncomment these 3 lines for 2 blocks of slices
 	--constant num_slices : integer := 2;

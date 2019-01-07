@@ -25,11 +25,13 @@ entity fsm is
 		addr                : out addr_type;
 		enR                 : out std_logic;
 		enW                 : out std_logic;
-		nr_round            : out integer range 0 to 23;
+		
 		command_for_pe      : out std_logic_vector(7 downto 0);
 		counter_plane_to_pe : out integer range 0 to 4;
 		counter_sheet_to_pe : out integer range 0 to 4;
-		done                : out std_logic
+		done                : out std_logic;
+		nxt_round : out std_logic;
+		init_round : out std_logic
 	);
 
 end fsm;
@@ -48,9 +50,15 @@ architecture rtl of fsm is
 	signal fsm_st : fsm_st_type;
 
 	signal mem_addr                     : addr_type;
+	signal ctr_sheet_plus_50                     : addr_type;
+	signal fp1                     : addr_type;
+	signal fx                     : addr_type;
 	signal command                      : std_logic_vector(7 downto 0);
 	signal counter_sheet, counter_plane : mod_5_type;
 	signal nr_round_internal            : integer range 0 to 23;
+	signal ff : mod_5_type;
+	
+	
 
 	function pi(count_lane : mod_5_type; count_sheet : mod_5_type)
 	return addr_type is
@@ -206,9 +214,13 @@ architecture rtl of fsm is
 	end f_mod5_p3;
 
 begin                                   -- Rtl
-
+	ff <= 25 + 5 * counter_plane + f_mod5_p3(counter_sheet);
+	fx <= counter_sheet + 5 * counter_plane;
+	fp1 <= f_mod5_p1(counter_sheet);
 	-- finite state machine
-
+    nxt_round <= '1' when  fsm_st = chi5 and counter_plane = 4 and counter_sheet = 4 else '0';
+    init_round <= '1' when fsm_st = INIT else '0';
+    
 	p_main : process(clk, rst_n)
 	begin                               -- process p_main
 		if rst_n = '0' then             -- asynchronous rst_n (active low)
@@ -219,7 +231,7 @@ begin                                   -- Rtl
 			command           <= "00000000";
 			done              <= '0';
 
-		elsif clk'event and clk = '1' then -- rising clk edge
+		elsif rising_edge(clk) then -- rising clk edge
 			case fsm_st is
 				when INIT =>
 					done    <= '0';
@@ -241,29 +253,29 @@ begin                                   -- Rtl
 				when theta0 =>
 					fsm_st        <= theta1;
 					--mem_addr<=0;
-					mem_addr      <= counter_sheet + 5 * counter_plane;
+					mem_addr      <= fx;
 					counter_plane <= counter_plane + 1;
 					command       <= "00000000";
 					enR           <= '1';
 					enW           <= '0';
 				when theta1 =>
 
-					mem_addr      <= counter_sheet + 5 * counter_plane;
+					mem_addr      <= fx;
 					counter_plane <= counter_plane + 1;
 					command       <= "00000001";
 					fsm_st        <= theta2;
 				when theta2 =>
-					mem_addr      <= counter_sheet + 5 * counter_plane;
+					mem_addr      <= fx;
 					counter_plane <= counter_plane + 1;
 					command       <= "00000010";
 					fsm_st        <= theta3;
 				when theta3 =>
-					mem_addr      <= counter_sheet + 5 * counter_plane;
+					mem_addr      <= fx;
 					counter_plane <= counter_plane + 1;
 					command       <= "00000010";
 					fsm_st        <= theta4;
 				when theta4 =>
-					mem_addr <= counter_sheet + 5 * counter_plane;
+					mem_addr <= fx;
 					command  <= "00000010";
 					fsm_st   <= theta5;
 				when theta5 =>
@@ -273,7 +285,7 @@ begin                                   -- Rtl
 				when theta6 =>
 					enW           <= '1';
 					enR           <= '0';
-					mem_addr      <= 50 + counter_sheet;
+					mem_addr      <= ctr_sheet_plus_50;
 					command       <= "00010000";
 					counter_plane <= 0;
 					if (counter_sheet = 4) then
@@ -288,7 +300,7 @@ begin                                   -- Rtl
 					enW <= '0';
 					enR <= '1';
 					if (counter_plane = 4) then
-						mem_addr      <= 50 + counter_sheet;
+						mem_addr      <= ctr_sheet_plus_50;
 						counter_sheet <= counter_sheet + 1;
 					else
 						--mem_addr<=50+((5+counter_sheet-1) mod 5);
@@ -300,7 +312,7 @@ begin                                   -- Rtl
 				when theta11 =>
 					enR      <= '1';
 					--mem_addr<=50+((5+counter_sheet+1) mod 5);
-					mem_addr <= 50 + f_mod5_p1(counter_sheet);
+					mem_addr <= 50 + fp1;
 					fsm_st   <= theta12;
 					command  <= "00001001";
 				when theta12 =>
@@ -368,7 +380,7 @@ begin                                   -- Rtl
 					command  <= "00000000";
 				when chi1 =>
 					--mem_addr<=25+5*counter_plane+((counter_sheet+1)mod 5);
-					mem_addr <= 25 + 5 * counter_plane + f_mod5_p1(counter_sheet);
+					mem_addr <= 25 + 5 * counter_plane + fp1;
 					command  <= "00000001";
 					fsm_st   <= chi2;
 				when chi2 =>
@@ -393,7 +405,7 @@ begin                                   -- Rtl
 					end if;
 					fsm_st   <= chi5;
 				when chi5 =>
-
+	
 					command <= "00000000";
 					if (counter_sheet = 4) then
 						if (counter_plane = 4) then
@@ -415,7 +427,7 @@ begin                                   -- Rtl
 							counter_sheet <= 0;
 							fsm_st        <= chi0bis;
 							--mem_addr<=25+5*counter_plane+((counter_sheet+3)mod 5);
-							mem_addr      <= 25 + 5 * counter_plane + f_mod5_p3(counter_sheet);
+							mem_addr      <= ff;
 						end if;
 					else
 						enR           <= '1';
@@ -423,7 +435,7 @@ begin                                   -- Rtl
 						counter_sheet <= counter_sheet + 1;
 						fsm_st        <= chi3;
 						--mem_addr<=25+5*counter_plane+((counter_sheet+3)mod 5);
-						mem_addr      <= 25 + 5 * counter_plane + f_mod5_p3(counter_sheet);
+						mem_addr      <= ff;
 					end if;
 
 			end case;
@@ -435,6 +447,5 @@ begin                                   -- Rtl
 
 	counter_plane_to_pe <= counter_plane;
 	counter_sheet_to_pe <= counter_sheet;
-	nr_round            <= nr_round_internal;
 
 end rtl;

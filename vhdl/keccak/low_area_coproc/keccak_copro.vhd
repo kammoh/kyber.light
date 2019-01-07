@@ -40,10 +40,11 @@ architecture rtl of keccak_copro is
 		     rst_n               : in  std_logic;
 		     data_from_mem       : in  std_logic_vector(63 downto 0);
 		     data_to_mem         : out std_logic_vector(63 downto 0);
-		     nr_round            : in  integer range 0 to 23;
 		     command             : in  std_logic_vector(7 downto 0);
 		     counter_plane_to_pe : in  integer range 0 to 4;
-		     counter_sheet_to_pe : in  integer range 0 to 4
+		     counter_sheet_to_pe : in  integer range 0 to 4;
+		     nxt_round           : in std_logic;
+		     init_round          : in std_logic
 		    );
 
 	end component;
@@ -56,25 +57,53 @@ architecture rtl of keccak_copro is
 			addr                : out addr_type;
 			enR                 : out std_logic;
 			enW                 : out std_logic;
-			nr_round            : out integer range 0 to 23;
 			command_for_pe      : out std_logic_vector(7 downto 0);
 			counter_plane_to_pe : out integer range 0 to 4;
 			counter_sheet_to_pe : out integer range 0 to 4;
-			done                : out std_logic
+			done                : out std_logic;
+			nxt_round           : out std_logic;
+			init_round          : out std_logic
 		);
 	end component;
 
 	-- signal declarations
 
-	signal nr_round                                 : integer range 0 to 23;
 	signal command                                  : std_logic_vector(7 downto 0);
 	signal counter_plane_to_pe, counter_sheet_to_pe : integer range 0 to 4;
+	signal nxt_round                                : std_logic;
+	signal init_round                               : std_logic;
 
 begin                                   -- Rtl
 
 	-- port map
 
-	pe_map : pe port map(clk, rst_n, data_from_mem, data_to_mem, nr_round, command, counter_plane_to_pe, counter_sheet_to_pe);
-	fsm_map : fsm port map(clk, rst_n, start, addr, enR, enW, nr_round, command, counter_plane_to_pe, counter_sheet_to_pe, done);
+	pe_map : pe
+		port map(
+			clk                 => clk,
+			rst_n               => rst_n,
+			data_from_mem       => data_from_mem,
+			data_to_mem         => data_to_mem,
+			command             => command,
+			counter_plane_to_pe => counter_plane_to_pe,
+			counter_sheet_to_pe => counter_sheet_to_pe,
+			nxt_round           => nxt_round,
+			init_round          => init_round
+		);
+
+	fsm_map : fsm
+		port map(
+			clk                 => clk,
+			rst_n               => rst_n,
+			start               => start,
+			addr                => addr,
+			enR                 => enR,
+			enW                 => enW,
+			command_for_pe      => command,
+			counter_plane_to_pe => counter_plane_to_pe,
+			counter_sheet_to_pe => counter_sheet_to_pe,
+			done                => done,
+			nxt_round           => nxt_round,
+			init_round          => init_round
+		);
 
 end rtl;

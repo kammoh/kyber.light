@@ -13,6 +13,9 @@ http://creativecommons.org/publicdomain/zero/1.0/
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <inttypes.h>
+
 #include "brg_endian.h"
 #include "displayIntermediateValues.h"
 #include "KeccakNISTInterface.h"
@@ -329,7 +332,7 @@ int KeccakPermutationIntermediateValuesForVHDL()
 		//write input to file
 		for(y=0;y<5;y++)
 			for(x=0;x<5;x++)
-				fprintf(fp_p_in, "%016I64X\n", A[index(x,y)]);
+				fprintf(fp_p_in, "%016" PRIx64 "\n", A[index(x,y)]);
 		fprintf(fp_p_in, "-\n");
 
 		for(i=0;i<nrRounds;i++)
@@ -348,7 +351,7 @@ int KeccakPermutationIntermediateValuesForVHDL()
 		}
 		for(y=0;y<5;y++)
 			for(x=0;x<5;x++)
-				fprintf(fp_p_out, "%016I64X\n", A[index(x,y)]);
+				fprintf(fp_p_out, "%016"PRIx64"\n", A[index(x,y)]);
 		fprintf(fp_p_out, "-\n");
 
 		for(i=0;i<nrRounds;i++)

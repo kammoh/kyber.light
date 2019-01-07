@@ -9,12 +9,12 @@
 -- and related or neighboring rights to the source code in this file.
 -- http://creativecommons.org/publicdomain/zero/1.0/
 
-library work;
-use work.keccak_globals.all;
 
 library ieee;
+use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.numeric_std_unsigned.all;
+use work.keccak_globals.all;
 
 entity chi_iota_theta is
 

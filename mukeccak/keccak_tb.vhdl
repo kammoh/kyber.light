@@ -1,20 +1,10 @@
--- The Keccak sponge function, designed by Guido Bertoni, Joan Daemen,
--- Micha�l Peeters and Gilles Van Assche. For more information, feedback or
--- questions, please refer to our website: http://keccak.noekeon.org/
-
--- Implementation by the designers,
--- hereby denoted as "the implementer".
-
--- To the extent possible under law, the implementer has waived all copyright
--- and related or neighboring rights to the source code in this file.
--- http://creativecommons.org/publicdomain/zero/1.0/
 
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.numeric_std_unsigned.all;
 use std.textio.all;
-use work.keccak_globals.all;
+use work.keccak_pkg.all;
 
 library vunit_lib;
 context vunit_lib.vunit_context;
@@ -26,48 +16,58 @@ use osvvm.CoveragePkg.all;
 entity keccak_tb is
 	generic(
 		runner_cfg : string;
-		G_IN_FILE  : string := "../test_vectors/Sources/keccak_in.txt";
-		G_OUT_FILE : string := "../test_vectors/keccak_out_compact_mid_vhdl.out.txt"
+		G_IN_FILE  : string := "../../keccak/test_vectors/Sources/keccak_in.txt";
+		G_OUT_FILE : string := "../../keccak/test_vectors/keccak_out_compact_mid_vhdl.out.txt"
 	);
 end keccak_tb;
 
 architecture tb of keccak_tb is
 
-	-- components
-
-	component keccak_core
-
-		port(
-			clk     : in  std_logic;
-			rst_n   : in  std_logic;
-			init    : in  std_logic;
-			go      : in  std_logic;
-			absorb  : in  std_logic;
-			squeeze : in  std_logic;
-			din     : in  std_logic_vector(N - 1 downto 0);
-			ready   : out std_logic;
-			dout    : out std_logic_vector(N - 1 downto 0));
-
-	end component;
 
 	-- signal declarations
 
 	signal clk   : std_logic;
-	signal rst_n : std_logic;
+	signal rst : std_logic;
 
 	signal init, go, absorb, ready, squeeze : std_logic;
-	signal din, dout                        : std_logic_vector(N - 1 downto 0);
+	signal din, dout                        : std_logic_vector(C_WORD_WIDTH - 1 downto 0);
 
 	type st_type is (initial, read_first_input, st0, st1, st1a, END_HASH1, END_HASH2, STOP);
 	signal st : st_type;
+	signal do_squeeze : std_logic;
+	signal din_valid : std_logic;
+	signal din_ready : std_logic;
+	signal dout_valid : std_logic;
+	signal dout_ready : std_logic;
+	signal from_mem_dout : std_logic_vector(C_WORD_WIDTH - 1 downto 0);
+	signal to_mem_din : std_logic_vector(C_WORD_WIDTH - 1 downto 0);
+	signal mem_addr : unsigned(log2ceil(C_NUM_MEM_WORDS) - 1 downto 0);
+	signal mem_we : std_logic;
+	signal mem_re : std_logic;
 
 begin                                   -- Rtl
 
 	-- port map
 
-	k_map : keccak_core port map(clk, rst_n, init, go, absorb, squeeze, din, ready, dout);
+	keccak: entity work.keccak_core
+		port map(
+			do_squeeze => do_squeeze,
+			clk           => clk,
+			rst           => rst,
+			din           => din,
+			din_valid     => din_valid,
+			din_ready     => din_ready,
+			dout          => dout,
+			dout_valid    => dout_valid,
+			dout_ready    => dout_ready,
+			from_mem_dout => from_mem_dout,
+			to_mem_din    => to_mem_din,
+			mem_addr      => mem_addr,
+			mem_we        => mem_we,
+			mem_re        => mem_re
+		);
 
-	rst_n <= '0', '1' after 19 ns;
+	rst <= '1', '0' after 19 ns;
 
 	vu_proc : process
 	begin
@@ -78,14 +78,14 @@ begin                                   -- Rtl
 	end process vu_proc;
 
 	--main process
-	p_main : process(clk, rst_n)
+	p_main : process(clk, rst)
 		variable counter, count_hash, num_test : integer;
 		variable line_in, line_out             : line;
 		variable temp                          : std_logic_vector(63 downto 0);
 		file filein                            : text open read_mode is G_IN_FILE;
 		file fileout                           : text open write_mode is G_OUT_FILE;
 	begin
-		if rst_n = '0' then             -- asynchronous rst_n (active low)
+		if rst = '1' then             -- asynchronous rst_n (active low)
 			st         <= initial;
 			counter    := 0;
 			din        <= (others => '0');
@@ -147,7 +147,7 @@ begin                                   -- Rtl
 					end if;
 				when st1 =>
 					go <= '0';
-					-- wait one clock cycle before checking if the core is ready ro not
+					-- wait one clock cycle before checking if the core is ready or not
 					st <= st1a;
 				when st1a =>
 					if (ready = '0') then

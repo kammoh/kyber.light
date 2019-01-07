@@ -27,8 +27,10 @@ class Module:
         self.name = name
         self.library_name = d.get('library_name',  None)
         self.path = d.get('path', ".")
-        self.files = get_as_list('files')
         self.tb_files = get_as_list('tb_files')
+        files = get_as_list('files')
+        self.files = [f for f in files if not f in self.tb_files]
+        
         self.top = d.get('top', None)
         self.tb_top = d.get('tb_top', None)
         self.depends = get_as_list('depends', False)
@@ -168,4 +170,5 @@ if __name__ == '__main__':
                 vu.main()
         else:
             logger.warning("top_module: {} does not have tb_files or tb_top set.. skipping".format(top_module.name))
+            print(top_module.top, len(top_module.tb_files), top_module.tb_top)
             

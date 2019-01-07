@@ -1,48 +1,114 @@
 {
-    "modules": {
-        "pkg": {
-            "path" : "vhdl",
-            "files": "kyber_pkg.vhdl"
-        },
-        "polyvec_mac": {
-            "path":"vhdl",
-            "top": "polyvec_mac",
-            "tb_top": "polyvec_mac_tb",
-            "files": ["polyvec_mac.vhdl"],
-            "tb_files": ["polyvec_mac_tb.vhdl"],
-            "depends": ["pkg", "barret", "poc"],
-            "tb_configs": []
-        },
-        "poc": {
-            "path": "vhdl/PoC",
-            "files": ["*/*.vhdl"],
-            "library_name": "PoC"
-        },
-        "barret": {
-            "path":"vhdl",
-            "top": "barret_reduce",
-            "tb_top": "barret_reduce_tb",
-            "files": ["barret_reduce.vhdl", "ConstMult*.vhdl"],
-            "tb_files": ["barret_reduce_tb.vhdl"],
-            "depends": ["pkg"],
-            "tb_configs": [
-                { "G_IN_WIDTH": 26}, 
-                { "G_IN_WIDTH": 27} 
-            ]
-        },
-        "keccak_mid": {
-            "path": "vhdl/keccak/mid_range_core",
-            "top": "keccak",
-            "tb_top": "keccak_tb",
-            "files": "*.vhd",
-            "tb_files": ["tb_keccak.vhd"]
-        },
-        "keccak": {
-            "path": "vhdl/keccak/low_area_coproc",
-            "top": "keccak_copro",
-            "tb_top": "keccak_coproc_tb",
-            "files": "*.vhd",
-            "tb_files": ["tb_keccak_copro.vhd", "system_mem.vhd"]
-        }
-    }
+	"modules": {
+		"pkg": {
+			"path": "vhdl",
+			"files": "kyber_pkg.vhdl"
+		},
+		"polyvec_mac": {
+			"path": "vhdl",
+			"top": "polyvec_mac",
+			"tb_top": "tb_polyvec_mac",
+			"files": [
+				"polyvec_mac.vhdl"
+			],
+			"tb_files": [
+				"tb_polyvec_mac.vhdl"
+			],
+			"depends": [
+				"polymac_dp",
+				"poc"
+			],
+			"tb_configs": [
+			]
+		},
+		"poc": {
+			"path": "vhdl/PoC",
+			"files": [
+				"*/*.vhdl"
+			],
+			"library_name": "PoC"
+		},
+		"barret": {
+			"path": "vhdl",
+			"top": "barret_reduce",
+			"tb_top": "tb_barret_reduce",
+			"files": [
+				"barret_reduce.vhdl",
+				"ConstMult*.vhdl"
+			],
+			"tb_files": [
+				"tb_barret_reduce.vhdl"
+			],
+			"depends": [
+				"pkg"
+			],
+			"tb_configs": [
+				{
+					"G_IN_WIDTH": 16,
+					"G_OUT_WIDTH": 13
+				},
+				{
+					"G_IN_WIDTH": 26,
+					"G_OUT_WIDTH": 15
+				},
+				{
+					"G_IN_WIDTH": 26,
+					"G_OUT_WIDTH": 13
+				},
+				{
+					"G_IN_WIDTH": 27,
+					"G_OUT_WIDTH": 13
+				}
+				
+			]
+		},
+		"polymac_dp" : {
+			"path": "vhdl",
+			"top": "polymac_dp",
+			"tb_top": "tb_polymac_dp",
+			"files": [
+				"polymac_dp.vhdl"
+			],
+			"tb_files": [
+				"tb_polymac_dp.vhdl"
+			],
+			"depends": [
+				"barret"
+			]
+		},
+		"keccak_mid": {
+			"path": "vhdl/keccak/mid_range_core",
+			"top": "keccak",
+			"tb_top": "keccak_tb",
+			"files": "*.vhd",
+			"tb_files": [
+				"tb_keccak.vhd"
+			],
+			"tb_configs": [
+				{
+					"G_IN_FILE": "vhdl/keccak/test_vectors/Sources/keccak_in.txt",
+					"G_OUT_FILE": "vhdl/keccak/outputs/keccak_out_compact_mid_vhdl.txt"
+				}
+			]
+		},
+		"keccak_coproc": {
+			"path": "vhdl/keccak/low_area_coproc",
+			"top": "keccak_copro",
+			"tb_top": "keccak_coproc_tb",
+			"files": "*.vhd",
+			"tb_files": [
+				"tb_keccak_copro.vhd",
+				"system_mem.vhd"
+			]
+		},
+		"keccak_lw": {
+			"path": "vhdl/Keccak_LW",
+			"top": "keccak",
+			"tb_top": "testbench1",
+			"files": "sources/*.vhd",
+			"tb_files": [
+				"tb/testbench1.vhd"
+			]
+		}
+	}
 }
