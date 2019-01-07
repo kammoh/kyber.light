@@ -53,7 +53,7 @@ def test_slice(dut):
     #     print(s._name)
     yield RisingEdge(dut.clk)
     yield RisingEdge(dut.clk)
-    for _ in range(0, 20):
+    for _ in range(0, 26):
         # yield Edge(dut.controller.state)
         yield Edge(dut.controller.round_cntr)
         print('round_cntr changed to', int(dut.controller.round_cntr.value) )

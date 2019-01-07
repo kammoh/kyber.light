@@ -17,7 +17,7 @@ entity controller is
 		dout_ready                : in  std_logic;
 		-- to datapath
 		out_do_bypass_iochipi     : out std_logic;
-		out_do_theta       		  : out std_logic;
+		out_do_theta              : out std_logic;
 		out_do_rho_out            : out std_logic;
 		out_do_lane0              : out std_logic;
 		out_do_odd_hword          : out std_logic; -- when shifting in and lane0 = '1', choose the higher half word from memory, o/w lower
@@ -140,7 +140,7 @@ begin
 								hword_cntr    <= (others => '0');
 								state         <= slice_read;
 							else
-								state     <= slice_write;
+								state <= slice_write;
 							end if;
 						else
 							lane_cntr <= lane_cntr + 1;
@@ -183,14 +183,18 @@ begin
 						end if;
 					when rho_write =>
 						if hword_cntr = LAST_HWORD then
-							hword_cntr <= (others => '0');
 							if lane_cntr = LAST_LANE then
-								round_cntr <= round_cntr + 1;
-								lane_cntr  <= (others => '0');
-								state      <= slice_read;
+								-- restart slice processing 
+								-- starts with Theta parity initialization of last halfword
+								round_cntr    <= round_cntr + 1;
+								lane_cntr     <= (others => '0');
+								hword_cntr    <= LAST_HWORD;
+								pre_last_flag <= '1';
+								state         <= slice_read;
 							else
-								lane_cntr <= lane_cntr + 1;
-								state     <= rho_read;
+								hword_cntr <= (others => '0');
+								lane_cntr  <= lane_cntr + 1;
+								state      <= rho_read;
 							end if;
 						else
 							hword_cntr <= hword_cntr + 1;
@@ -203,8 +207,8 @@ begin
 		end if;
 	end process fsm;
 
-	mem_addr              <= resize(hword_cntr(hword_cntr'length - 1 downto 1), mem_addr'length) when lane_cntr = 0 else (lane_cntr - 1) & hword_cntr(3 downto 0) + C_LANE0_WORDS;
-	out_do_lane0          <= '1' when lane_cntr = 0 else '0';
+	mem_addr <= resize(hword_cntr(hword_cntr'length - 1 downto 1), mem_addr'length) when lane_cntr = 0 else (lane_cntr - 1) & hword_cntr(3 downto 0) + C_LANE0_WORDS;
+
 	out_do_bypass_iochipi <= '1' when round_cntr = 0 else '0';
 
 	control_proc : process(all) is
@@ -222,7 +226,8 @@ begin
 		out_do_xorin              <= '0'; -- TODO
 		out_do_data_hi            <= '0'; -- TODO
 		out_do_setzero_to_mem_din <= '0';
-		out_do_theta  <=  '0';
+		out_do_theta              <= '0';
+		out_do_lane0              <= '0';
 		--
 		out_do_odd_hword          <= hword_cntr(0);
 
@@ -240,19 +245,25 @@ begin
 				out_do_shift_en0 <= '1';
 				out_do_shift_en1 <= '1';
 				mem_ce           <= '1';
+				if lane_cntr = 1 then
+					out_do_lane0 <= '1';
+				end if;
 			when slice_proc =>
 				out_do_shift_en0 <= '1';
 				out_do_shift_en1 <= '1';
 				out_do_vertical  <= '1';
 				if round_cntr /= C_NUM_ROUNDS then
-					out_do_theta  <=  '1';
+					out_do_theta <= '1';
 				end if;
-				
+
 			when slice_write =>
 				mem_ce           <= '1';
 				out_do_shift_en0 <= '1';
 				out_do_shift_en1 <= '1';
 				mem_we           <= '1';
+				if lane_cntr = 0 then
+					out_do_lane0 <= '1';
+				end if;
 			when rho_read =>
 				out_do_shift_en0 <= '1';
 				out_do_shift_en1 <= '1';
@@ -266,6 +277,7 @@ begin
 				end if;
 				out_do_hrotate <= '1';
 			when rho_write =>
+				out_do_hrotate   <= '1'; -- rotate modular
 				out_do_shift_en0 <= '1';
 				out_do_shift_en1 <= '1';
 				out_do_rho_out   <= '1';

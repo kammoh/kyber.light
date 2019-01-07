@@ -33,7 +33,7 @@ pub fn print_rho() {
         println!("{:3} {}", MY_RHO[i] / 4 , MY_RHO[i] % 4 );
     }
     for i in 1..13 {
-        print!("12X\"{:03X}\", ", (MY_RHO[2*i] << 6) | MY_RHO[2*i - 1]);
+        print!("12X\"{:03X}\", ", ((64 - MY_RHO[2*i]) << 6) | (64 - MY_RHO[2*i - 1]));
         if (i-1) % 4 == 3 {
             print!("\n");
         }
@@ -164,6 +164,7 @@ impl Keccak {
         for col in 0..5 {
             println!(">> {:016X}", parity[col]);
         }
+        println!("");
 
         for col in 0..5 {
             for row in 0..5 {;
