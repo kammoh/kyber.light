@@ -103,8 +103,8 @@ class Sim(object):
     def run_test(self, top, test_modules: List[str], test_case: str = None):
         assert isinstance(test_modules, list), "test_modules needs to be a list of strings" 
             
-        env=dict()
-        env['PATH'] = os.environ['PATH'] + ":/usr/local/bin"
+        env=dict(os.environ)
+        env['PATH'] += ":/usr/local/bin"
         env['PYTHONPATH'] = ':'.join([self.vpi_dir, self.cocotb_path, os.getcwd()])
         env['LD_LIBRARY_PATH']= ':'.join([self.vpi_dir, self.python_lib_path])
         env['MODULE'] = ','.join(test_modules)

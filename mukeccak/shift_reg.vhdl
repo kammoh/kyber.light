@@ -5,6 +5,9 @@ use ieee.numeric_std.all;
 use work.keccak_pkg.all;
 
 entity shift_reg is
+	generic(
+		G_NUM_VERTICAL_IO: positive	
+	);
 	port(
 		clk                : in  std_logic;
 		-- control
@@ -16,8 +19,8 @@ entity shift_reg is
 		hword_in           : in  t_half_word;
 		in_rho_mod         : in  unsigned(log2ceil(C_HALFWORD_WIDTH) - 1 downto 0);
 		hword_out          : out t_half_word;
-		slice_vertical_in  : out std_logic_vector(12 downto 0);
-		slice_vertical_out : out std_logic_vector(12 downto 0)
+		slice_vertical_in  : in std_logic_vector(G_NUM_VERTICAL_IO - 1 downto 0);
+		slice_vertical_out : out std_logic_vector(G_NUM_VERTICAL_IO - 1 downto 0)
 	);
 end entity shift_reg;
 
@@ -34,8 +37,8 @@ begin
 		if rising_edge(clk) then
 			if in_do_shift_en then
 				if in_do_vertical then
-					for i in 0 to 12 loop
-						shift_reg_array(12 - i) <= slice_vertical_in(i) & shift_reg_array(12 - i)(C_HALFWORD_WIDTH - 1 downto 1); -- shift UP 
+					for i in 0 to G_NUM_VERTICAL_IO - 1 loop
+						shift_reg_array(G_NUM_VERTICAL_IO - 1 - i) <= slice_vertical_in(i) & shift_reg_array(G_NUM_VERTICAL_IO - 1 - i)(C_HALFWORD_WIDTH - 1 downto 1); -- shift UP 
 					end loop;
 				else                    -- horizontal shift/rotate
 					if in_do_hrotate then
@@ -52,13 +55,13 @@ begin
 		end if;
 	end process name;
 
-	generate_slice_vertical_out : for i in 0 to 12 generate
-		slice_vertical_out(i) <= shift_reg_array(12 - i)(0);
+	generate_slice_vertical_out : for i in 0 to G_NUM_VERTICAL_IO - 1 generate
+		slice_vertical_out(i) <= shift_reg_array(G_NUM_VERTICAL_IO - 1 - i)(0);
 	end generate generate_slice_vertical_out;
 
 	rho_in  <= shift_reg_array(shift_reg_array'length - 2)(t_half_word'length - 2 downto 0) & shift_reg_array(shift_reg_array'length - 1);
 	rho_out <= rho_in(to_integer(in_rho_mod) + 3 downto to_integer(in_rho_mod));
 
-	hword_out <= rho_out when in_do_rho_out else shift_reg_array(12);
+	hword_out <= rho_out when in_do_rho_out else shift_reg_array(12); -- always 12
 
 end architecture RTL;

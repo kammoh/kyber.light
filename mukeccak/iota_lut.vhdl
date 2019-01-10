@@ -7,7 +7,7 @@ use work.keccak_pkg.all;
 entity iota_lut is
 	port(
 		round           : in  unsigned(log2ceil(C_NUM_ROUNDS + 1 - 1) - 1 downto 0);
-		k               : out unsigned(log2ceil(C_LANE_WIDTH) - 1 downto 0);
+		k               : in unsigned(log2ceil(C_LANE_WIDTH) - 1 downto 0);
 		iota_bit        : out std_logic
 	);
 end entity iota_lut;
@@ -42,7 +42,7 @@ begin
 		else X"8000000000008080" when round = 22
 		else X"0000000080000001" when round = 23
 		else X"8000000080008008" when round = 24
-		else X"0000000000000000";
+		else (others  => '-');
 
 	iota_bit        <= iota(to_integer(k));
 

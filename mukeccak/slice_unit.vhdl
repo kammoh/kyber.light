@@ -61,7 +61,7 @@ architecture RTL of slice_unit is
 	function replicate_row_to_slice(in_row : t_row) return t_slice is
 		variable ret : t_slice;
 	begin
-		for row in 0 to 4 loop            -- rows
+		for row in 0 to 4 loop
 			ret(5 * row + 4 downto 5 * row) := in_row;
 		end loop;
 		return ret;
@@ -80,7 +80,7 @@ begin
 	iochipi <= slice_in when bypass_iochipi else iota_o_chi(pi(slice_in), round_const_bit);
 
 	cur_parities <= parity(iochipi);
-	theta_row <= (cur_parities rol 1) xor (prev_parities_reg ror 1); -- parity(a[0...4][j−1][k]) xor parity(a[0...4][j+1][k−1])
+	theta_row <= (cur_parities rol 1) xor (prev_parities_reg ror 1);
 
 	process(clk)
 	begin
