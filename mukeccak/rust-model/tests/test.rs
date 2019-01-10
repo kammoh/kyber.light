@@ -1,0 +1,251 @@
+extern crate core;
+extern crate tiny_keccak;
+
+use tiny_keccak::*;
+
+#[test]
+fn empty_keccak() {
+    let mut keccak = Keccak::new_keccak256();
+    let mut res: [u8; 32] = [0; 32];
+    keccak.finalize(&mut res);
+
+    let expected = vec![
+        0xc5, 0xd2, 0x46, 0x01, 0x86, 0xf7, 0x23, 0x3c, 0x92, 0x7e, 0x7d, 0xb2, 0xdc, 0xc7, 0x03,
+        0xc0, 0xe5, 0x00, 0xb6, 0x53, 0xca, 0x82, 0x27, 0x3b, 0x7b, 0xfa, 0xd8, 0x04, 0x5d, 0x85,
+        0xa4, 0x70,
+    ];
+
+    let ref_ex: &[u8] = &expected;
+    assert_eq!(&res, ref_ex);
+}
+
+#[test]
+fn string_keccak_256_overlapping_buffer() {
+    let mut in_and_out: [u8; 32] = [0; 32];
+    for i in 1..6 {
+        in_and_out[i as usize - 1] = i
+    }
+
+    let ptr = in_and_out.as_mut_ptr();
+    Keccak::keccak256(
+        unsafe {
+            core::slice::from_raw_parts(ptr, 5) // read a piece from start of in_and_out
+        },
+        &mut in_and_out, // write over the whole array
+    );
+
+    let expected = vec![
+        125, 135, 197, 234, 117, 247, 55, 139, 183, 1, 228, 4, 197, 6, 57, 22, 26, 243, 239, 246,
+        98, 147, 233, 243, 117, 181, 241, 126, 181, 4, 118, 244,
+    ];
+    assert_eq!(&in_and_out, &expected.as_ref());
+
+    // Verify using overlapping in/out buffers yields same result as a "normal" hash
+    let control_in: [u8; 5] = [1, 2, 3, 4, 5];
+    let mut control_out: [u8; 32] = [0; 32];
+    Keccak::keccak256(&control_in, &mut control_out);
+    assert_eq!(&control_out, &in_and_out);
+}
+
+#[test]
+fn empty_sha3_256() {
+    let mut sha3 = Keccak::new_sha3_256();
+    let mut res: [u8; 32] = [0; 32];
+    sha3.finalize(&mut res);
+
+    let expected = vec![
+        0xa7, 0xff, 0xc6, 0xf8, 0xbf, 0x1e, 0xd7, 0x66, 0x51, 0xc1, 0x47, 0x56, 0xa0, 0x61, 0xd6,
+        0x62, 0xf5, 0x80, 0xff, 0x4d, 0xe4, 0x3b, 0x49, 0xfa, 0x82, 0xd8, 0x0a, 0x4b, 0x80, 0xf8,
+        0x43, 0x4a,
+    ];
+
+    let ref_ex: &[u8] = &expected;
+    assert_eq!(&res, ref_ex);
+}
+
+#[test]
+fn string_sha3_256() {
+    let mut sha3 = Keccak::new_sha3_256();
+    let data: Vec<u8> = From::from("hello");
+    sha3.update(&data);
+
+    let mut res: [u8; 32] = [0; 32];
+    sha3.finalize(&mut res);
+
+    let expected = vec![
+        0x33, 0x38, 0xbe, 0x69, 0x4f, 0x50, 0xc5, 0xf3, 0x38, 0x81, 0x49, 0x86, 0xcd, 0xf0, 0x68,
+        0x64, 0x53, 0xa8, 0x88, 0xb8, 0x4f, 0x42, 0x4d, 0x79, 0x2a, 0xf4, 0xb9, 0x20, 0x23, 0x98,
+        0xf3, 0x92,
+    ];
+
+    let ref_ex: &[u8] = &expected;
+    assert_eq!(&res, ref_ex);
+}
+
+#[test]
+fn string_sha3_256_parts() {
+    let mut sha3 = Keccak::new_sha3_256();
+    let data: Vec<u8> = From::from("hell");
+    sha3.update(&data);
+    sha3.update(&[b'o']);
+
+    let mut res: [u8; 32] = [0; 32];
+    sha3.finalize(&mut res);
+
+    let expected = vec![
+        0x33, 0x38, 0xbe, 0x69, 0x4f, 0x50, 0xc5, 0xf3, 0x38, 0x81, 0x49, 0x86, 0xcd, 0xf0, 0x68,
+        0x64, 0x53, 0xa8, 0x88, 0xb8, 0x4f, 0x42, 0x4d, 0x79, 0x2a, 0xf4, 0xb9, 0x20, 0x23, 0x98,
+        0xf3, 0x92,
+    ];
+
+    let ref_ex: &[u8] = &expected;
+    assert_eq!(&res, ref_ex);
+}
+
+#[test]
+fn string_sha3_256_parts5() {
+    let mut sha3 = Keccak::new_sha3_256();
+    sha3.update(&[b'h']);
+    sha3.update(&[b'e']);
+    sha3.update(&[b'l']);
+    sha3.update(&[b'l']);
+    sha3.update(&[b'o']);
+
+    let mut res: [u8; 32] = [0; 32];
+    sha3.finalize(&mut res);
+
+    let expected = vec![
+        0x33, 0x38, 0xbe, 0x69, 0x4f, 0x50, 0xc5, 0xf3, 0x38, 0x81, 0x49, 0x86, 0xcd, 0xf0, 0x68,
+        0x64, 0x53, 0xa8, 0x88, 0xb8, 0x4f, 0x42, 0x4d, 0x79, 0x2a, 0xf4, 0xb9, 0x20, 0x23, 0x98,
+        0xf3, 0x92,
+    ];
+
+    let ref_ex: &[u8] = &expected;
+    assert_eq!(&res, ref_ex);
+}
+
+#[test]
+fn long_string_sha3_512() {
+    let mut sha3 = Keccak::new_sha3_512();
+    let data: Vec<u8> = From::from("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.");
+
+    sha3.update(&data);
+    let mut res: [u8; 64] = [0; 64];
+    sha3.finalize(&mut res);
+
+    let expected = vec![
+        0xf3, 0x2a, 0x94, 0x23, 0x55, 0x13, 0x51, 0xdf, 0x0a, 0x07, 0xc0, 0xb8, 0xc2, 0x0e, 0xb9,
+        0x72, 0x36, 0x7c, 0x39, 0x8d, 0x61, 0x06, 0x60, 0x38, 0xe1, 0x69, 0x86, 0x44, 0x8e, 0xbf,
+        0xbc, 0x3d, 0x15, 0xed, 0xe0, 0xed, 0x36, 0x93, 0xe3, 0x90, 0x5e, 0x9a, 0x8c, 0x60, 0x1d,
+        0x9d, 0x00, 0x2a, 0x06, 0x85, 0x3b, 0x97, 0x97, 0xef, 0x9a, 0xb1, 0x0c, 0xbd, 0xe1, 0x00,
+        0x9c, 0x7d, 0x0f, 0x09,
+    ];
+
+    let ref_res: &[u8] = &res;
+    let ref_ex: &[u8] = &expected;
+    assert_eq!(ref_res, ref_ex);
+}
+
+#[test]
+fn long_string_sha3_512_parts() {
+    let mut sha3 = Keccak::new_sha3_512();
+    let data: Vec<u8> = From::from("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ");
+    let data2: Vec<u8> = From::from("ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.");
+
+    sha3.update(&data);
+    sha3.update(&data2);
+
+    let mut res: [u8; 64] = [0; 64];
+    sha3.finalize(&mut res);
+
+    let expected = vec![
+        0xf3, 0x2a, 0x94, 0x23, 0x55, 0x13, 0x51, 0xdf, 0x0a, 0x07, 0xc0, 0xb8, 0xc2, 0x0e, 0xb9,
+        0x72, 0x36, 0x7c, 0x39, 0x8d, 0x61, 0x06, 0x60, 0x38, 0xe1, 0x69, 0x86, 0x44, 0x8e, 0xbf,
+        0xbc, 0x3d, 0x15, 0xed, 0xe0, 0xed, 0x36, 0x93, 0xe3, 0x90, 0x5e, 0x9a, 0x8c, 0x60, 0x1d,
+        0x9d, 0x00, 0x2a, 0x06, 0x85, 0x3b, 0x97, 0x97, 0xef, 0x9a, 0xb1, 0x0c, 0xbd, 0xe1, 0x00,
+        0x9c, 0x7d, 0x0f, 0x09,
+    ];
+
+    let ref_res: &[u8] = &res;
+    let ref_ex: &[u8] = &expected;
+    assert_eq!(ref_res, ref_ex);
+}
+
+#[test]
+fn sha3_224_abc() {
+    let mut sha3 = Keccak::new_sha3_224();
+    let data: Vec<u8> = From::from("abc");
+    sha3.update(&data);
+
+    let expected = vec![
+        0xe6, 0x42, 0x82, 0x4c, 0x3f, 0x8c, 0xf2, 0x4a, 0xd0, 0x92, 0x34, 0xee, 0x7d, 0x3c, 0x76,
+        0x6f, 0xc9, 0xa3, 0xa5, 0x16, 0x8d, 0x0c, 0x94, 0xad, 0x73, 0xb4, 0x6f, 0xdf,
+    ];
+
+    let mut res = vec![0; 28];
+    sha3.finalize(&mut res);
+
+    assert_eq!(res, expected);
+}
+
+#[test]
+fn sha3_512_abc() {
+    let mut sha3 = Keccak::new_sha3_512();
+    let data: Vec<u8> = From::from("abc");
+    sha3.update(&data);
+
+    let expected = vec![
+        0xb7, 0x51, 0x85, 0x0b, 0x1a, 0x57, 0x16, 0x8a, 0x56, 0x93, 0xcd, 0x92, 0x4b, 0x6b, 0x09,
+        0x6e, 0x08, 0xf6, 0x21, 0x82, 0x74, 0x44, 0xf7, 0x0d, 0x88, 0x4f, 0x5d, 0x02, 0x40, 0xd2,
+        0x71, 0x2e, 0x10, 0xe1, 0x16, 0xe9, 0x19, 0x2a, 0xf3, 0xc9, 0x1a, 0x7e, 0xc5, 0x76, 0x47,
+        0xe3, 0x93, 0x40, 0x57, 0x34, 0x0b, 0x4c, 0xf4, 0x08, 0xd5, 0xa5, 0x65, 0x92, 0xf8, 0x27,
+        0x4e, 0xec, 0x53, 0xf0,
+    ];
+
+    let mut res = vec![0; 64];
+    sha3.finalize(&mut res);
+
+    assert_eq!(res, expected);
+}
+
+#[test]
+fn sha3_384_million_a() {
+    let mut sha3 = Keccak::new_sha3_384();
+    let data: Vec<u8> = From::from("aaaaaaaaaa");
+
+    for _ in 0..100_000 {
+        sha3.update(&data);
+    }
+
+    let expected = vec![
+        0xee, 0xe9, 0xe2, 0x4d, 0x78, 0xc1, 0x85, 0x53, 0x37, 0x98, 0x34, 0x51, 0xdf, 0x97, 0xc8,
+        0xad, 0x9e, 0xed, 0xf2, 0x56, 0xc6, 0x33, 0x4f, 0x8e, 0x94, 0x8d, 0x25, 0x2d, 0x5e, 0x0e,
+        0x76, 0x84, 0x7a, 0xa0, 0x77, 0x4d, 0xdb, 0x90, 0xa8, 0x42, 0x19, 0x0d, 0x2c, 0x55, 0x8b,
+        0x4b, 0x83, 0x40,
+    ];
+
+    let mut res = vec![0; 48];
+    sha3.finalize(&mut res);
+
+    assert_eq!(res, expected);
+}
+
+// #[test]
+// fn fill_shake() {
+//     const RATE: usize = 168;
+//     let mut shake = Keccak::new_shake128();
+//     // shake.update(&[0x42; RATE / 2]);
+//     let mut shake2 = shake.clone();
+
+//     shake.update(&[0; RATE / 2]);
+//     shake2.update(&[0; RATE / 2]);
+//     shake2.fill_block();
+
+//     let mut res = [0; 32];
+//     let mut res2 = [0; 32];
+
+//     shake.finalize(&mut res);
+//     shake2.finalize(&mut res2);
+
+//     assert_eq!(res, res2);
+// }
