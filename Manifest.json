@@ -62,6 +62,20 @@
 				
 			]
 		},
+		"divider": {
+			"path": "vhdl",
+			"top": "divider",
+			"tb_top": "divider_tb",
+			"files": [
+				"divider.vhdl"
+			],
+			"tb_files": [
+				"divider_tb.vhdl"
+			],
+			"depends": [
+				"pkg"
+			]
+		},
 		"polymac_dp" : {
 			"path": "vhdl",
 			"top": "polymac_dp",
