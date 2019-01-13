@@ -87,7 +87,7 @@
 				"tb_polymac_dp.vhdl"
 			],
 			"depends": [
-				"barret"
+				"divider"
 			]
 		},
 		"keccak_mid": {

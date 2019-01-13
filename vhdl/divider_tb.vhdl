@@ -14,10 +14,10 @@ use osvvm.CoveragePkg.all;
 entity divider_tb is
 	generic(
 		runner_cfg       : string;
-		G_EXMAX          : positive := 2**20 - 1;
+		G_EXMAX          : positive := 2**22 - 1;
 		G_IN_WIDTH       : positive := 25;
 		G_CLK_PERIOD     : time     := 1 ns;
-		G_EXTRA_RND_SEED : string   := "a0W7x9@xq"
+		G_EXTRA_RND_SEED : string   := "a0W7"
 	);
 
 end entity divider_tb;

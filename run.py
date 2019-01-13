@@ -166,7 +166,7 @@ if __name__ == '__main__':
                 
 
                     
-                vu.set_sim_option("ghdl.elab_flags", ["-O3", "-Wbinding", "-Wreserved", "-Wlibrary", "-Wvital-generic", "-Wdelayed-checks", "-Wbody", "-Wspecs", "-Wunused"] + ghdl_flags, allow_empty=True)
+                vu.set_sim_option("ghdl.elab_flags", ["-O3"] + ghdl_flags, allow_empty=True)
                 vu.main()
         else:
             logger.warning("top_module: {} does not have tb_files or tb_top set.. skipping".format(top_module.name))
