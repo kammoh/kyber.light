@@ -14,15 +14,6 @@ import tiny_keccak
 # can yield a list of triggers! == join_any, returns the trigger that fired first!
 
 
-def discover(obj, indent=0):
-    try:
-        for thing in obj:
-            print(">>" * indent + "%s (%s)" % (thing._name, type(thing)))
-            discover(thing, indent + 1)
-    except:
-        print("StopIteration")
-
-
 def dump_state(dut):
     print(dut._id('state_mem.ginfer.ram', extended=False))
 

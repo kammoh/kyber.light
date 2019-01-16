@@ -1,0 +1,141 @@
+% !TeX root = ./main.tex
+
+\setchapterpreamble[uc][\textwidth]{%
+\dictum[Chirrut Îmwe, \textit{Star Wars}]{%
+\hfill ``The strongest stars have hearts of \emph{Kyber}''}\vskip1.5em}
+
+\chapter{Introduction and Motivation}
+
+Cryptography lays a foundation for many aspects of modern society, including monetary 
+transactions, electronic commerce, and private communications. Public Key cryptography
+ schemes have taken a crucial role in safeguarding our information and with the 
+ proliferation of IoT devices, their presence is becoming even more wide-spread. \\
+
+
+Quantum Computers are getting closer to a reality and so is the threat they would pose
+ to to the security of currently deployed Public Key cryptography schemes. As formulated
+  by Shor’s algorithm, quantum computers would be able to solve “integer factorization”
+   and “discrete logarithm” problems, the underlying hard problems for RSA and ECC 
+   schemes, in a polynomial time complexity. \\
+
+
+Public Key cryptography schemes which can withstand the power of Quantum Computers
+ are being considered and evaluated worldwide. The National Institute of Standards and 
+ Technology (NIST) has organized a project for evaluating and standardizing Post-Quantum
+  Cryptography schemes. During the first round, 23 signature schemes were submitted, 59
+   encryption/KEM schemes were submitted, of which 69 total were deemed complete and
+    proper. Among the encryption/KEM schemes, those based on Lattices are deemed 
+    promising as they appear to provide a high level of security, with good performance
+     and smaller key size. 
+
+
+Kyber.PKE\cite{bos2018} is a Public Key Encryption scheme, developed as a part of Crystal Kyber KEM, 
+and is one of the most promising candidates among NIST Round 1 PKE and KEM submissions.
+ It’s based on Module Learning With Error (M-LWR) problem and by itself is deemed to have
+  the Indistinguishability under chosen-plaintext attack (IND-CPA) property. The Public
+   Key Encryption scheme is composed of three basic primitives: Key generation, 
+   Encryption, and Decryption. The Kyber.PKE submission to NIST includes full
+    specifications and a reference C implementation 
+    \cite{kyberres}. High-level data-flow diagrams of
+     the encryption and decryption primitives are provided in Fig \ref{fig:kyper_enc} and \ref{fig:kyper_dec}.
+
+     \begin{table}
+        \begin{adjustbox}{width=1.2\textwidth,center=\textwidth}
+            \rowcolors{2}{lightgray!45}{white}   
+            \begin{tabular}{l*{9}{c}}
+              \rowcolor{DispositionColor!50}              % Heading with different color to highlight it      
+                                & n   & k  & q    & $\eta$ & $(d_u,d_v,d_t)$ & $\delta$ & sec & $|pk|$ in bytes & $|c|$ in bytes \\ 
+              \hline
+              \textbf{Paranoid} & 255 &  4 & 7681 & 3      & (11, 3, 11)  & $2^{-169}$ & 218 & 1440  & 1536 \\
+              \textbf{Light}    & 255 &  2 & 7681 & 5      & (11, 3, 11)  & $2^{-145}$ & 102 & 736  & 832 \\
+             \hline
+            \end{tabular}
+           \end{adjustbox}
+        \caption{Kyber Parameter Sets \cite{bos2018} }
+        \label{table:params}
+        \end{table}
+
+\begin{figure}[h]
+ \includegraphics[width=\textwidth]{../kyber_enc_hl.pdf}
+ \caption{High-level diagram of Kyber.PKE Encryption}
+ \label{fig:kyper_enc}
+\end{figure}
+
+\begin{figure}[h]
+ \includegraphics[width=\textwidth]{../kyber_dec_hl.pdf} 
+ \caption{High-level diagram of Kyber.PKE Decryption}
+ \label{fig:kyper_dec}
+\end{figure}  
+
+This project aims to design and develop an FPGA implementation of Kyper.PKE optimized 
+for area and resource usage. Resilience of the implementation agains timing and power
+ attacks is also a primary design consideration. At the time of this writing, no other
+  published hardware implementations of Kyber seems yet to be available.
+
+  \chapter{Design Entry}
+  The design will be implemented in VHDL 2008 hardware description language. Kyber.PKE 
+  will be implemented as distinct entities: Encryption, Decryption, and Key Generation.
+   The design will follow best coding practices for code readability and will target a 
+   modular design with as much code reuse as possible. Every building block will have 
+   it’s own verification test-bench (through CocoTB) and the completed 3 entities will 
+   as well be verified against the reference implementation.
+
+
+The primary target platform is Xilinx Zynq-7000 FPGA SoCs. The developed design will be
+ tested on a MYIR Z-turn development board which hosts a Zynq-7020 chip. Developed design
+  will be programmed into Zynq’s Programmable Logic (PL) FPGA fabric and accessed through 
+  an AMBA-AXI4 interface by Linux application running on the ARM processors (PS). 
+  Simulations for verification will be primarily done using GHDL free/open-source VHDL
+   simulator.  FPGA synthesis is performed using Vivado. The Integrated Design Environment
+    of choice for the VHDL development is Sigasi Studio.
+
+
+\chapter{Verification}
+Ensuring the correct functionality of the implementation is a primary concern during the 
+development. The design will be developed in a modular fashion accompanying unit-tests 
+and integration tests. Functional verification is performed against the reference 
+software implementation using Python, Cocotb \cite{cocotb}
+ , and GHDL \cite{ghdl}.
+
+ \chapter{Use of other code}
+
+ Bits and pieces from PoC library \cite{poc} as well as other available open-source libraries could be utilized for the design. 
+
+
+A survey of hardware implementation of the required building blocks is under way. Ideas and code will be borrowed from previously published implementations and improved upon 
+ for the purpose of this project.
+
+
+ \chapter{Assumptions}
+
+ The design goals in descending priority:
+ \begin{itemize}
+     \item Area/Resources: measured as the number of used LUT, FF, DSP, and BRAM blocks used as reported by the synthesis tool.
+     \item Resilience to Timing Attacks: constant timing
+     \item Resilience to Simple Power Attacks
+     \item Efficiency: least number of cycles and highest attainable frequency considering all above constraints.  
+ \end{itemize}
+
+ \chapter{Circuit Interface}
+ The interface of the three main entities (Encryption, Decryption, Key Generation) will 
+ be AMBA AXI-Lite which will be accessed both during simulations by CocoTB+GHDL/VCS and 
+ in the FPGA instance by the Linux application running on ARM cores. 
+
+ \chapter{Project Timing}
+
+ \begin{table}
+ \begin{adjustbox}{width=1.2\textwidth,center=\textwidth}
+ \rowcolors{2}{lightgray!45}{white}   
+ \begin{tabular}{|c |l |c|}
+   \rowcolor{DispositionColor!50}              % Heading with different color to highlight it      
+   \textbf{Deadline}  & \textbf{Target} & \textbf{Progress} \\ \hline
+   \textbf{Oct 16-17} & Literature, Logistics & 60\% \\
+   \textbf{Oct 30-31} & Polynomial Arithmetic, Keccak, Verification Suite &  \\
+   \textbf{Nov 13-14} & Gaussian Noise, Integration &  \\
+   \textbf{Nov 27-28} & AXI wrapper, FPGA target, Linux, Board verification  &  \\
+   \hline
+ \end{tabular}
+\end{adjustbox}
+\caption{Project Timing}
+\label{table:schedule}
+\end{table}

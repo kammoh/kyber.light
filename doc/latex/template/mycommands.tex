@@ -1,0 +1,117 @@
+%% Time-stamp: <2015-04-30 17:19:58 vk>
+%%%% === Disclaimer: =======================================================
+%% created by
+%%
+%%      Karl Voit
+%%
+%% using GNU/Linux, GNU Emacs & LaTeX 2e
+%%
+
+%doc%
+%doc% \section{\texttt{mycommands.tex} --- various definitions}\myinteresting
+%doc% \label{sec:mycommands}
+%doc%
+%doc% In file \verb#template/mycommands.tex# many useful commands are being
+%doc% defined. 
+%doc% 
+%doc% \paragraph{What should I do with this file?} Please take a look at its 
+%doc% content to get the most out of your document.
+%doc% 
+
+%doc% 
+%doc% One of the best advantages of \LaTeX{} compared to \myacro{WYSIWYG} software products is
+%doc% the possibility to define and use macros within text. This empowers the user to
+%doc% a great extend.  Many things can be defined using \verb#\newcommand{}# and
+%doc% automates repeating tasks. It is recommended to use macros not only for
+%doc% repetitive tasks but also for separating form from content such as \myacro{CSS}
+%doc% does for \myacro{XHTML}. Think of including graphics in your document: after
+%doc% writing your book, you might want to change all captions to the upper side of
+%doc% each figure. In this case you either have to modify all
+%doc% \texttt{includegraphics} commands or you were clever enough to define something
+%doc% like \verb#\myfig#\footnote{See below for a detailed description}. Using a
+%doc% macro for including graphics enables you to modify the position caption on only
+%doc% \emph{one} place: at the definition of the macro.
+%doc% 
+%doc% The following section describes some macros that came with this document template
+%doc% from \myLaT and you are welcome to modify or extend them or to create
+%doc% your own macros!
+%doc% 
+
+%doc% 
+%doc% \subsection{\texttt{myfig} --- including graphics made easy}
+%doc% 
+%doc% The classic: you can easily add graphics to your document with \verb#\myfig#:
+%doc% \begin{verbatim}
+%doc%  \myfig{flower}%% filename w/o extension in the folder figures
+%doc%        {width=0.7\textwidth}%% maximum width/height, aspect ratio will be kept
+%doc%        {This flower was photographed at my home town in 2010}%% caption
+%doc%        {Home town flower}%% optional (short) caption for list of figures
+%doc%        {fig:flower}%% label
+%doc% \end{verbatim}
+%doc% 
+%doc% There are many advantages of this command (compared to manual
+%doc% \texttt{figure} environments and \texttt{includegraphics} commands:
+%doc% \begin{itemize}
+%doc% \item consistent style throughout the whole document
+%doc% \item easy to change; for example move caption on top
+%doc% \item much less characters to type (faster, error prone)
+%doc% \item less visual clutter in the \TeX{}-files
+%doc% \end{itemize}
+%doc% 
+%doc% 
+\newcommand{\myfig}[5]{
+%% example:
+% \myfig{}%% filename in figures folder
+%       {width=0.5\textwidth,height=0.5\textheight}%% maximum width/height, aspect ratio will be kept
+%       {}%% caption
+%       {}%% optional (short) caption for list of figures
+%       {}%% label
+\begin{figure}%[htp]
+  \centering
+  \includegraphics[keepaspectratio,#2]{figures/#1}
+  \caption[#4]{#3}
+  \label{#5} %% NOTE: always label *after* caption!
+\end{figure}
+}
+
+
+%doc% 
+%doc% \subsection{\texttt{myclone} --- repeat things!}
+%doc% 
+%doc% Using \verb#\myclone[42]{foobar}# results the text \enquote{foobar} printed 42 times.
+%doc% But you can not only repeat text output with \texttt{myclone}. 
+%doc%
+%doc% Default argument
+%doc% for the optional parameter \enquote{number of times} (like \enquote{42} in the example above) 
+%doc% is set to two.
+%doc% 
+%% \myclone[x]{text}
+\newcounter{myclonecnt}
+\newcommand{\myclone}[2][2]{%
+  \setcounter{myclonecnt}{#1}%
+  \whiledo{\value{myclonecnt}>0}{#2\addtocounter{myclonecnt}{-1}}%
+}
+
+%old% %d oc% 
+%old% %d oc% \subsection{\texttt{fixxme} --- sidemark something as unfinished}
+%old% %d oc% 
+%old% %d oc% You know it: something has to be fixed and you can not do it right
+%old% %d oc% now. In order to \texttt{not} forget about it, you might want to add a
+%old% %d oc% note like \verb+\fixxme{check again}+ which inserts a note on the page
+%old% %d oc% margin such as this\fixxme{check again} example.
+%old% %d oc%
+%old% \newcommand{\fixxme}[1]{%%
+%old% \textcolor{red}{FIXXME}\marginpar{\textcolor{red}{#1}}%%
+%old% }
+
+
+%%%% End 
+%%% Local Variables:
+%%% mode: latex
+%%% mode: auto-fill
+%%% mode: flyspell
+%%% eval: (ispell-change-dictionary "en_US")
+%%% TeX-master: "../main"
+%%% End:
+%% vim:foldmethod=expr
+%% vim:fde=getline(v\:lnum)=~'^%%%%'?0\:getline(v\:lnum)=~'^%doc.*\ .\\%(sub\\)\\?section{.\\+'?'>1'\:'1':

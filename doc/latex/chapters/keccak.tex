@@ -1,0 +1,49 @@
+
+\section{Keccak}
+Keccak is a versatile cryptographic function \cite{zotero-2456}.
+It's a sponge construction \cite{guido11} which is at the heart of FIPS 202 SHA-3 Standard \cite{dwork15}.
+
+An extendable-output function (XOF): the generalization of a cryptographic hash function with arbitrary output length.
+
+Kyber uses following versions of Keccak family of cryptographic hashing algorithms:
+
+
+The implemented core is Keccak-f1600 permutation along with mechanism that make the sponge and 
+
+KEM:
+    \begin{table}
+    \begin{adjustbox}{width=1.2\textwidth,center=\textwidth}
+        \rowcolors{2}{lightgray!45}{white}   
+        \begin{tabular}{l*{3}{c}}
+            \rowcolor{DispositionColor!50}              % Heading with different color to highlight it      
+            Phase & Hash Type &  number of blocks & number of times \\ 
+            SHA3-256  & KEM Encrypt + KEM Decrypt  &  1  &  4  +2 \\
+            SHA3-512  &  KEM Encrypt + KEM Decrypt  &  1 &  1 + 1 \\
+            SHAKE-256 & IND-CPA Encrypt  & 1 & 3 \\
+             \hline
+        \end{tabular}
+        \end{adjustbox}
+    \caption{Keccak family of hashes used in Kyber}
+    \label{table:sha3}
+    \end{table}
+
+
+
+    Synthesis results:
+    \begin{table}
+        \begin{adjustbox}{width=1.2\textwidth,center=\textwidth}
+            \rowcolors{2}{lightgray!45}{white}   
+            \begin{tabular}{l*{7}{r}}
+                \rowcolor{DispositionColor!50}              % Heading with different color to highlight it      
+                         {}            & Slices & Block RAMs &  Slice LUTs & Slice Registers & F7/8 Muxes & DSPs  & Complete \\ 
+                \hline
+                This implementation  & 71   &  1 x RAMB18  &  261        &    151         &      1/0    & 0     & Yes\\
+                Kaps et al           & 238  &  1 x RAMB36  &  704        &    490         &      31/12  & 0     & No \\
+                Keccak team Coproc   & 321  &  0           &  1104       &    233         &     335/3   & 0     & No \\
+                Keccak team Mid Core & 559  &  0           &  1867       &    1683        &      1/0    & 0      & Yes \\
+                 \hline
+            \end{tabular}
+            \end{adjustbox}
+        \caption{Keccak Core Synthesis result (post place and route) using Vivado 2018.2 device: 7z020clg484-1}
+        \label{table:synth_area}
+        \end{table}

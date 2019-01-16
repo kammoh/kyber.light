@@ -1,7 +1,6 @@
 # STEP#0: define output directory area.
 #
 set VHDL_SRCS "$env(VHDL_SRCS)"
-set POC_SRCS {    "PoC/src/common/my_config.vhdl" "PoC/src/common/my_project.vhdl" "PoC/src/common/utils.vhdl" "PoC/src/common/config.vhdl" "PoC/src/common/strings.vhdl"  "PoC/src/common/vectors.vhdl" "PoC/src/mem/mem.pkg.vhdl" "PoC/src/mem/ocram/ocram_sp.vhdl"  "PoC/src/mem/ocram/ocram.pkg.vhdl"}
 set TOP_MODULE $env(TOP_MODULE)
 
 set timestamp [clock format [clock seconds] -format {%y-%m-%d-%H:%M:%S}]
@@ -14,7 +13,6 @@ set parts [get_parts]
 puts $parts
 
 set PART  xc7z020clg484-1
-
 
 if { $argc != 2 } {
         puts "The script requires two numbers to be input."
@@ -73,7 +71,6 @@ proc reportCriticalPaths { fileName } {
 #read_vhdl -library $TOP_MODULELib [ glob ./Sources/hdl/$TOP_MODULELib/*.vhdl ]         
 
 read_vhdl -vhdl2008 "$VHDL_SRCS"
-read_vhdl -vhdl2008 -library PoC  "$POC_SRCS"
 
 read_xdc "vivado/clock.xdc"
 #synth_design -top $TOP_MODULE -rtl -name rtl_1 

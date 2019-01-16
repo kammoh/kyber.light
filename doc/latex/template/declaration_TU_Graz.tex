@@ -1,0 +1,54 @@
+%%%% Time-stamp: <2017-02-14 16:01:12 vk>
+%% ========================================================================
+%%%% Disclaimer
+%% ========================================================================
+%%
+%% created by
+%%
+%%      Karl Voit, and Matthias Wölbitsch
+%%
+%%
+%% code for the date and signature fields adapted from
+%% http://tex.stackexchange.com/a/20562
+
+
+\newcommand{\textfield}[2]{
+  \vbox{
+    \hsize=#1\kern3cm\hrule\kern1ex
+    \hbox to \hsize{\strut\hfil\footnotesize#2\hfil}
+  }
+}
+
+
+\ifthenelse{\boolean{english_affidavit}}{
+  \section*{Affidavit}
+  I declare that I have authored this thesis independently, that I have
+  not used other than the declared sources/resources, and that I have
+  explicitly indicated all material which has been quoted either
+  literally or by content from the sources used. The text document
+  uploaded to \myacro{TUGRAZ}online is identical to the present master‘s
+  thesis.
+
+  \hbox to \hsize{\textfield{4cm}{Date}\hfil\hfil\textfield{7cm}{Signature}}
+}{
+  \section*{Eidesstattliche Erklärung}
+  \foreignlanguage{ngerman}{%
+    Ich erkläre an Eides statt, dass ich die vorliegende Arbeit
+    selbstständig verfasst, andere als die angegebenen
+    Quellen/Hilfsmittel nicht benutzt, und die den benutzten Quellen
+    wörtlich und inhaltlich entnommenen Stellen als solche kenntlich
+    gemacht habe. Das in \myacro{TUGRAZ}online hochgeladene Textdokument
+    ist mit der vorliegenden Dissertation identisch.}
+
+    \hbox to \hsize{\textfield{4cm}{Datum}\hfil\hfil\textfield{7cm}{Unterschrift}}
+}
+
+\newpage
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% mode: auto-fill
+%%% mode: flyspell
+%%% TeX-master: "../main"
+%%% End:

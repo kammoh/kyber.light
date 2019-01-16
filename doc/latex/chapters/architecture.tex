@@ -1,0 +1,88 @@
+% !TeX root = ./main.tex
+
+\chapter{Architecture}
+
+
+
+
+\section{Polynomial Arithmetic}
+
+blah blah
+
+From the implementation perspective these polynomials are an array 
+of unsigned coefficients. 
+All coefficients are less than q (7681), which means 13 bits.
+Each polynomial has n=255 coefficients.
+
+
+
+\subsection{Polynomial Multiplication}
+
+
+Multiplication over polynomial rings is the most 
+critical operation performed in Lattice based 
+cryptographic schemes.
+
+In Standard or Random lattices the main operation is matrix-vector 
+multiplication. In Ring or Ideal lattices the main operation is
+polynomial multiplication. 
+Module lattices lie somewhere between Standard and Ring lattices.
+The main operation is multiplication of a vector of polynomials with 
+another polynomial.
+
+\section{Number Theoretic Transform}
+Fast Fourier Transform where coefficients are defined in a finite field.
+
+Performing the polynomial multiplications in NTT will transform the 
+polynomial multiplication to a pointwise multiplication. This 
+can reduce the time complexity from quadratic $\mathcal{O}(n^2)$  to quasi-linear ($\mathcal{O}(n\log{}n)$ serial or $\mathcal{O}(\log{}n)$ parallel),
+the NTT and inverse NTT hardware could impose a large area impact 
+on the design.
+
+
+In Kyber all polynomials sent over the channel (Cyphertext and Public Key) are in normal domain.
+
+NTT not needed for area constrained implementation?
+
+Secret key is in NTT domain.
+
+
+While performing the 
+
+\section{Noise Sampling}
+
+- Bernoulli sampling
+- Cumulative Distribution Table (CDT) sampling
+- Knuth
+- Yao sampling
+- Ziggurat sampling
+- Micciancio
+- Walter Gaussian Sampler
+
+
+Gaussian Sampler:
+Used in encryption
+costly
+
+\cite{poppelmann2014a} :
+1: exp() : rejection sampling + Bernoulli trials
+2: rounding-based \cite{devroye1986}
+
+\section{Entropy Expansion?}
+Keccak
+FIPS 202:
+cSHAKE: customizable SHAKE function
+SHAKE-128 
+SHAKE-256
+SHA3-256
+SHA3-512
+
+customizable SHAKE function
+
+Only need Keccak-f1600 permutation
+
+independent streams can be pipelined.
+
+
+
+

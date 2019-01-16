@@ -1,0 +1,47 @@
+%%%% Time-stamp: <2013-02-25 10:52:27 vk>
+%% ========================================================================
+%%%% Disclaimer
+%% ========================================================================
+%%
+%% created by
+%%
+%%      Karl Voit
+%%
+%% using grml GNU/Linux, vim & LaTeX 2e
+
+%% this is a very simple title page using LaTeX maketitle
+
+%% if myaddcolophon is set to "true", colophon is added:
+\ifthenelse{\boolean{myaddcolophon}}{
+  \lowertitleback{
+    \mycolophon
+  }%% end lowertitleback
+}{}
+
+\title{%%
+~\hfill\includegraphics[width=3cm]{figures/institution}\\[5mm] %% a logo at the upper right corner
+\mytitle}
+
+\subtitle{\mysubject}
+
+\author{\myauthor
+  \thanks{\href{http://LaTeX.TUGraz.at}{http://LaTeX.TUGraz.at}}\\
+    \date{\today}
+}
+
+\maketitle
+
+
+%\thispagestyle{empty}  %% no page number, header or footer
+
+
+
+%% vim:foldmethod=expr
+%% vim:fde=getline(v\:lnum)=~'^%%%%\ .\\+'?'>1'\:'='
+%%% Local Variables:
+%%% mode: latex
+%%% mode: auto-fill
+%%% mode: flyspell
+%%% eval: (ispell-change-dictionary "en_US")
+%%% TeX-master: "../main"
+%%% End:

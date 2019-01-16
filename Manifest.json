@@ -91,7 +91,7 @@
 			]
 		},
 		"keccak_mid": {
-			"path": "vhdl/keccak/mid_range_core",
+			"path": "keccak/mid_range_core",
 			"top": "keccak",
 			"tb_top": "keccak_tb",
 			"files": "*.vhd",
@@ -100,13 +100,13 @@
 			],
 			"tb_configs": [
 				{
-					"G_IN_FILE": "vhdl/keccak/test_vectors/Sources/keccak_in.txt",
-					"G_OUT_FILE": "vhdl/keccak/outputs/keccak_out_compact_mid_vhdl.txt"
+					"G_IN_FILE": "keccak/test_vectors/Sources/keccak_in.txt",
+					"G_OUT_FILE": "keccak/outputs/keccak_out_compact_mid_vhdl.txt"
 				}
 			]
 		},
 		"keccak_coproc": {
-			"path": "vhdl/keccak/low_area_coproc",
+			"path": "keccak/low_area_coproc",
 			"top": "keccak_copro",
 			"tb_top": "keccak_coproc_tb",
 			"files": "*.vhd",
@@ -119,7 +119,7 @@
 			"path": "vhdl/Keccak_LW",
 			"top": "keccak",
 			"tb_top": "testbench1",
-			"files": "sources/*.vhd",
+			"files": ["sources/*.vhd", "sources/*.vhdl"],
 			"tb_files": [
 				"tb/testbench1.vhd"
 			]

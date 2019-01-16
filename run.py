@@ -155,20 +155,22 @@ if __name__ == '__main__':
     
     for top_module in modules:
         print(top_module.name, top_module.top, len(top_module.tb_files), top_module.tb_top)
-        if top_module.top and len(top_module.tb_files) > 0 and top_module.tb_top:
+        if top_module.top:
             
             manifest.add_module(vu, top_module, top_module.name + '_lib' )
                     
             if args.synth != None:
                 file_list = manifest.module_files(top_module.name) # FIXME TODO
+                print("file-list: {}".format(file_list))
                 synth_vivado(srcs=file_list , top=top_module.top)
             else:
-                
-
-                    
-                vu.set_sim_option("ghdl.elab_flags", ["-O3"] + ghdl_flags, allow_empty=True)
-                vu.main()
+                if len(top_module.tb_files) > 0 and top_module.tb_top:
+                    vu.set_sim_option("ghdl.elab_flags", ["-O3"] + ghdl_flags, allow_empty=True)
+                    vu.main()
+                else:
+                    logger.warning("top_module: {} does not have tb_files or tb_top set.. skipping".format(top_module.name))
+                    print(top_module.top, len(top_module.tb_files), top_module.tb_top)
         else:
-            logger.warning("top_module: {} does not have tb_files or tb_top set.. skipping".format(top_module.name))
-            print(top_module.top, len(top_module.tb_files), top_module.tb_top)
+             logger.warning("top_module: {} no top.. skipping".format(top_module.name))
+
             

@@ -22,12 +22,12 @@ entity keccak_core is
 		squeeze    : in  std_logic;
 		absorb     : in  std_logic;
 		done       : out std_logic;
-		din        : in  std_logic_vector(C_HALFWORD_WIDTH - 1 downto 0);
+		din_data        : in  std_logic_vector(C_HALFWORD_WIDTH - 1 downto 0);
 		din_valid  : in  std_logic;
 		din_ready  : out std_logic;
 		rate       : in  unsigned(log2ceil(C_SLICE_WIDTH) - 1 downto 0);
 		---- output
-		dout       : out std_logic_vector(C_HALFWORD_WIDTH - 1 downto 0);
+		dout_data       : out std_logic_vector(C_HALFWORD_WIDTH - 1 downto 0);
 		dout_valid : out std_logic;
 		dout_ready : in  std_logic
 	);
@@ -89,8 +89,8 @@ begin
 			in_data_from_mem     => from_mem_dout,
 			out_data_to_mem      => to_mem_din,
 			--
-			din                  => din,
-			dout                 => dout
+			din                  => din_data,
+			dout                 => dout_data
 		);
 
 	state_mem : entity poc.ocram_sp

@@ -1,0 +1,167 @@
+% !TeX root = ./main.tex
+
+\setchapterpreamble[uc][\textwidth]{%
+\dictum[Chirrut Îmwe, \textit{Star Wars}]{%
+\hfill ``The strongest stars have hearts of \emph{Kyber}''}\vskip1.5em}
+
+\chapter{Introduction and Motivation}
+
+Many aspects of our modern life depend on the reliable functionality of cryptographic algorithms. Public Key (assymentric key) cryptography
+ schemes occupy a central role in modern cryptographic applications and with the
+ proliferation of Internet of Things (IoT) devices, their presence is expected to become even more pronounced. \\
+% The change to front
+
+The security of crypto relies on intractability of certain problems to 
+modern computers \cite{moody2017}.
+
+The idea of Quantum Computers has been around for a long time, but it's only in recent years that 
+a broad consensus has emerged on their viability.
+Bold investments from technology giants such as Google, IBM, Microsoft, and Intel as well as  
+ government initiatives herald a not-too-distant future where a quantum computer is able to solve problems
+ which are infeasible [to solve] using digital computers. While this immense power is expected to open new horizons in 
+ many fields, it will also pose a grave threat to the security of currently deployed Public Key schemes. 
+ As formulated by Shor’s algorithm, an adequately powerful quantum computer would be able to solve the underlying hard problems
+ used in public key schemes, such as ``integer factorization''
+   and ``discrete logarithm'', in polynomial time.
+
+
+Cryptographic schemes resistant against quantum computing attacks are known as Post-Quantum Cryptography (PQC)
+ and are being actively studied and evaluated worldwide. In the US, the National Institute of Standards and 
+ Technology (NIST) has organized an evaluation project towards standardizing Post-Quantum
+  Cryptography schemes. During the first round, 23 signature schemes and 59
+   encryption/KEM (Key Encapsulation) schemes were submitted, of which 69 total were deemed complete and
+    proper. 
+    
+    
+  Among the encryption and KEM schemes, those based on Lattices seem the most 
+    promising as they're known to provide a high level of security, with acceptable performance
+     and practical key size. 
+
+    Lattice-based schemes are more versatile than code-based, MQ, and hash-based schemes [cite poppleman 2014]
+
+
+    While there has been large amount of research on theory and security foundations of lattice schemes,
+     implementation aspects of these schemes have only recently been thoroughly evaluated.
+
+
+
+
+
+- PQC run on classical computers.
+- Unlike RSA and ECC there's even no sub-exponential attack on Lattice-based schemes.
+- String security proofs, based on "worst-case" hard problems:..
+
+
+
+
+
+Kyber.PKE\cite{bos2018} is a Public Key Encryption scheme, developed as a part of Crystal Kyber KEM, 
+and is one of the leading candidates among NIST Round 1 submissions in the PKE and KEM category.
+ It’s based on Module Learning With Error (M-LWR) problem and by itself is deemed to have
+  the \textit{indistinguishability under chosen-plaintext attack} (IND-CPA) property. The Public
+   Key Encryption scheme is composed of three basic primitives: Key generation (Gen), 
+   Encryption (Enc), and Decryption (Dec). The Kyber.PKE submission to NIST includes full
+    specifications and a reference C implementation 
+    \cite{kyberres}. High-level data-flow diagrams of
+     the encryption and decryption primitives are provided in Fig \ref{fig:kyper_enc} and \ref{fig:kyper_dec}.
+
+    %  \begin{table}
+    %     \begin{adjustbox}{width=1.2\textwidth,center=\textwidth}
+    %         \rowcolors{2}{lightgray!45}{white}   
+    %         \begin{tabular}{l*{9}{c}}
+    %           \rowcolor{DispositionColor!50}              % Heading with different color to highlight it      
+    %                             & n   & k  & q    & $\eta$ & $(d_u,d_v,d_t)$ & $\delta$ & sec & $|pk|$ in bytes & $|c|$ in bytes \\ 
+    %           \hline
+    %           \textbf{Paranoid} & 255 &  4 & 7681 & 3      & (11, 3, 11)  & $2^{-169}$ & 218 & 1440  & 1536 \\
+    %           \textbf{Light}    & 255 &  2 & 7681 & 5      & (11, 3, 11)  & $2^{-145}$ & 102 & 736  & 832 \\
+    %          \hline
+    %         \end{tabular}
+    %        \end{adjustbox}
+    %     \caption{Kyber Parameter Sets \cite{bos2018} }
+    %     \label{table:params}
+    %     \end{table}
+
+\begin{figure}[h]
+ \includegraphics[width=\textwidth]{../kyber_enc_hl.pdf}
+ \caption{High-level diagram of Kyber.PKE Encryption}
+ \label{fig:kyper_enc}
+\end{figure}
+
+\begin{figure}[h]
+ \includegraphics[width=\textwidth]{../kyber_dec_hl.pdf} 
+ \caption{High-level diagram of Kyber.PKE Decryption}
+ \label{fig:kyper_dec}
+\end{figure}  
+
+This project aims to design and develop an FPGA implementation of Kyper.PKE optimized 
+for area and resource usage. Resilience of the implementation agains timing and power
+ attacks is also a primary design consideration. At the time of this writing, no other
+  published hardware implementations of Kyber seems yet to be available.
+
+  \chapter{Design Entry}
+  The design will be implemented in VHDL 2008 hardware description language. Kyber.PKE 
+  will be implemented as distinct entities: Encryption, Decryption, and Key Generation.
+   The design will follow best coding practices for code readability and will target a 
+   modular design with as much code reuse as possible. Every building block will have 
+   it’s own verification test-bench (through CocoTB) and the completed 3 entities will 
+   as well be verified against the reference implementation.
+
+
+The primary target platform is Xilinx Zynq-7000 FPGA SoCs. The developed design will be
+ tested on a MYIR Z-turn development board which hosts a Zynq-7020 chip. Developed design
+  will be programmed into Zynq’s Programmable Logic (PL) FPGA fabric and accessed through 
+  an AMBA-AXI4 interface by Linux application running on the ARM processors (PS). 
+  Simulations for verification will be primarily done using GHDL free/open-source VHDL
+   simulator.  FPGA synthesis is performed using Vivado. The Integrated Design Environment
+    of choice for the VHDL development is Sigasi Studio.
+
+
+\chapter{Verification}
+Ensuring the correct functionality of the implementation is a primary concern during the 
+development. The design will be developed in a modular fashion accompanying unit-tests 
+and integration tests. Functional verification is performed against the reference 
+software implementation using Python, Cocotb \cite{cocotb}
+ , and GHDL \cite{ghdl}.
+
+ \chapter{Use of other code}
+
+ Bits and pieces from PoC library \cite{poc} as well as other available open-source libraries could be utilized for the design. 
+
+
+A survey of hardware implementation of the required building blocks is under way. Ideas and code will be borrowed from previously published implementations and improved upon 
+ for the purpose of this project.
+
+
+ \chapter{Assumptions}
+
+ The design goals in descending priority:
+ \begin{itemize}
+     \item Area/Resources: measured as the number of used LUT, FF, DSP, and BRAM blocks used as reported by the synthesis tool.
+     \item Resilience to Timing Attacks: constant timing
+     \item Resilience to Simple Power Attacks
+     \item Efficiency: least number of cycles and highest attainable frequency considering all above constraints.  
+ \end{itemize}
+
+ \chapter{Circuit Interface}
+ The interface of the three main entities (Encryption, Decryption, Key Generation) will 
+ be AMBA AXI-Lite which will be accessed both during simulations by CocoTB+GHDL/VCS and 
+ in the FPGA instance by the Linux application running on ARM cores. 
+
+ \chapter{Project Timing}
+
+ \begin{table}
+ \begin{adjustbox}{width=1.2\textwidth,center=\textwidth}
+ \rowcolors{2}{lightgray!45}{white}   
+ \begin{tabular}{|c |l |c|}
+   \rowcolor{DispositionColor!50}              % Heading with different color to highlight it      
+   \textbf{Deadline}  & \textbf{Target} & \textbf{Progress} \\ \hline
+   \textbf{Oct 16-17} & Literature, Logistics & 60\% \\
+   \textbf{Oct 30-31} & Polynomial Arithmetic, Keccak, Verification Suite &  \\
+   \textbf{Nov 13-14} & Gaussian Noise, Integration &  \\
+   \textbf{Nov 27-28} & AXI wrapper, FPGA target, Linux, Board verification  &  \\
+   \hline
+ \end{tabular}
+\end{adjustbox}
+\caption{Project Timing}
+\label{table:schedule}
+\end{table}

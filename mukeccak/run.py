@@ -3,6 +3,7 @@ import os
 import subprocess
 import pathlib
 
+g
 # os.system('ghdl --remove --std=08 --work=PoC --workdir=PoC/PoC/08')
 # os.system('mkdir -p PoC/PoC/08')
 # os.system('rm -rf PoC/PoC/08/*')
@@ -14,8 +15,6 @@ import pathlib
 import tiny_keccak
 import os
 import shutil
-# import edalize
-# from edalize import *
 
 
 poc_srcs = [
@@ -92,4 +91,4 @@ def synth_vivado(srcs, top):
 
 
 
-# synth_vivado(srcs, top)
+synth_vivado(srcs, top)

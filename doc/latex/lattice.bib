@@ -1,0 +1,1219 @@
+
+@inreference{wikip18,
+  langid = {english},
+  title = {Lattice-Based Cryptography},
+  url = {https://en.wikipedia.org/w/index.php?title=Lattice-based_cryptography\\&oldid=849380260},
+  abstract = {Lattice-based cryptography is the generic term for constructions of cryptographic primitives that involve lattices, either in the construction itself or in the security proof. Lattice-based constructions are currently important candidates for post-quantum cryptography.  Unlike more widely used and known public-key schemes such as the RSA, Diffie-Hellman or Elliptic-Curve cryptosystems, which are easily attacked by a quantum computer, some lattice-based constructions appear to be resistant to attack by both classical and quantum computers. Furthermore, many lattice-based constructions are known to be secure under the assumption that certain well-studied computational lattice problems cannot be solved efficiently.},
+  booktitle = {Wikipedia},
+  urldate = {2018-09-17},
+  date = {2018-07-08T15:57:01Z},
+  author = {{Wikipedia Contributors}},
+  file = {/Users/kamyar/Zotero/storage/HZDIDQFW/index.html},
+  note = {Page Version ID: 849380260}
+}
+
+@book{nejat17,
+  title = {Software and {{Hardware Implementation}} of {{Lattice}}-{{Cased Cryptography Schemes}}},
+  abstract = {Advances in computing steadily erode computer security at its foundation, and call for fundamental innovations to strengthen current
+practices in computer security, specifically in applied cryptography, from theory to standardization to actual implementations. At
+the same time, the emergence of new computing paradigms, such as cloud computing, software defined networks and Internet of
+Everything, demands devices to adopt an increasing number of security standards - with a diverse set of cryptographic primitives.
+This in turn calls for innovations in security beyond the foundational aspects, down to the actual design and deployment of such
+primitives and protocols while satisfying conflicting design constraints such as latency, compactness, and energy efficiency.
+The advent of Quantum computing threatens to break many classical cryptographic schemes, leading to innovations in public key
+cryptography that focus on post-quantum cryptography primitives and their protocols that are resistant to quantum computing threats.
+In particular, lattice-based cryptography is a promising post-quantum cryptography family, both in terms of foundational properties,
+as well as its application to both traditional and emerging security problems such as encryption (asymmetric, but also symmetric),
+digital signature, key exchange, homomorphic encryption etc. While such techniques provide guarantees in theory, their realization on
+contemporary computing platforms requires careful design choices and tradeoffs to manage both the diversity of computing platforms
+(e.g., high-performance to resource constrained), as well as agility for deployment in the face of emerging and changing standards.
+In this work we survey trends in lattice-based cryptographic schemes, some fundamental recent proposals for the use of lattices in
+computer security, challenges for their implementation in software and hardware, and emerging needs for their adoption.},
+  date = {2017-11-10},
+  author = {Nejatollahi, Hamid and Cammarota, Rosario and Regazzoni, Francesco and RAY, SANDIP and Banerjee, Indranil and Dutt, Nikil},
+  file = {/Users/kamyar/Zotero/storage/DIAEXQ53/Nejatollahi et al. - 2017 - Software and Hardware Implementation of Lattice-Ca.pdf}
+}
+
+@video{matth,
+  title = {Introduction to {{Lattice Based Cryptography}}},
+  url = {https://www.youtube.com/watch?v=37Ri1jpl5p8},
+  urldate = {2018-09-18},
+  keywords = {crypotgraphy,lattice,learning with error,LWE,public key,quantum computers},
+  director = {{Matthew Dozer}}
+}
+
+@video{micro,
+  title = {Lattice-{{Based Cryptography}}},
+  url = {https://www.youtube.com/watch?v=DmemT_OPn2Q},
+  urldate = {2018-09-18},
+  keywords = {microsoft research},
+  director = {{Microsoft Research}}
+}
+
+@report{dong,
+  title = {Lattice {{Based Cryptography}} for {{Beginners}}},
+  url = {https://eprint.iacr.org/2015/938.pdf},
+  urldate = {2018-09-17},
+  author = {{Dong Pyo Chi} and {Jeong Woon Choi} and {Jeong San Kim} and {Taewan Kim}},
+  file = {/Users/kamyar/Zotero/storage/AW79YT2K/938.pdf}
+}
+
+@inproceedings{howe16,
+  location = {{New York, NY, USA}},
+  title = {Lattice-Based {{Encryption Over Standard Lattices In Hardware}}},
+  isbn = {978-1-4503-4236-0},
+  url = {http://doi.acm.org/10.1145/2897937.2898037},
+  doi = {10.1145/2897937.2898037},
+  abstract = {Lattice-based cryptography has gained credence recently as a replacement for current public-key cryptosystems, due to its quantum-resilience, versatility, and relatively low key sizes. To date, encryption based on the learning with errors (LWE) problem has only been investigated from an ideal lattice standpoint, due to its computation and size efficiencies. However, a thorough investigation of standard lattices in practice has yet to be considered. Standard lattices may be preferred to ideal lattices due to their stronger security assumptions and less restrictive parameter selection process. In this paper, an area-optimised hardware architecture of a standard lattice-based cryptographic scheme is proposed. The design is implemented on a FPGA and it is found that both encryption and decryption fit comfortably on a Spartan-6 FPGA. This is the first hardware architecture for standard lattice-based cryptography reported in the literature to date, and thus is a benchmark for future implementations. Additionally, a revised discrete Gaussian sampler is proposed which is the fastest of its type to date, and also is the first to investigate the cost savings of implementing with λ/2-bits of precision. Performance results are promising compared to the hardware designs of the equivalent ring-LWE scheme, which in addition to providing stronger security proofs; generate 1272 encryptions per second and 4395 decryptions per second.},
+  booktitle = {Proceedings of the 53rd {{Annual Design Automation Conference}}},
+  series = {{{DAC}} '16},
+  publisher = {{ACM}},
+  urldate = {2018-09-18},
+  date = {2016},
+  pages = {162:1--162:6},
+  author = {Howe, J. and Moore, C. and O'Neill, M. and Regazzoni, F. and Güneysu, T. and Beeden, K.},
+  file = {/Users/kamyar/Zotero/storage/8H4THMD3/Howe et al. - 2016 - Lattice-based Encryption Over Standard Lattices In.pdf}
+}
+
+@inproceedings{aysu13,
+  title = {Low-Cost and Area-Efficient {{FPGA}} Implementations of Lattice-Based Cryptography},
+  doi = {10.1109/HST.2013.6581570},
+  abstract = {The interest in lattice-based cryptography is increasing due to its quantum resistance and its provable security under some worst-case hardness assumptions. As this is a relatively new topic, the search for efficient hardware architectures for lattice-based cryptographic building blocks is still an active area of research. We present area optimizations for the most critical and computationally-intensive operation in lattice-based cryptography: polynomial multiplication with the Number Theoretic Transform (NTT). The proposed methods are implemented on an FPGA for polynomial multiplication over the ideal ℤp[x]〈xn+ 1〉. The proposed hardware architectures reduce slice usage, number of utilized memory blocks and total memory accesses by using a simplified address generation, improved memory organization and on-the-fly operand generations. Compared to prior work, with similar performance the proposed hardware architectures can save up to 67\% of occupied slices, 80\% of used memory blocks and 60\% of memory accesses, and can fit into smallest Xilinx Spartan-6 FPGA.},
+  eventtitle = {2013 {{IEEE International Symposium}} on {{Hardware}}-{{Oriented Security}} and {{Trust}} ({{HOST}})},
+  booktitle = {2013 {{IEEE International Symposium}} on {{Hardware}}-{{Oriented Security}} and {{Trust}} ({{HOST}})},
+  date = {2013-06},
+  pages = {81-86},
+  keywords = {Security,cryptography,field programmable gate arrays,optimisation,area-efficient FPGA implementation,Clocks,Control systems,Decision support systems,FPGA,hardware architectures,ideal lattices,lattice-based cryptographic building block,Lattice-based cryptography,low-cost FPGA implementation,memory blocks,memory organization,NTT,number theoretic transform,Number Theoretic Transform,on-the-fly operand generations,polynomial multiplication,polynomials,quantum resistance,simplified address generation,total memory accesses,worst-case hardness assumptions,Xilinx Spartan-6 FPGA},
+  author = {Aysu, A. and Patterson, C. and Schaumont, P.},
+  file = {/Users/kamyar/Zotero/storage/J4N6Y2CB/Aysu et al. - 2013 - Low-cost and area-efficient FPGA implementations o.pdf;/Users/kamyar/Zotero/storage/2FDA5TE8/6581570.html}
+}
+
+@inproceedings{gyorf13,
+  title = {Implementing {{Modular FFTs}} in {{FPGAs}} – {{A Basic Block}} for {{Lattice}}-{{Based Cryptography}}},
+  doi = {10.1109/DSD.2013.136},
+  abstract = {Modular FFTs are essential primitives in many application fields. This paper explores the improvements that can be obtained through the use of an FPGA device for implementing modular FFTs. Although the architectural study presented in this paper is generic, the implementation has been particularized for the field of Lattice-based Cryptography, which uses modular FFTs. We present three main FPGA implementation variants for a modular FFT and perform a thorough scalability analysis for the parameters set proposed in the literature so far for the SWIFFT(X) hash function (an FFT of order 64 on Z257).},
+  eventtitle = {2013 {{Euromicro Conference}} on {{Digital System Design}}},
+  booktitle = {2013 {{Euromicro Conference}} on {{Digital System Design}}},
+  date = {2013-09},
+  pages = {305-308},
+  keywords = {Computer architecture,Hardware,cryptography,field programmable gate arrays,Throughput,Cryptography,lattice-based cryptography,Clocks,Adders,diminished-one representation,distributed arithmetic,fast Fourier transform,fast Fourier transforms,FFT,FPGA device,modular arithmetics,modular FFT,Polynomials,scalability analysis,serial distributed arithmetic,SWIFFT(X) hash function},
+  author = {Györfi, T. and Cret, O. and Borsos, Z.},
+  file = {/Users/kamyar/Zotero/storage/GFGA3FDR/Györfi et al. - 2013 - Implementing Modular FFTs in FPGAs – A Basic Block.pdf;/Users/kamyar/Zotero/storage/ZGXC3UTV/6628294.html}
+}
+
+@inproceedings{dongs17,
+  title = {Area-Optimized {{Lattice}}-Based Cryptographic Processor for Constrained Devices},
+  doi = {10.1109/MWSCAS.2017.8052914},
+  abstract = {Lattice-based cryptography has been widely researched due to its quantum attack resistance and versatility, but a practical hardware implementation that is suitable for constrained devices is still challenging. In this paper, a novel area-optimized Ring-LWE (Learning with Error) cryptographic processor is proposed. Effective structures are presented to solve the huge circuit consumption of high precision Gaussian sampling and modular multiplication in Ring-LWE public-key cryptosystem. The Ring-LWE processor is smaller than the current state of the art hardware implementations, occupying only 948 slices, 3 BRAMs and none DSP module on a Xilinx Spartan-6 FPGA. Additionally, this processor is designed with resistance to side-channel attack, while it can encrypt/decrypt 256-bit message in 1.4ms/0.4ms.},
+  eventtitle = {2017 {{IEEE}} 60th {{International Midwest Symposium}} on {{Circuits}} and {{Systems}} ({{MWSCAS}})},
+  booktitle = {2017 {{IEEE}} 60th {{International Midwest Symposium}} on {{Circuits}} and {{Systems}} ({{MWSCAS}})},
+  date = {2017-08},
+  pages = {277-280},
+  keywords = {Hardware,field programmable gate arrays,Table lookup,side-channel attack,Encryption,Lattice-based cryptography,Xilinx Spartan-6 FPGA,Gaussian processes,public key cryptography,area-optimized Lattice,area-optimized ring-LWE cryptographic processor,BRAM,Ciphers,circuit consumption,circuit optimisation,constrained devices,digital signal processing chips,Gaussian sampling,hardware implementation,Learning with Error,modular multiplication,Public key cryptography,public-key cryptosystem,quantum attack resistance,Ring-LWE},
+  author = {Dongsheng, L. and Cong, Z. and Hui, L.},
+  file = {/Users/kamyar/Zotero/storage/AFQZXMVY/Dongsheng et al. - 2017 - Area-optimized Lattice-based cryptographic process.pdf;/Users/kamyar/Zotero/storage/DIY5YWSM/8052914.html}
+}
+
+@inproceedings{poppe14,
+  langid = {english},
+  title = {Towards {{Practical Lattice}}-{{Based Public}}-{{Key Encryption}} on {{Reconfigurable Hardware}}},
+  isbn = {978-3-662-43414-7},
+  abstract = {With this work we provide further evidence that lattice-based cryptography is a promising and efficient alternative to secure embedded applications. So far it is known for solid security reductions but implementations of specific instances have often been reported to be too complex beyond any practicability. In this work, we present an efficient and scalable micro-code engine for Ring-LWE encryption that combines polynomial multiplication based on the Number Theoretic Transform (NTT), polynomial addition, subtraction, and Gaussian sampling in a single unit. This unit can encrypt and decrypt a block in 26.19 µs and 16.80 µs on a Virtex-6 LX75T FPGA, respectively – at moderate resource requirements of about 1506 slices and a few block RAMs. Additionally, we provide solutions for several practical issues with Ring-LWE encryption, including the reduction of ciphertext expansion, error rate and constant-time operation. We hope that this contribution helps to pave the way for the deployment of ideal lattice-based encryption in future real-world systems.},
+  booktitle = {Selected {{Areas}} in {{Cryptography}} -- {{SAC}} 2013},
+  series = {Lecture {{Notes}} in {{Computer Science}}},
+  publisher = {{Springer Berlin Heidelberg}},
+  date = {2014},
+  pages = {68-85},
+  keywords = {Ring-LWE,FPGA implementation,Ideal lattices},
+  author = {Pöppelmann, Thomas and Güneysu, Tim},
+  editor = {Lange, Tanja and Lauter, Kristin and Lisoněk, Petr},
+  file = {/Users/kamyar/Zotero/storage/GL54FEI7/Pöppelmann and Güneysu - 2014 - Towards Practical Lattice-Based Public-Key Encrypt.pdf}
+}
+
+@inproceedings{tsai15,
+  title = {A 1.96mm\^2 Low-Latency Multi-Mode Crypto-Coprocessor for {{PKC}}-Based {{IoT}} Security Protocols},
+  doi = {10.1109/ISCAS.2015.7168763},
+  abstract = {In this paper, we present the implementation of a multi-mode crypto-coprocessor, which can support three different public-key cryptography (PKC) engines (NTRU, TTS, Pairing) used in post-quantum and identity-based cryptosystems. The PKC-based security protocols are more energy-efficient because they usually require less communication overhead than symmetric-key-based counterparts. In this work, we propose the first-of-its-kind tri-mode PKC coprocessor for secured data transmission in Internet-of-Things (IoT) systems. For the purpose of low energy consumption, the crypto-coprocessor incorporates three design features, including 1) specialized instruction set for the multi-mode cryptosystems, 2) a highly parallel arithmetic unit for cryptographic kernel operations, and 3) a smart scheduling unit with intelligent control mechanism. By utilizing the parallel arithmetic unit, the proposed crypto-coprocessor can achieve about 50\% speed up. Meanwhile, the smart scheduling unit can save up to 18\% of the total latency. The crypto-coprocessor was implemented with AHB interface in TSMC 90nm CMOS technology, and the die size is only 1.96 mm\textsuperscript{2}. Furthermore, our chip is integrated with an ARM-based system-on-chip (SoC) platform for functional verification.},
+  eventtitle = {2015 {{IEEE International Symposium}} on {{Circuits}} and {{Systems}} ({{ISCAS}})},
+  booktitle = {2015 {{IEEE International Symposium}} on {{Circuits}} and {{Systems}} ({{ISCAS}})},
+  date = {2015-05},
+  pages = {834-837},
+  keywords = {Computer architecture,Engines,public key cryptography,Polynomials,CMOS integrated circuits,CMOS technology,coprocessors,crypto-coprocessor,cryptographic kernel operations,cryptographic protocols,Elliptic curve cryptography,functional verification,highly parallel arithmetic unit,identity based cryptosystems,intelligent control mechanism,Internet of Things,Internet-of-Things systems,IoT,IoT security protocols,IoT systems,multimode cryptocoprocessor,parallel arithmetic unit,PKC based security protocols,PKC coprocessor,PKC engines,post quantum cryptosystems,Public-key cryptography,secured data transmission,smart scheduling unit,SoC,SoC platform,symmetric key based counterparts,system-on-chip,System-on-chip},
+  author = {Tsai, C. and Hsiao, M. and Shen, W. and Wu, A. A. and Cheng, C.},
+  file = {/Users/kamyar/Zotero/storage/YMX9NJTH/Tsai et al. - 2015 - A 1.96mm lt\;sup gt\;2 lt\;sup gt\; low-latency multi.pdf;/Users/kamyar/Zotero/storage/8USEH2AK/7168763.html}
+}
+
+@article{guney15,
+  title = {Lattice-{{Based Signatures}}: {{Optimization}} and {{Implementation}} on {{Reconfigurable Hardware}}},
+  volume = {64},
+  issn = {0018-9340},
+  doi = {10.1109/TC.2014.2346177},
+  shorttitle = {Lattice-{{Based Signatures}}},
+  abstract = {Nearly all of the currently used signature schemes, such as RSA or DSA, are based either on the factoring assumption or the presumed intractability of the discrete logarithm problem. As a consequence, the appearance of quantum computers or algorithmic advances on these problems may lead to the unpleasant situation that a large number of today's schemes will most likely need to be replaced with more secure alternatives. In this work we present such an alternative-an efficient signature scheme whose security is derived from the hardness of lattice problems. It is based on recent theoretical advances in lattice-based cryptography and is highly optimized for practicability and use in embedded systems. The public and secret keys are roughly 1.5 kB and 0.3 kB long, while the signature size is approximately 1.1 kB for a security level of around 80 bits. We provide implementation results on reconfigurable hardware (Spartan/Virtex-6) and demonstrate that the scheme is scalable, has low area consumption, and even outperforms classical schemes.},
+  number = {7},
+  journaltitle = {IEEE Transactions on Computers},
+  date = {2015-07},
+  pages = {1954-1967},
+  keywords = {Hardware,cryptography,Optimization,lattice-based cryptography,Lattices,FPGA,ideal lattices,reconfigurable hardware,Polynomials,digital signatures,discrete logarithm problem,lattice-based signatures,Public key,Public key cryptosystems,signature scheme},
+  author = {Güneysu, T. and Lyubashevsky, V. and Pöppelmann, T.},
+  file = {/Users/kamyar/Zotero/storage/XGQRPGVI/Güneysu et al. - 2015 - Lattice-Based Signatures Optimization and Impleme.pdf;/Users/kamyar/Zotero/storage/VREUR5RL/6873291.html}
+}
+
+@inproceedings{aysu18a,
+  title = {Binary {{Ring}}-{{LWE}} Hardware with Power Side-Channel Countermeasures},
+  doi = {10.23919/DATE.2018.8342207},
+  abstract = {We describe the first hardware implementation of a quantum-secure encryption scheme along with its low-cost power side-channel countermeasures. The encryption uses an implementation-friendly Binary-Ring-Learning-with-Errors (B-RLWE) problem with binary errors that can be efficiently generated in hardware. We demonstrate that a direct implementation of B-RLWE exhibits vulnerability to power side-channel attacks, even to Simple Power Analysis, due to the nature of binary coefficients. We mitigate this vulnerability with a redundant addition and memory update. To further protect against Differential Power Analysis (DPA), we use a B-RLWE specific opportunity to construct a lightweight yet effective countermeasure based on randomization of intermediate states and masked threshold decoding. On a SAKURA-G FPGA board, we show that our method increases the required number of measurements for DPA attacks by 40 χ compared to unprotected design. Our results also quantify the trade-off between side-channel security and hardware area-cost of B-RLWE.},
+  eventtitle = {2018 {{Design}}, {{Automation Test}} in {{Europe Conference Exhibition}} ({{DATE}})},
+  booktitle = {2018 {{Design}}, {{Automation Test}} in {{Europe Conference Exhibition}} ({{DATE}})},
+  date = {2018-03},
+  pages = {1253-1258},
+  keywords = {Computer architecture,Hardware,field programmable gate arrays,Side-channel attacks,Encryption,quantum cryptography,Adders,hardware implementation,Public key,B-RLWE problem,B-RLWE specific opportunity,binary coefficients,binary errors,Binary Ring-LWE hardware,Binary-Ring-Learning-with-Errors,decoding,differential power analysis,direct implementation,DPA attacks,low-cost power side-channel countermeasures,memory update,power side-channel attacks,quantum-secure encryption scheme,redundant addition,side-channel security,simple power analysis,telecommunication security},
+  author = {Aysu, A. and Orshansky, M. and Tiwari, M.},
+  file = {/Users/kamyar/Zotero/storage/DFLWQRVP/Aysu et al. - 2018 - Binary Ring-LWE hardware with power side-channel c.pdf;/Users/kamyar/Zotero/storage/LJCCT4NJ/8342207.html}
+}
+
+@incollection{roy14,
+  langid = {english},
+  location = {{Berlin, Heidelberg}},
+  title = {Compact {{Ring}}-{{LWE Cryptoprocessor}}},
+  volume = {8731},
+  isbn = {978-3-662-44708-6 978-3-662-44709-3},
+  url = {http://link.springer.com/10.1007/978-3-662-44709-3_21},
+  abstract = {In this paper we propose an eﬃcient and compact processor for a ring-LWE based encryption scheme. We present three optimizations for the Number Theoretic Transform (NTT) used for polynomial multiplication: we avoid preprocessing in the negative wrapped convolution by merging it with the main algorithm, we reduce the ﬁxed computation cost of the twiddle factors and propose an advanced memory access scheme. These optimization techniques reduce both the cycle and memory requirements. Finally, we also propose an optimization of the ring-LWE encryption system that reduces the number of NTT operations from ﬁve to four resulting in a 20\% speed-up. We use these computational optimizations along with several architectural optimizations to design an instruction-set ring-LWE cryptoprocessor. For dimension 256, our processor performs encryption/decryption operations in 20/9 µs on a Virtex 6 FPGA and only requires 1349 LUTs, 860 FFs, 1 DSP-MULT and 2 BRAMs. Similarly for dimension 512, the processor takes 48/21 µs for performing encryption/decryption operations and only requires 1536 LUTs, 953 FFs, 1 DSP-MULT and 3 BRAMs. Our processors are therefore more than three times smaller than the current state of the art hardware implementations, whilst running somewhat faster.},
+  booktitle = {Cryptographic {{Hardware}} and {{Embedded Systems}} – {{CHES}} 2014},
+  publisher = {{Springer Berlin Heidelberg}},
+  urldate = {2018-09-25},
+  date = {2014},
+  pages = {371-391},
+  author = {Roy, Sujoy Sinha and Vercauteren, Frederik and Mentens, Nele and Chen, Donald Donglong and Verbauwhede, Ingrid},
+  editor = {Batina, Lejla and Robshaw, Matthew},
+  file = {/Users/kamyar/Zotero/storage/2M9EN62U/Roy et al. - 2014 - Compact Ring-LWE Cryptoprocessor.pdf},
+  doi = {10.1007/978-3-662-44709-3_21}
+}
+
+@inproceedings{du16a,
+  title = {Efficient Polynomial Multiplier Architecture for {{Ring}}-{{LWE}} Based Public Key Cryptosystems},
+  doi = {10.1109/ISCAS.2016.7527452},
+  abstract = {The most critical and computationally intensive operation of Ring-LWE based public key cryptosystems is polynomial multiplication. In this paper, we introduce several optimization techniques to speed up polynomial multiplication with the number theoretic transform (NTT). We propose to pre-compute NTT of the constant polynomial to reduce the number of NTT computations. In order to reduce the cost of bit-reverse operation, a optimization technique is introduced to perform it on-the-fly. We also present a technique to improve the utilization rate of the butterfly operator. Moreover, the cancellation lemma is exploited to reduce the required ROM storage. Based on these optimizations, we present a versatile pipelined polynomial multiplication architecture, which takes around (n lg n + 1.5n) clock cycles to calculate the product of two n-degree polynomials. Experimental results on a Spartan-6 FPGA show that our polynomial multiplier achieves a speedup of 2.04 on average and consumes less hardware resources when compared with the state of art of efficient implementation.},
+  eventtitle = {2016 {{IEEE International Symposium}} on {{Circuits}} and {{Systems}} ({{ISCAS}})},
+  booktitle = {2016 {{IEEE International Symposium}} on {{Circuits}} and {{Systems}} ({{ISCAS}})},
+  date = {2016-05},
+  pages = {1162-1165},
+  keywords = {Computer architecture,field programmable gate arrays,optimisation,Optimization,Random access memory,Spartan-6 FPGA,Clocks,number theoretic transform,polynomials,public key cryptography,Public key cryptography,bit-reverse operation,butterfly operator,cancellation lemma,clock cycles,clocks,computationally intensive operation,constant polynomial,multiplying circuits,n-degree polynomials,NTT computations,number theory,optimization technique,polynomial multiplier architecture,read-only storage,ring-LWE based public key cryptosystems,ROM storage,Transforms,versatile pipelined polynomial multiplication architecture},
+  author = {Du, C. and Bai, G.},
+  file = {/Users/kamyar/Zotero/storage/CUDL6UWC/Du and Bai - 2016 - Efficient polynomial multiplier architecture for R.pdf;/Users/kamyar/Zotero/storage/Q9MU4YUZ/7527452.html}
+}
+
+@incollection{albre18,
+  langid = {english},
+  location = {{Cham}},
+  title = {Estimate {{All}} the \{\vphantom\}{{LWE}}, {{NTRU}}\vphantom\{\} {{Schemes}}!},
+  volume = {11035},
+  isbn = {978-3-319-98112-3 978-3-319-98113-0},
+  url = {http://link.springer.com/10.1007/978-3-319-98113-0_19},
+  abstract = {We consider all LWE- and NTRU-based encryption, key encapsulation, and digital signature schemes proposed for standardisation as part of the Post-Quantum Cryptography process run by the US National Institute of Standards and Technology (NIST). In particular, we investigate the impact that diﬀerent estimates for the asymptotic runtime of (block-wise) lattice reduction have on the predicted security of these schemes. Relying on the “LWE estimator” of Albrecht et al., we estimate the cost of running primal and dual lattice attacks against every LWE-based scheme, using every cost model proposed as part of a submission. Furthermore, we estimate the security of the proposed NTRU-based schemes against the primal attack under all cost models for lattice reduction.},
+  booktitle = {Security and {{Cryptography}} for {{Networks}}},
+  publisher = {{Springer International Publishing}},
+  urldate = {2018-10-08},
+  date = {2018},
+  pages = {351-367},
+  author = {Albrecht, Martin R. and Curtis, Benjamin R. and Deo, Amit and Davidson, Alex and Player, Rachel and Postlethwaite, Eamonn W. and Virdia, Fernando and Wunderer, Thomas},
+  editor = {Catalano, Dario and De Prisco, Roberto},
+  file = {/Users/kamyar/Zotero/storage/XWCZTGVU/Albrecht et al. - 2018 - Estimate All the LWE, NTRU Schemes!.pdf},
+  doi = {10.1007/978-3-319-98113-0_19}
+}
+
+@inproceedings{oder16,
+  langid = {english},
+  location = {{Singapore}},
+  title = {Lattice-Based Cryptography: {{From}} Reconfigurable Hardware to {{ASIC}}},
+  isbn = {978-1-4673-9019-4},
+  url = {http://ieeexplore.ieee.org/document/7829689/},
+  doi = {10.1109/ISICIR.2016.7829689},
+  shorttitle = {Lattice-Based Cryptography},
+  abstract = {As progress in technology is predicted to make quantum computers available in the next few decades, it is imperative to design public-key cryptosystems capable of resisting attacks that are perceived to be possible using these new platforms. Lattice-based cryptography is one of the most promising quantum-safe candidates being considered to replace current public-key systems. Thus, it has been extensively evaluated in terms of both hardware and software implementations. However, to date lattice-based hardware designs have only been proposed for reconﬁgurable FPGA devices, leaving ASIC designs unexplored. In this paper, we present and discuss the main challenges and opportunities in implementing lattice-based algorithms on dedicated ASIC devices.},
+  eventtitle = {2016 {{International Symposium}} on {{Integrated Circuits}} ({{ISIC}})},
+  booktitle = {2016 {{International Symposium}} on {{Integrated Circuits}} ({{ISIC}})},
+  publisher = {{IEEE}},
+  urldate = {2018-10-08},
+  date = {2016-12},
+  pages = {1-4},
+  author = {Oder, Tobias and Guneysu, Tim and Valencia, Felipe and Khalid, Ayesha and O'Neill, Maire and Regazzoni, Francesco},
+  file = {/Users/kamyar/Zotero/storage/WJDWWN3W/Oder et al. - 2016 - Lattice-based cryptography From reconfigurable ha.pdf}
+}
+
+@inproceedings{nejat17a,
+  title = {Special Session: Trends, Challenges and Needs for Lattice-Based Cryptography Implementations},
+  doi = {10.1145/3125502.3125559},
+  shorttitle = {Special Session},
+  abstract = {Advances in computing steadily erode computer security at its foundation, calling for fundamental innovations to strengthen the weakening cryptographic primitives and security protocols. At the same time, the emergence of new computing paradigms, such as Cloud Computing and Internet of Everything, demand that innovations in security extend beyond their foundational aspects, to the actual design and deployment of these primitives and protocols while satisfying emerging design constraints such as latency, compactness, energy efficiency, and agility. While many alternatives have been proposed for symmetric key cryptography and related protocols (e.g., lightweight ciphers and authenticated encryption), the alternatives for public key cryptography are limited to post-quantum cryptography primitives and their protocols. In particular, lattice-based cryptography is a promising candidate, both in terms of foundational properties, as well as its application to traditional security problems such as key exchange, digital signature, and encryption/decryption. We summarize trends in lattice-based cryptographic schemes, some fundamental recent proposals for the use of lattices in computer security, challenges for their implementation in software and hardware, and emerging needs.},
+  eventtitle = {2017 {{International Conference}} on {{Hardware}}/{{Software Codesign}} and {{System Synthesis}} ({{CODES}}+{{ISSS}})},
+  booktitle = {2017 {{International Conference}} on {{Hardware}}/{{Software Codesign}} and {{System Synthesis}} ({{CODES}}+{{ISSS}})},
+  date = {2017-10},
+  pages = {1-3},
+  keywords = {Software,Cryptography,Protocols,Computer security,Lattices,Standards,quantum cryptography,public key cryptography,Public key cryptography,Ring-LWE,Ideal lattices,cryptographic protocols,digital signatures,Cloud Computing,computer security,computing paradigms,design constraints,foundational properties,fundamental innovations,Lattice based cryptography,lattice-based cryptography implementations,Post-quantum cryptography,post-quantum cryptography primitives,symmetric key cryptography,weakening cryptographic primitives},
+  author = {Nejatollahi, H. and Dutt, N. and Cammarota, R.},
+  file = {/Users/kamyar/Zotero/storage/RANQIQ3N/Nejatollahi et al. - 2017 - Special session trends, challenges and needs for .pdf;/Users/kamyar/Zotero/storage/J2UNC6YF/8101303.html}
+}
+
+@article{lin18,
+  langid = {english},
+  title = {Design and {{Implementation}} of a {{Lattice}}-{{Based Public}}-{{Key Encryption Scheme}}},
+  volume = {27},
+  issn = {0218-1266, 1793-6454},
+  url = {https://www.worldscientific.com/doi/abs/10.1142/S0218126618502018},
+  doi = {10.1142/S0218126618502018},
+  number = {13},
+  journaltitle = {Journal of Circuits, Systems and Computers},
+  urldate = {2018-10-08},
+  date = {2018-12-15},
+  pages = {1850201},
+  author = {Lin, Hui and Liu, Dongsheng and Zhang, Cong and Dong, Yahui},
+  file = {/Users/kamyar/Zotero/storage/TL67H2SA/Lin et al. - 2018 - Design and Implementation of a Lattice-Based Publi.pdf}
+}
+
+@article{nejat,
+  langid = {english},
+  title = {Domain-Specific {{Accelerators}} for  {{Ideal Lattice}}-Based {{Public Key Protocols}}},
+  abstract = {Post Quantum Lattice-Based Cryptography (LBC) schemes are increasingly gaining attention in traditional and emerging security problems, such as encryption, digital signature, key exchange, homomorphic encryption etc, to address security needs of both short and long-lived devices — due to their foundational properties and ease of implementation. However, LBC schemes induce higher computational demand compared to classic schemes (e.g., DSA, ECDSA) for equivalent security guarantees, making domain-speciﬁc acceleration a viable option for improving security and favor early adoption of LBC schemes by the semiconductor industry. In this paper, we present a workﬂow to explore the design space of domain-speciﬁc accelerators for LBC schemes, to target a diverse set of host devices, from resource-constrained IoT devices to high-performance computing platforms. We present design exploration results on workloads executing NewHope and BLISSB-I schemes accelerated by our domain-speciﬁc accelerators, with respect to a baseline without acceleration. We show that achieved performance with acceleration makes the execution of NewHope and BLISSB-I comparable to classic key exchange and digital signature schemes while retaining some form of general purpose programmability. In addition to 44\% and 67\% improvement in energy-delay product (EDP), we enhance performance (cycles) of the sign and verify steps in BLISSB-I schemes by 24\% and 47\%, respectively. Performance (EDP) improvement of server and client side of the NewHope key exchange is improved by 37\% and 33\% (52\% and 48\%), demonstrating the utility of the design space exploration framework.},
+  pages = {16},
+  author = {Nejatollahi, Hamid and Dutt, Nikil and Banerjee, Indranil and Cammarota, Rosario},
+  file = {/Users/kamyar/Zotero/storage/U2X2H6TT/Nejatollahi et al. - Domain-specific Accelerators for  Ideal Lattice-ba.pdf}
+}
+
+@inproceedings{bian18,
+  title = {{{DWE}}: {{Decrypting Learning}} with {{Errors}} with {{Errors}}},
+  doi = {10.1109/DAC.2018.8465870},
+  shorttitle = {{{DWE}}},
+  abstract = {The Learning with Errors (LWE) problem is a novel foundation of a variety of cryptographic applications, including quantumly-secure public-key encryption, digital signature, and fully homomorphic encryption. In this work, we propose an approximate decryption technique for LWE-based cryptosystems. Based on the fact that the decryption process for such systems is inherently approximate, we apply hardware-based approximate computing techniques. Rigorous experiments have shown that the proposed technique simultaneously achieved 1.3× (resp., 2.5×) speed increase, 2.06× (resp., 7.89×) area reduction, 20.5\% (resp., 4×) of power reduction, and an average of 27.1\% (resp., 65.6\%) ciphertext size reduction for public-key encryption scheme (resp., a state-of-the-art fully homomorphic encryption scheme).},
+  eventtitle = {2018 55th {{ACM}}/{{ESDA}}/{{IEEE Design Automation Conference}} ({{DAC}})},
+  booktitle = {2018 55th {{ACM}}/{{ESDA}}/{{IEEE Design Automation Conference}} ({{DAC}})},
+  date = {2018-06},
+  pages = {1-6},
+  keywords = {Hardware,Encryption,Lattices,Standards,Approximation algorithms},
+  author = {Bian, S. and Hiromoto, M. and Sato, T.},
+  file = {/Users/kamyar/Zotero/storage/SZ2WKD5G/Bian et al. - 2018 - DWE Decrypting Learning with Errors with Errors.pdf;/Users/kamyar/Zotero/storage/3GTFXQAK/8465870.html}
+}
+
+@inproceedings{aysu18,
+  title = {Horizontal Side-Channel Vulnerabilities of Post-Quantum Key Exchange Protocols},
+  doi = {10.1109/HST.2018.8383894},
+  abstract = {The following topics are dealt with: field programmable gate arrays; reverse engineering; logic design; Internet of Things; learning (artificial intelligence); invasive software; security of data; cryptographic protocols; and integrated circuit design.},
+  eventtitle = {2018 {{IEEE International Symposium}} on {{Hardware Oriented Security}} and {{Trust}} ({{HOST}})},
+  booktitle = {2018 {{IEEE International Symposium}} on {{Hardware Oriented Security}} and {{Trust}} ({{HOST}})},
+  date = {2018-04},
+  pages = {81-88},
+  keywords = {Hardware,integrated circuit design,logic design,security of data,reverse engineering,field programmable gate arrays,Protocols,Side-channel attacks,Lattices,cryptographic protocols,Internet of Things,Public key,Correlation,invasive software,learning (artificial intelligence),Power measurement},
+  author = {Aysu, A. and Tobah, Y. and Tiwari, M. and Gerstlauer, A. and Orshansky, M.},
+  file = {/Users/kamyar/Zotero/storage/SKYB3VPR/Aysu et al. - 2018 - Horizontal side-channel vulnerabilities of post-qu.pdf;/Users/kamyar/Zotero/storage/FGC8U2B7/8383894.html}
+}
+
+@report{nejat18,
+  title = {Domain-Specific {{Accelerators}} for {{Ideal Lattice}}-Based {{Public Key Protocols}}},
+  url = {https://eprint.iacr.org/2018/608},
+  abstract = {Post Quantum Lattice-Based Cryptography (LBC) schemes are increasingly gaining attention in traditional and emerging security problems, such as encryption, digital signature, key exchange, homomorphic encryption etc, to address security needs of both short and long-lived devices — due to their foundational properties and ease of implementation. However, LBC schemes induce higher computational demand compared to classic schemes (e.g., DSA, ECDSA) for equivalent security guarantees, making domain-specific acceleration a viable option for improving security and favor early adoption of LBC schemes by the semiconductor industry. In this paper, we present a workflow to explore the design space of domain-specific accelerators for LBC schemes, to target a diverse set of host devices, from resource-constrained IoT devices to high-performance computing platforms. We present design exploration results on workloads executing NewHope and BLISSB-I schemes accelerated by our domain-specific accelerators, with respect to a baseline without acceleration. We show that achieved performance with acceleration makes the execution of NewHope and BLISSB-I comparable to classic key exchange and digital signature schemes while retaining some form of general purpose programmability. In addition to 44\% and 67\% improvement in energy-delay product (EDP), we enhance performance (cycles) of the sign and verify steps in BLISSB-I schemes by 24\% and 47\%, respectively. Performance (EDP) improvement of server and client side of the NewHope key exchange is improved by 37\% and 33\% (52\% and 48\%), demonstrating the utility of the design space exploration framework.},
+  number = {608},
+  urldate = {2018-10-08},
+  date = {2018},
+  keywords = {Post-quantum Cryptography; Lattice-based Cryptography;  Ideal Lattices; Key Exchange; Digital Signature; System on Chip; Domain Specific Acceleration; Cache Architecture,Public Key Cryptography},
+  author = {Nejatollahi, Hamid and Dutt, Nikil and Banerjee, Indranil and Cammarota, Rosario},
+  file = {/Users/kamyar/Zotero/storage/HG3CS3IM/Nejatollahi et al. - 2018 - Domain-specific Accelerators for Ideal Lattice-bas.pdf;/Users/kamyar/Zotero/storage/MZ6QS3PX/608.html}
+}
+
+@article{baner,
+  langid = {english},
+  title = {Energy {{Consumption}} of {{Candidate Algorithms}} for {{NIST PQC Standards}}},
+  volume = {26},
+  pages = {13},
+  author = {Banerjee, Tanushree and Hasan, M Anwar},
+  file = {/Users/kamyar/Zotero/storage/DNF3PK2W/Banerjee and Hasan - Energy Consumption of Candidate Algorithms for NIS.pdf}
+}
+
+@inproceedings{wang18,
+  langid = {english},
+  title = {{{FPGA}}-{{Based Niederreiter Cryptosystem Using Binary Goppa Codes}}},
+  isbn = {978-3-319-79063-3},
+  abstract = {This paper presents an FPGA implementation of the Niederreiter cryptosystem using binary Goppa codes, including modules for encryption, decryption, and key generation. We improve over previous implementations in terms of efficiency (time-area product and raw performance) and security level. Our implementation is constant time in order to protect against timing side-channel analysis. The design is fully parameterized, using code-generation scripts, in order to support a wide range of parameter choices for security, including binary field size, the degree of the Goppa polynomial, and the code length. The parameterized design allows us to choose design parameters for time-area trade-offs in order to support a wide variety of applications ranging from smart cards to server accelerators. For parameters that are considered to provide “128-bit post-quantum security”, our time-optimized implementation requires 966,400 cycles for the generation of both public and private portions of a key and 14,291 cycles to decrypt a ciphertext. The time-optimized design uses only 121,806 ALMs (52\% of the available logic) and 961 RAM blocks (38\% of the available memory), and results in a design that runs at about 250 MHz on a medium-size Stratix V FPGA.},
+  booktitle = {Post-{{Quantum Cryptography}}},
+  series = {Lecture {{Notes}} in {{Computer Science}}},
+  publisher = {{Springer International Publishing}},
+  date = {2018},
+  pages = {77-98},
+  keywords = {FPGA,Hardware implementation,Code-based cryptography,Niederreiter cryptosystem,Post-Quantum Cryptography},
+  author = {Wang, Wen and Szefer, Jakub and Niederhagen, Ruben},
+  editor = {Lange, Tanja and Steinwandt, Rainer},
+  file = {/Users/kamyar/Zotero/storage/D3CWXWFP/Wang et al. - 2018 - FPGA-Based Niederreiter Cryptosystem Using Binary .pdf}
+}
+
+@inreference{18l,
+  langid = {english},
+  title = {Ciphertext Indistinguishability},
+  url = {https://en.wikipedia.org/w/index.php?title=Ciphertext_indistinguishability\\&oldid=862779954},
+  abstract = {Ciphertext indistinguishability is a property of many encryption schemes. Intuitively, if a cryptosystem possesses the property of indistinguishability, then an adversary will be unable to distinguish pairs of ciphertexts based on the message they encrypt. The property of indistinguishability under chosen plaintext attack is considered a basic requirement for most provably secure public key cryptosystems, though some schemes also provide indistinguishability under chosen ciphertext attack and adaptive chosen ciphertext attack. Indistinguishability under chosen plaintext attack is equivalent to the property of semantic security, and many cryptographic proofs use these definitions interchangeably.
+A cryptosystem is considered secure in terms of indistinguishability if no adversary, given an encryption of a message randomly chosen from a two-element message space determined by the adversary, can identify the message choice with probability significantly better than that of random guessing (\mbox{}1⁄2). If any adversary can succeed in distinguishing the chosen ciphertext with a probability significantly greater than \mbox{}1⁄2, then this adversary is considered to have an "advantage" in distinguishing the ciphertext, and the scheme is not considered secure in terms of indistinguishability. This definition encompasses the notion that in a secure scheme, the adversary should learn no information from seeing a ciphertext. Therefore, the adversary should be able to do no better than if it guessed randomly.},
+  booktitle = {Wikipedia},
+  urldate = {2018-10-08},
+  date = {2018-10-06T17:17:05Z},
+  file = {/Users/kamyar/Zotero/storage/V5MQNTU3/index.html},
+  note = {Page Version ID: 862779954}
+}
+
+@inreference{18m,
+  langid = {english},
+  title = {Post-{{Quantum Cryptography Standardization}}},
+  url = {https://en.wikipedia.org/w/index.php?title=Post-Quantum_Cryptography_Standardization\\&oldid=859375253},
+  abstract = {Post-Quantum Cryptography Standardization is a project by NIST to standardize post-quantum cryptography. 23 signature schemes were submitted, 59 encryption/KEM schemes were submitted by the initial submission deadline at the end of 2017, of which 69 total were deemed complete and proper.
+Under consideration are:},
+  booktitle = {Wikipedia},
+  urldate = {2018-10-08},
+  date = {2018-09-13T17:04:49Z},
+  file = {/Users/kamyar/Zotero/storage/HNXLRP2L/index.html},
+  note = {Page Version ID: 859375253}
+}
+
+@online{zotero-2259,
+  langid = {american},
+  title = {Post-{{Quantum Crypto Lounge}} – {{SAFEcrypto}}},
+  url = {https://www.safecrypto.eu/pqclounge/},
+  urldate = {2018-10-08},
+  file = {/Users/kamyar/Zotero/storage/LPMNACL6/pqclounge.html}
+}
+
+@online{zotero-2261,
+  title = {Estimate All the \{\vphantom\}{{LWE}}, {{NTRU}}\vphantom\{\} Schemes!},
+  url = {https://estimate-all-the-lwe-ntru-schemes.github.io/docs/},
+  urldate = {2018-10-08},
+  file = {/Users/kamyar/Zotero/storage/YS9TEXST/docs.html}
+}
+
+@online{zotero-2263,
+  title = {Measurements of Key-Encapsulation Mechanisms, Indexed by Machine},
+  url = {https://bench.cr.yp.to/results-kem.html#amd64-titan0},
+  urldate = {2018-10-08},
+  file = {/Users/kamyar/Zotero/storage/Q2SFACBW/results-kem.html}
+}
+
+@inproceedings{gotte12a,
+  langid = {english},
+  title = {On the {{Design}} of {{Hardware Building Blocks}} for {{Modern Lattice}}-{{Based Encryption Schemes}}},
+  isbn = {978-3-642-33027-8},
+  abstract = {We present both a hardware and a software implementation variant of the learning with errors (LWE) based cryptosystem presented by Lindner and Peikert. This work helps in assessing the practicality of lattice-based encryption. For the software implementation, we give a comparison between a matrix and polynomial based variant of the LWE scheme. This module includes multiplication in polynomial rings using Fast Fourier Transform (FFT). In order to implement lattice-based cryptography in an efficient way, it is crucial to apply the systems over polynomial rings. FFT speeds up multiplication in polynomial rings, which is the most critical operation in lattice-based cryptography, from quadratic to quasi-linear runtime. For the hardware variant, we show how this fundamental building block of lattice-based cryptography can be implemented and evaluated in terms of performance. A second important component for lattice-based cryptosystems is the sampling from discrete Gaussian distributions. We examine three different variants for sampling Gaussian distributed integers, namely rejection sampling, a rounding based approach, and a look-up table based approach in hardware.},
+  booktitle = {Cryptographic {{Hardware}} and {{Embedded Systems}} – {{CHES}} 2012},
+  series = {Lecture {{Notes}} in {{Computer Science}}},
+  publisher = {{Springer Berlin Heidelberg}},
+  date = {2012},
+  pages = {512-529},
+  keywords = {Hardware,LWE,FPGA,Lattice-Based Encryption},
+  author = {Göttert, Norman and Feller, Thomas and Schneider, Michael and Buchmann, Johannes and Huss, Sorin},
+  editor = {Prouff, Emmanuel and Schaumont, Patrick},
+  file = {/Users/kamyar/Zotero/storage/2H3M4E4Z/Göttert et al. - 2012 - On the Design of Hardware Building Blocks for Mode.pdf}
+}
+
+@inproceedings{bos18,
+  langid = {english},
+  location = {{London}},
+  title = {{{CRYSTALS}} - {{Kyber}}: {{A CCA}}-{{Secure Module}}-{{Lattice}}-{{Based KEM}}},
+  isbn = {978-1-5386-4228-3},
+  url = {https://ieeexplore.ieee.org/document/8406610/},
+  doi = {10.1109/EuroSP.2018.00032},
+  shorttitle = {{{CRYSTALS}} - {{Kyber}}},
+  abstract = {Rapid advances in quantum computing, together with the announcement by the National Institute of Standards and Technology (NIST) to deﬁne new standards for digitalsignature, encryption, and key-establishment protocols, have created signiﬁcant interest in post-quantum cryptographic schemes.},
+  eventtitle = {2018 {{IEEE European Symposium}} on {{Security}} and {{Privacy}} ({{EuroS}}\&{{P}})},
+  booktitle = {2018 {{IEEE European Symposium}} on {{Security}} and {{Privacy}} ({{EuroS}}\&{{P}})},
+  publisher = {{IEEE}},
+  urldate = {2018-10-09},
+  date = {2018-04},
+  pages = {353-367},
+  author = {Bos, Joppe and Ducas, Leo and Kiltz, Eike and Lepoint, T and Lyubashevsky, Vadim and Schanck, John M. and Schwabe, Peter and Seiler, Gregor and Stehle, Damien},
+  file = {/Users/kamyar/Zotero/storage/PNJHVX38/Bos et al. - 2018 - CRYSTALS - Kyber A CCA-Secure Module-Lattice-Base.pdf}
+}
+
+@article{shari,
+  langid = {english},
+  title = {A {{Generic High}}-{{Speed Hardware Implementation}} of {{NTRUEncrypt SVES}}},
+  abstract = {In this paper, we present a high-speed hardware implementation of NTRUEncrypt Short Vector Encryption Scheme (SVES), fully compliant with the IEEE 1363.1 Standard Specification for Public Key Cryptographic Techniques Based on Hard Problems over Lattices. Our implementation supports two representative parameter sets, ees1087ep1 and ees1499ep1, optimized for speed, which provide security levels of 192 and 256 bits, respectively. Our implementation follows an earlier proposed Post-Quantum Cryptography (PQC) Hardware Application Programming Interface (API), which facilitates its fair comparison with implementations of other PQC schemes, especially those submitted for consideration in the NIST PQC standardization process. The paper contains the detailed flow and block diagrams, timing analysis, as well as results in terms of latency (in clock cycles), maximum clock frequency, and resource utilization in modern high-performance Field Programmable Gate Arrays (FPGAs). Our implementation has demonstrated a hash function bottleneck caused by the sequential nature of SHA-2, as compared to the ability of concurrent execution of multiple lower-level operations during a polynomial multiplication. In order to address this bottleneck, we have proposed the use of a pseudorandom function based on the pipelined AES. Additionally, we have also suggested a method for eliminating the dependence of the execution time on the message size. Our code is intended to be made open-source to speed-up further design-space exploration and benchmarking on multiple hardware platforms.},
+  pages = {20},
+  author = {Sharif, Malik Umar and Lorence, Anthony and Briggs, Kevin and Farahmand, Farnoud and Gaj, Kris},
+  file = {/Users/kamyar/Zotero/storage/RGMH8RQP/Sharif et al. - A Generic High-Speed Hardware Implementation of NT.pdf}
+}
+
+@inproceedings{gaj18,
+  location = {{New York, NY, USA}},
+  title = {Challenges and {{Rewards}} of {{Implementing}} and {{Benchmarking Post}}-{{Quantum Cryptography}} in {{Hardware}}},
+  isbn = {978-1-4503-5724-1},
+  url = {http://doi.acm.org/10.1145/3194554.3194615},
+  doi = {10.1145/3194554.3194615},
+  abstract = {Practical quantum computers have been recently selected as one of 10 breakthrough technologies of 2017 by the MIT Technology Review. Although various fields of human activity, such as chemistry, medicine, and materials science, are likely to be dramatically affected by practical quantum computers, the most likely immediate impact will take place in the area of cryptography and cyber security. As a result of this potential threat, a new field of science has emerged, called Post-Quantum Cryptography (PQC). PQC is devoted to the design and analysis of cryptographic algorithms that are resistant against any known attacks using quantum computers, but by themselves can be implemented using classical computing platforms, based on traditional modern semiconductor technologies. In this paper, we provide an overview and motivation for the PQC, NIST Standardization Effort, cryptographic competitions, and hardware benchmarking of candidates in cryptographic contests. Five major families of PQC schemes, code-, hash-, isogeny-, lattice-, and multivariate-based, are shortly introduced. The challenges of fair and comprehensive hardware benchmarking of PQC submissions are highlighted, together with the possible ways of overcoming these difficulties, such as the use of a common API, development packages, specialized libraries, and high-level synthesis.},
+  booktitle = {Proceedings of the 2018 on {{Great Lakes Symposium}} on {{VLSI}}},
+  series = {{{GLSVLSI}} '18},
+  publisher = {{ACM}},
+  urldate = {2018-10-14},
+  date = {2018},
+  pages = {359--364},
+  keywords = {cryptographic standards,hardware benchmarking,post-quantum cryptography,security primitives},
+  author = {Gaj, Kris},
+  file = {/Users/kamyar/Zotero/storage/GJV93RY2/Gaj - 2018 - Challenges and Rewards of Implementing and Benchma.pdf}
+}
+
+@article{jani18,
+  langid = {english},
+  title = {Evaluating the {{Efficiency}} of {{Physical}} and {{Cryptographic Security Solutions}} for {{Quantum Immune IoT}}},
+  volume = {2},
+  issn = {2410-387X},
+  url = {http://www.mdpi.com/2410-387X/2/1/5},
+  doi = {10.3390/cryptography2010005},
+  abstract = {The threat of quantum-computer-assisted cryptanalysis is forcing the security community to develop new types of security protocols. These solutions must be secure against classical and post-quantum cryptanalysis techniques as well as feasible for all kinds of devices, including energy-restricted Internet of Things (IoT) devices. The quantum immunity can be implemented in the cryptographic layer, e.g., by using recent lattice-based key exchange algorithms NewHope or Frodo, or in the physical layer of wireless communication, by utilizing eavesdropping-resistant secrecy coding techniques. In this study, we explore and compare the feasibility and energy efﬁciency of selected cryptographic layer and physical layer approaches by applying an evaluation approach that is based on simulation and modeling. In particular, we consider NewHope and Frodo key exchange algorithms as well as novel physical layer secrecy coding approach that is based on polar codes. The results reveal that our proposed physical layer implementation is very competitive with respect to the cryptographic solutions, particularly in short-range wireless communication. We also observed that the total energy consumption is unequally divided between transmitting and receiving devices in all the studied approaches. This may be an advantage when designing security architectures for energy-restricted devices.},
+  number = {1},
+  journaltitle = {Cryptography},
+  urldate = {2018-10-14},
+  date = {2018-02-07},
+  pages = {5},
+  author = {{Jani Suomalainen} and {Adrian Kotelba} and {Jari Kreku} and {Sami Lehtonen}},
+  file = {/Users/kamyar/Zotero/storage/9P5V62DX/Jani Suomalainen et al. - 2018 - Evaluating the Efficiency of Physical and Cryptogr.pdf}
+}
+
+@unpublished{zotero-2278,
+  title = {{{AN FPGA STUDY OF LATTICE}}-{{BASED KEY EXCHANGES}}},
+  url = {https://docbox.etsi.org/Workshop/2017/201709_ETSI_IQC_QUANTUMSAFE/TECHNICAL_TRACK/S04_SYSTEM_LEVEL_ISSUES/ENVIETA_FAUX.pdf},
+  urldate = {2018-10-08},
+  file = {/Users/kamyar/Zotero/storage/NHUEUDPT/ENVIETA_FAUX.pdf}
+}
+
+@online{kyberres,
+  title = {Kyber – {{Resources}}},
+  url = {https://pq-crystals.org/kyber/resources.shtml},
+  type = {Text},
+  urldate = {2018-10-16},
+  author = {Schwabe, Peter},
+  file = {/Users/kamyar/Zotero/storage/SQH2FCRY/resources.html}
+}
+
+@online{poc,
+  title = {The {{PoC}}-{{Library Documentation}} — {{The PoC}}-{{Library}} 1.2.0 Documentation},
+  url = {https://poc-library.readthedocs.io/en/release/},
+  urldate = {2018-10-16},
+  file = {/Users/kamyar/Zotero/storage/Z3Z3EM76/release.html}
+}
+
+@online{cocotb,
+  title = {Welcome to {{Cocotb}}’s Documentation! — Cocotb 1.0 Documentation},
+  url = {https://cocotb.readthedocs.io/en/latest/},
+  urldate = {2018-10-16},
+  file = {/Users/kamyar/Zotero/storage/UWQ9ZWZD/latest.html}
+}
+
+@online{ghdl,
+  title = {{{GHDL Documentation}} — {{GHDL}} 0.36-Dev Documentation},
+  url = {https://ghdl.readthedocs.io/en/latest/},
+  urldate = {2018-10-16},
+  file = {/Users/kamyar/Zotero/storage/M6QDE2P3/latest.html}
+}
+
+@inproceedings{poppe14a,
+  title = {Area Optimization of Lightweight Lattice-Based Encryption on Reconfigurable Hardware},
+  doi = {10.1109/ISCAS.2014.6865754},
+  abstract = {Ideal lattice-based cryptography gained significant attraction in the last years due to its versatility, simplicity and performance in implementations. Nevertheless, existing implementations of encryption schemes reported only results trimmed for high-performance what is certainly not sufficient for all applications in practice. To the contrary, in this work we investigate lightweight aspects and suitable parameter sets for Ring-LWE encryption and show optimizations that enable implementations even with very few resources on a reconfigurable hardware device. Despite of this restriction, we still achieve reasonable throughput that is sufficient for many today's and future applications.},
+  eventtitle = {2014 {{IEEE International Symposium}} on {{Circuits}} and {{Systems}} ({{ISCAS}})},
+  booktitle = {2014 {{IEEE International Symposium}} on {{Circuits}} and {{Systems}} ({{ISCAS}})},
+  date = {2014-06},
+  pages = {2796-2799},
+  keywords = {Hardware,cryptography,Digital signal processing,Encryption,Lattices,Polynomials,Elliptic curve cryptography,area optimization,ideal lattice-based cryptography,lightweight lattice-based encryption scheme,reconfigurable hardware device,ring-LWE encryption},
+  author = {Pöppelmann, T. and Güneysu, T.},
+  file = {/Users/kamyar/Zotero/storage/S9I75PNL/Pöppelmann and Güneysu - 2014 - Area optimization of lightweight lattice-based enc.pdf;/Users/kamyar/Zotero/storage/227PH3N6/6865754.html}
+}
+
+@report{homsi16,
+  title = {{{CAESAR Hardware API}}},
+  url = {https://eprint.iacr.org/2016/626},
+  abstract = {In this paper, we define the CAESAR hardware Application Programming Interface (API) for authenticated ciphers. In particular, our API is intended to meet the requirements of all algorithms submitted to the CAESAR competition. The major parts of our specification include: minimum compliance criteria, interface, communication protocol, and timing characteristics supported by the core. All of them have been defined with the goals of guaranteeing (a) compatibility among implementations of the same algorithm by different designers, and (b) fair benchmarking of authenticated ciphers in hardware.},
+  number = {626},
+  urldate = {2018-10-22},
+  date = {2016},
+  keywords = {implementation,benchmarking,API,authenticated cipher,secret-key cryptography},
+  author = {Homsirikamol, Ekawat and Diehl, William and Ferozpuri, Ahmed and Farahmand, Farnoud and Yalla, Panasayya and Kaps, Jens-Peter and Gaj, Kris},
+  file = {/Users/kamyar/Zotero/storage/5GXMVBER/Homsirikamol et al. - 2016 - CAESAR Hardware API.pdf;/Users/kamyar/Zotero/storage/MWMH4JXK/626.html}
+}
+
+@article{gaj,
+  langid = {english},
+  title = {Post-{{Quantum Cryptography}} in {{Reconfigurable Hardware}}: {{Challenges}}, {{Opportunities}}, and {{State}}-of-the-{{Art}}},
+  pages = {2},
+  author = {Gaj, Kris and Ferozpuri, Ahmed and Dang, Viet and Nguyen, Duc and Farahmand, Farnoud and Kaps, Jens-Peter},
+  file = {/Users/kamyar/Zotero/storage/C5P4YGH7/Gaj et al. - Post-Quantum Cryptography in Reconfigurable Hardwa.pdf}
+}
+
+@report{taha15,
+  title = {Implementation {{Attacks}} on {{Post}}-{{Quantum Cryptographic Schemes}}},
+  url = {https://eprint.iacr.org/2015/1083},
+  abstract = {Post-quantum cryptographic schemes have been developed in the last decade in response to the rise of quantum computers. Fortunately, several schemes have been developed with quantum resistance. However, there is very little effort in evaluating and comparing these schemes in the embedded settings. Low cost embedded devices represents a highly-constraint environment that challenges all post-quantum cryptographic schemes. Moreover, there are even fewer efforts in evaluating the security of these schemes against implementation attacks including side-channel and fault attacks. It is commonly accepted that, any embedded cryptographic module that is built without a sound countermeasure, can be easily broken. Therefore, we investigate the question: Are we ready to implement post-quantum cryptographic schemes on embedded systems? We present an exhaustive survey of research efforts in designing embedded modules of post-quantum cryptographic schemes and the efforts in securing these modules against implementation attacks. Unfortunately, the study shows that: we are not ready yet to implement any post-quantum cryptographic scheme in practical embedded systems. There is still a considerable amount of research that needs to be conducted before reaching a satisfactory level of security.},
+  number = {1083},
+  urldate = {2018-10-22},
+  date = {2015},
+  keywords = {implementation,Attacks},
+  author = {Taha, Mostafa and Eisenbarth, Thomas},
+  file = {/Users/kamyar/Zotero/storage/ERMMSLGR/Taha and Eisenbarth - 2015 - Implementation Attacks on Post-Quantum Cryptograph.pdf;/Users/kamyar/Zotero/storage/IXMB6BZ6/1083.html}
+}
+
+@article{feroz,
+  langid = {english},
+  title = {Hardware {{API}} for {{Post}}-{{Quantum Public Key Cryptosystems}}},
+  abstract = {In this paper, we specify the proposed hardware Application Programming Interface (API) for Post-Quantum Public Key Cryptosystems. This new hardware API intends to meet the diverse requirements of Post-Quantum Cryptosystems, and includes: minimum compliance criteria, interface, communication protocol, and the timing characteristics supported by the core. All of them have been deﬁned with the goals of guaranteeing (a) compatibility among implementations of the same algorithm by diﬀerent designers, and (b) fair benchmarking of Post-Quantum Public Key Cryptosystems in hardware. In the rest of this document, we refer to the core compatible with our API as a Post-Quantum Cryptography (PQC) core.},
+  pages = {16},
+  author = {Ferozpuri, Ahmed and Farahmand, Farnoud and Dang, Viet and Sharif, Malik Umar and Kaps, Jens-Peter and Gaj, Kris},
+  file = {/Users/kamyar/Zotero/storage/CLCPZENV/Ferozpuri et al. - Hardware API for Post-Quantum Public Key Cryptosys.pdf}
+}
+
+@article{raffe17,
+  title = {Evaluation of {{Large Integer Multiplication Methods}} on {{Hardware}}},
+  volume = {66},
+  issn = {0018-9340},
+  doi = {10.1109/TC.2017.2677426},
+  abstract = {Multipliers requiring large bit lengths have a major impact on the performance of many applications, such as cryptography, digital signal processing (DSP) and image processing. Novel, optimised designs of large integer multiplication are needed as previous approaches, such as schoolbook multiplication, may not be as feasible due to the large parameter sizes. Parameter bit lengths of up to millions of bits are required for use in cryptography, such as in lattice-based and fully homomorphic encryption (FHE) schemes. This paper presents a comparison of hardware architectures for large integer multiplication. Several multiplication methods and combinations thereof are analysed for suitability in hardware designs, targeting the FPGA platform. In particular, the first hardware architecture combining Karatsuba and Comba multiplication is proposed. Moreover, a hardware complexity analysis is conducted to give results independent of any particular FPGA platform. It is shown that hardware designs of combination multipliers, at a cost of additional hardware resource usage, can offer lower latency compared to individual multiplier designs. Indeed, the proposed novel combination hardware design of the Karatsuba-Comba multiplier offers lowest latency for integers greater than 512 bits. For large multiplicands, greater than 16,384 bits, the hardware complexity analysis indicates that the NTT-Karatsuba-Schoolbook combination is most suitable.},
+  number = {8},
+  journaltitle = {IEEE Transactions on Computers},
+  date = {2017-08},
+  pages = {1369-1382},
+  keywords = {Field programmable gate arrays,Hardware,cryptography,field programmable gate arrays,Encryption,FPGA,hardware architectures,Algorithm design and analysis,combination multipliers,Complexity theory,digital arithmetic,FPGA platform,fully homomorphic encryption,hardware complexity,hardware complexity analysis,hardware designs,hardware resource,integer multiplication methods,integer programming,Karatsuba-Comba multiplier,Large integer multiplication,NTT-Karatsuba-Schoolbook combination,parameter bit lengths,Software algorithms},
+  author = {Rafferty, C. and O’Neill, M. and Hanley, N.},
+  file = {/Users/kamyar/Zotero/storage/FB267QIU/Rafferty et al. - 2017 - Evaluation of Large Integer Multiplication Methods.pdf;/Users/kamyar/Zotero/storage/GQ7FQPTR/7869256.html}
+}
+
+@collection{berns09,
+  langid = {english},
+  location = {{Berlin}},
+  title = {Post-Quantum Cryptography},
+  isbn = {978-3-540-88701-0},
+  pagetotal = {245},
+  publisher = {{Springer}},
+  date = {2009},
+  keywords = {Cryptography,Chiffrement (Informatique),Cryptographie,Data encryption (Computer science)},
+  editor = {Bernstein, Daniel J. and Buchmann, Johannes and Dahmén, Erik},
+  file = {/Users/kamyar/Zotero/storage/HP3KFCAD/Bernstein et al. - 2009 - Post-quantum cryptography.pdf},
+  note = {OCLC: ocn297797507}
+}
+
+@article{hutte,
+  langid = {english},
+  title = {Topics in {{Post}}-{{Quantum Cryptography}}},
+  pages = {23},
+  author = {Huttenhain, Jesko and Wallenborn, Lars},
+  file = {/Users/kamyar/Zotero/storage/96YTXXII/Huttenhain and Wallenborn - Topics in Post-Quantum Cryptography.pdf}
+}
+
+@online{zotero-2316,
+  title = {What Is a "Lattice" in Cryptography?},
+  url = {https://crypto.stackexchange.com/questions/26577/what-is-a-lattice-in-cryptography},
+  journaltitle = {Cryptography Stack Exchange},
+  urldate = {2018-10-24},
+  file = {/Users/kamyar/Zotero/storage/7B5IK45B/what-is-a-lattice-in-cryptography.html}
+}
+
+@report{mayer16,
+  title = {Implementing a {{Toolkit}} for {{Ring}}-{{LWE Based Cryptography}} in {{Arbitrary Cyclotomic Number Fields}}},
+  url = {https://eprint.iacr.org/2016/049},
+  abstract = {Recent research in the field of lattice-based cryptography, especially on the topic of the ring-based primitive ring-LWE, provided efficient and practical ring-based cryptographic schemes, which can compete with more traditional number-theoretic ones. In the case of ring-LWE these cryptographic schemes operated mainly in power-of-two cyclotomics, which vastly restricted the variety of possible applications. Due to the toolkit for ring-LWE of Lyubashevsky, Peikert and Regev, there are now cryptographic schemes that operate in arbitrary cyclotomics, with no loss in their underlying hardness guarantees, and only little loss computational efficiency. Next to some further refinements and explanations of the theory and additional implementation notes, we provide the - as far as we know - first implementation of the toolkit of Lyubashevsky, Peikert and Regev. This includes a complete framework with fast and modular algorithms that can be used to build cryptographic schemes around ring-LWE. Our framework is easy to use, open source and has only little third party dependencies. For demonstration purposes we implemented two public-key cryptographic schemes using our framework. The complete source code is available at https://github.com/CMMayer/Toolkit-for-Ring-LWE.git.},
+  number = {049},
+  urldate = {2018-10-25},
+  date = {2016},
+  keywords = {implementation,applications,lattice-based cryptography,ring-LWE,algebraic number theory,arbitrary cyclotomic number fields,lattices},
+  author = {Mayer, Christoph M.},
+  file = {/Users/kamyar/Zotero/storage/DDSJAJDN/Mayer - 2016 - Implementing a Toolkit for Ring-LWE Based Cryptogr.pdf;/Users/kamyar/Zotero/storage/7QJFQN8X/049.html}
+}
+
+@article{buchm17,
+  title = {Postquantum {{Cryptography}}—{{State}} of the {{Art}}},
+  volume = {15},
+  issn = {1540-7993},
+  doi = {10.1109/MSP.2017.3151326},
+  abstract = {Because of public-key cryptography’s relevance and quantum computers’ increasingly realistic threat to this technology, it’s necessary to come up with practical and secure postquantum cryptography. This special issue aims to present the state of the art and the grand challenges in postquantum cryptography and to discuss the transition of real-world systems to the new technology.},
+  number = {4},
+  journaltitle = {IEEE Security Privacy},
+  date = {2017},
+  pages = {12-13},
+  keywords = {cryptography,Cryptography,security,Computer security,Quantum computing,quantum computing,Public key cryptography,postquantum cryptography,public-key cryptography,Special issues and sections},
+  author = {Buchmann, J. and Lauter, K. and Mosca, M.},
+  file = {/Users/kamyar/Zotero/storage/HPM8TP9S/Buchmann et al. - 2017 - Postquantum Cryptography—State of the Art.pdf;/Users/kamyar/Zotero/storage/U39FHRVJ/8012288.html}
+}
+
+@online{gotte12,
+  langid = {english},
+  title = {On the {{Design}} of {{Hardware Building Blocks}} for {{Modern Lattice}}-{{Based Encryption Schemes}}},
+  url = {/paper/On-the-Design-of-Hardware-Building-Blocks-for-G%C3%B6ttert-Feller/217a90284c0d3d9e5426813593ab87d9c51ff314},
+  abstract = {We present both a hardware and a software implementation variant of the learning with errors (LWE) based cryptosystem presented by Lindner and Peikert. This work helps in assessing the practicality of lattice-based encryption. For the software implementation, we give a comparison between a matrix and polynomial based variant of the LWE scheme. This module includes multiplication in polynomial rings using Fast Fourier Transform (FFT). In order to implement lattice-based cryptography in an efficient way, it is crucial to apply the systems over polynomial rings. FFT speeds up multiplication in polynomial rings, which is the most critical operation in lattice-based cryptography, from quadratic to quasi-linear runtime. For the hardware variant, we show how this fundamental building block of lattice-based cryptography can be implemented and evaluated in terms of performance. A second important component for lattice-based cryptosystems is the sampling from discrete Gaussian distributions. We examine three different variants for sampling Gaussian distributed integers, namely rejection sampling, a rounding based approach, and a look-up table based approach in hardware.},
+  journaltitle = {undefined},
+  urldate = {2018-10-29},
+  date = {2012},
+  author = {Göttert, Norman and Feller, Thomas and Schneider, Michael and Buchmann, Johannes A. and Huss, Sorin A.},
+  file = {/Users/kamyar/Zotero/storage/WLZ7WFXC/Göttert et al. - 2012 - On the Design of Hardware Building Blocks for Mode.pdf;/Users/kamyar/Zotero/storage/AJHK4UXP/217a90284c0d3d9e5426813593ab87d9c51ff314.html}
+}
+
+@book{devro86,
+  langid = {english},
+  location = {{New York}},
+  title = {Non-Uniform Random Variate Generation},
+  isbn = {978-0-387-96305-1 978-3-540-96305-9},
+  pagetotal = {843},
+  publisher = {{Springer}},
+  date = {1986},
+  author = {Devroye, Luc},
+  file = {/Users/kamyar/Zotero/storage/K3HMPNHD/Devroye - 1986 - Non-uniform random variate generation.pdf},
+  note = {OCLC: 13269466}
+}
+
+@article{devro,
+  langid = {english},
+  title = {{{NON}}-{{UNIFORM RANDOM VARIATE GENERATION}}},
+  abstract = {This chapter provides a survey of the main methods in non-uniform random variate generation, and highlights recent research on the subject. Classical paradigms such as inversion, rejection, guide tables, and transformations are reviewed. We provide information on the expected time complexity of various algorithms, before addressing modern topics such as indirectly speciﬁed distributions, random processes, and Markov chain methods.},
+  pages = {39},
+  author = {Devroye, Luc},
+  file = {/Users/kamyar/Zotero/storage/D6HE2ZAQ/Devroye - NON-UNIFORM RANDOM VARIATE GENERATION.pdf}
+}
+
+@article{ducas,
+  langid = {english},
+  title = {Department of {{Mathemathics}}, {{Ege University}}, {{Turkey}}},
+  pages = {22},
+  author = {Ducas, Léo and Pöppelmann, Thomas and Schwabe, Peter},
+  file = {/Users/kamyar/Zotero/storage/FUCZ48RR/Ducas et al. - Department of Mathemathics, Ege University, Turkey.pdf}
+}
+
+@article{alkima,
+  langid = {english},
+  title = {Post-Quantum Key Exchange – a New Hope},
+  abstract = {At IEEE Security \& Privacy 2015, Bos, Costello, Naehrig, and Stebila proposed an instantiation of Peikert’s ring-learning-with-errors–based (Ring-LWE) keyexchange protocol (PQCrypto 2014), together with an implementation integrated into OpenSSL, with the afﬁrmed goal of providing post-quantum security for TLS. In this work we revisit their instantiation and stand-alone implementation. Speciﬁcally, we propose new parameters and a better suited error distribution, analyze the scheme’s hardness against attacks by quantum computers in a conservative way, introduce a new and more efﬁcient error-reconciliation mechanism, and propose a defense against backdoors and all-for-the-price-of-one attacks. By these measures and for the same lattice dimension, we more than double the security parameter, halve the communication overhead, and speed up computation by more than a factor of 8 in a portable C implementation and by more than a factor of 27 in an optimized implementation targeting current Intel CPUs. These speedups are achieved with comprehensive protection against timing attacks.},
+  pages = {18},
+  author = {Alkim, Erdem and Ducas, Léo and Pöppelmann, Thomas and Schwabe, Peter},
+  file = {/Users/kamyar/Zotero/storage/ZV8X3VXB/Alkim et al. - Post-quantum key exchange – a new hope.pdf}
+}
+
+@unpublished{moody17,
+  langid = {english},
+  venue = {{NIST}},
+  title = {The {{Ship}} Has Sailed: {{The NIST Post}}-{{Quantum Crypto}} "{{Competition}}"},
+  url = {https://csrc.nist.gov/CSRC/media/Projects/Post-Quantum-Cryptography/documents/asiacrypt-2017-moody-pqc.pdf},
+  abstract = {NIST Presentation at AsiaCrypt 2017},
+  type = {NIST Presentation at AsiaCrypt 2017},
+  eventtitle = {{{AsiaCrypt}}},
+  date = {2017},
+  author = {Moody, Dustin},
+  file = {/Users/kamyar/Zotero/storage/AW3JE5LA/The Ship has sailed The NIST Post-Quantum Crypto .pdf}
+}
+
+@report{oder16a,
+  title = {Practical {{CCA2}}-{{Secure}} and {{Masked Ring}}-{{LWE Implementation}}},
+  url = {https://eprint.iacr.org/2016/1109},
+  abstract = {During the last years public-key encryption schemes based on the hardness of ring-LWE have gained significant popularity. For real-world security applications assuming strong adversary models, a number of practical issues still need to be addressed. In this work we thus present an instance of ring-LWE encryption that is protected against active attacks (i.e., adaptive chosen-ciphertext attacks) and equipped with countermeasures against side-channel analysis. Our solution is based on a postquantum variant of the Fujisaki-Okamoto (FO) transform combined with provably secure first-order masking. To protect the key and message during decryption, we developed a masked binomial sampler that secures the re-encryption process required by FO. Our work shows that CCA2-secured RLWE-based encryption can be achieved with reasonable performance on constrained devices but also stresses that the required transformation and handling of decryption errors implies a performance overhead that has been overlooked by the community so far. With parameters providing 233 bits of quantum security, our implementation requires 4,176,684 cycles for encryption and 25,640,380 cycles for decryption with masking and hiding countermeasures on a Cortex-M4F. The first-order security of our masked implementation is also practically verified using the non-specific t-test evaluation methodology.},
+  number = {1109},
+  urldate = {2018-10-29},
+  date = {2016},
+  keywords = {implementation,lattice-based cryptography,public-key cryptography,ARM Cortex-M4,CCA2-security,masking,post-qunatum},
+  author = {Oder, Tobias and Schneider, Tobias and Pöppelmann, Thomas and Güneysu, Tim},
+  file = {/Users/kamyar/Zotero/storage/5DR48438/Oder et al. - 2016 - Practical CCA2-Secure and Masked Ring-LWE Implemen.pdf;/Users/kamyar/Zotero/storage/RJXPDSZF/1109.html}
+}
+
+@inproceedings{khali18a,
+  location = {{New York, NY, USA}},
+  title = {Physical {{Protection}} of {{Lattice}}-{{Based Cryptography}}: {{Challenges}} and {{Solutions}}},
+  isbn = {978-1-4503-5724-1},
+  url = {http://doi.acm.org/10.1145/3194554.3194616},
+  doi = {10.1145/3194554.3194616},
+  shorttitle = {Physical {{Protection}} of {{Lattice}}-{{Based Cryptography}}},
+  abstract = {The impending realization of scalable quantum computers will have a significant impact on today's security infrastructure. With the advent of powerful quantum computers public key cryptographic schemes will become vulnerable to Shor's quantum algorithm, undermining the security current communications systems. Post-quantum (or quantum-resistant) cryptography is an active research area, endeavoring to develop novel and quantum resistant public key cryptography. Amongst the various classes of quantum-resistant cryptography schemes, lattice-based cryptography is emerging as one of the most viable options. Its efficient implementation on software and on commodity hardware has already been shown to compete and even excel the performance of current classical security public-key schemes. This work discusses the next step in terms of their practical deployment, i.e., addressing the physical security of lattice-based cryptographic implementations. We survey the state-of-the-art in terms of side channel attacks (SCA), both invasive and passive attacks, and proposed countermeasures. Although the weaknesses exposed have led to countermeasures for these schemes, the cost, practicality and effectiveness of these on multiple implementation platforms, however, remains under-studied.},
+  booktitle = {Proceedings of the 2018 on {{Great Lakes Symposium}} on {{VLSI}}},
+  series = {{{GLSVLSI}} '18},
+  publisher = {{ACM}},
+  urldate = {2018-10-29},
+  date = {2018},
+  pages = {365--370},
+  keywords = {side-channel analysis,lattice-based cryptography,fault-injection attacks,physical security},
+  author = {Khalid, Ayesha and Oder, Tobias and Valencia, Felipe and O' Neill, Maire and Güneysu, Tim and Regazzoni, Francesco},
+  file = {/Users/kamyar/Zotero/storage/Q5EQEKQY/Khalid et al. - 2018 - Physical Protection of Lattice-Based Cryptography.pdf}
+}
+
+@inproceedings{buchm16,
+  location = {{New York, NY, USA}},
+  title = {High-{{Performance}} and {{Lightweight Lattice}}-{{Based Public}}-{{Key Encryption}}},
+  isbn = {978-1-4503-4283-4},
+  url = {http://doi.acm.org/10.1145/2899007.2899011},
+  doi = {10.1145/2899007.2899011},
+  abstract = {In the emerging Internet of Things, lightweight public-key cryptography is an essential component for many cost-efficient security solutions. Since conventional public-key schemes, such as ECC and RSA, remain expensive and energy hungry even after aggressive optimization, this work investigates a possible alternative. In particular, we show the practical potential of replacing the Gaussian noise distribution in the Ring-LWE based encryption scheme by Lindner and Peikert/Lyubashevsky et al. with a binary distribution. When parameters are carefully chosen, our construction is resistant against any state-of-the-art cryptanalytic techniques (e.g., attacks on original Ring-LWE or NTRU) and suitable for low-cost scenarios. In the end, our scheme can enable public-key encryption even on very small and low-cost 8-bit (ATXmega128) and 32-bit (Cortex-M0) microcontrollers.},
+  booktitle = {Proceedings of the {{2Nd ACM International Workshop}} on {{IoT Privacy}}, {{Trust}}, and {{Security}}},
+  series = {{{IoTPTS}} '16},
+  publisher = {{ACM}},
+  urldate = {2018-10-29},
+  date = {2016},
+  pages = {2--9},
+  keywords = {ideal lattices,atxmega,cortex-m0,learning with errors,public-key encryption},
+  author = {Buchmann, Johannes and Göpfert, Florian and Güneysu, Tim and Oder, Tobias and Pöppelmann, Thomas},
+  file = {/Users/kamyar/Zotero/storage/HMP9E8UC/Buchmann et al. - 2016 - High-Performance and Lightweight Lattice-Based Pub.pdf}
+}
+
+@article{repar16,
+  langid = {english},
+  title = {Masking Ring-{{LWE}}},
+  volume = {6},
+  issn = {2190-8516},
+  url = {https://doi.org/10.1007/s13389-016-0126-5},
+  doi = {10.1007/s13389-016-0126-5},
+  abstract = {In this paper, we propose a masking scheme to protect ring-LWE decryption from first-order side-channel attacks. In an unprotected ring-LWE decryption, the recovered plaintext is computed by first performing polynomial arithmetic on the secret key and then decoding the result. We mask the polynomial operations by arithmetically splitting the secret key polynomial into two random shares; the final decoding operation is performed using a new bespoke masked decoder. The outputs of our masked ring-LWE decryption are Boolean shares suitable for derivation of a symmetric key. Thus, the masking scheme keeps all intermediates, including the recovered plaintext, in the masked domain. We have implemented the masking scheme on both hardware and software. On a Xilinx Virtex-II FPGA, the masked ring-LWE processor requires around 2000 LUTs, a 20 \%20 \%20\textasciitilde$\backslash$\% increase in the area with respect to the unprotected architecture. A masked decryption operation takes 7478 cycles, which is only a factor 2.6×2.6×2.6$\backslash$times larger than the unprotected decryption. On a 32-bit ARM Cortex-M4F processor, the masked software implementation costs around 5.2×5.2×5.2$\backslash$times more cycles than the unprotected implementation.},
+  number = {2},
+  journaltitle = {Journal of Cryptographic Engineering},
+  shortjournal = {J Cryptogr Eng},
+  urldate = {2018-10-29},
+  date = {2016-06-01},
+  pages = {139-153},
+  keywords = {Masking,Ring-LWE,DPA,Lattice cryptography},
+  author = {Reparaz, Oscar and Roy, Sujoy Sinha and family=Clercq, given=Ruan, prefix=de, useprefix=true and Vercauteren, Frederik and Verbauwhede, Ingrid}
+}
+
+@incollection{repar15,
+  langid = {english},
+  location = {{Berlin, Heidelberg}},
+  title = {A {{Masked Ring}}-{{LWE Implementation}}},
+  volume = {9293},
+  isbn = {978-3-662-48323-7 978-3-662-48324-4},
+  url = {http://link.springer.com/10.1007/978-3-662-48324-4_34},
+  abstract = {Lattice-based cryptography has been proposed as a postquantum public-key cryptosystem. In this paper, we present a masked ringLWE decryption implementation resistant to ﬁrst-order side-channel attacks. Our solution has the peculiarity that the entire computation is performed in the masked domain. This is achieved thanks to a new, bespoke masked decoder implementation. The output of the ring-LWE decryption are Boolean shares suitable for derivation of a symmetric key. We have implemented a hardware architecture of the masked ring-LWE processor on a Virtex-II FPGA, and have performed side channel analysis to conﬁrm the soundness of our approach. The area of the protected architecture is around 2000 LUTs, a 20\% increase with respect to the unprotected architecture. The protected implementation takes 7478 cycles to compute, which is only a factor ×2.6 larger than the unprotected implementation.},
+  booktitle = {Cryptographic {{Hardware}} and {{Embedded Systems}} -- {{CHES}} 2015},
+  publisher = {{Springer Berlin Heidelberg}},
+  urldate = {2018-10-29},
+  date = {2015},
+  pages = {683-702},
+  author = {Reparaz, Oscar and Sinha Roy, Sujoy and Vercauteren, Frederik and Verbauwhede, Ingrid},
+  editor = {Güneysu, Tim and Handschuh, Helena},
+  file = {/Users/kamyar/Zotero/storage/WKHAFFYR/Reparaz et al. - 2015 - A Masked Ring-LWE Implementation.pdf},
+  doi = {10.1007/978-3-662-48324-4_34}
+}
+
+@article{alkim,
+  langid = {english},
+  title = {Algorithm {{Specifcations}} and {{Supporting Documentation}}},
+  pages = {45},
+  author = {Alkim, Erdem and Avanzi, Roberto and Bos, Joppe and Ducas, Léo},
+  file = {/Users/kamyar/Zotero/storage/F2Z5FUSU/Alkim et al. - Algorithm Specifcations and Supporting Documentati.pdf}
+}
+
+@article{oder,
+  langid = {english},
+  title = {Implementing the {{NewHope}}-{{Simple Key Exchange}} on {{Low}}-{{Cost FPGAs}}},
+  abstract = {Lattice-based cryptography is one of the most promising candidates being considered to replace current public-key systems in the era of quantum computing. In 2016 Alkim, Ducas, P¨oppelmann, and Schwabe proposed the lattice-based key exchange scheme NewHope. The scheme has gained some popularity in the research community as it is believed to withstand attacks by quantum computers with a comfortable security margin and provides decent eﬃciency and low communication cost. In this work, we evaluate the eﬃciency of NewHope on reconﬁgurable hardware. We provide the up to our knowledge ﬁrst ﬁeldprogrammable gate array (FPGA) implementation of NewHope-Simple that is a slight modiﬁcation of NewHope proposed by the authors themselves in 2016. NewHope-Simple is basically NewHope with diﬀerent error correction mechanism. Our implementation of the client-side scheme requires 1,483 slices, 4,498 look-up tables (LUTs), and 4,635 ﬂip-ﬂops (FFs) on low-cost Xilinx Artix-7 FPGAs. The implementation of the server-side scheme takes 1,708 slices, 5,142 LUTs, and 4,452 FFs. Both cores use only two digital signal processors (DSPs) and four 18-kb block memories (BRAMs). The implementation has a constant execution time to prevent timing attacks. The server-side operations take 1.4 milliseconds and the client-side operations take 1.5 milliseconds.},
+  pages = {16},
+  author = {Oder, Tobias and Guneysu, Tim},
+  file = {/Users/kamyar/Zotero/storage/GN7MZYMM/Oder and Guneysu - Implementing the NewHope-Simple Key Exchange on Lo.pdf}
+}
+
+@article{lepoi,
+  langid = {english},
+  title = {Design and {{Implementation}} of {{Lattice}}-{{Based Cryptography}}},
+  pages = {219},
+  author = {Lepoint, Tancrède},
+  file = {/Users/kamyar/Zotero/storage/MDTQHP96/Lepoint - Design and Implementation of Lattice-Based Cryptog.pdf}
+}
+
+@article{howe18,
+  title = {On {{Practical Discrete Gaussian Samplers}} for {{Lattice}}-{{Based Cryptography}}},
+  volume = {67},
+  issn = {0018-9340},
+  doi = {10.1109/TC.2016.2642962},
+  abstract = {Lattice-based cryptography is one of the most promising branches of quantum resilient cryptography, offering versatility and efficiency. Discrete Gaussian samplers are a core building block in most, if not all, lattice-based cryptosystems, and optimised samplers are desirable both for high-speed and low-area applications. Due to the inherent structure of existing discrete Gaussian sampling methods, lattice-based cryptosystems are vulnerable to side-channel attacks, such as timing analysis. In this paper, the first comprehensive evaluation of discrete Gaussian samplers in hardware is presented, targeting FPGA devices. Novel optimised discrete Gaussian sampler hardware architectures are proposed for the main sampling techniques. An independent-time design of each of the samplers is presented, offering security against side-channel timing attacks, including the first proposed constant-time Bernoulli, KnuthYao, and discrete Ziggurat sampler hardware designs. For a balanced performance, the Cumulative Distribution Table (CDT) sampler is recommended, with the proposed hardware CDT design achieving a throughput of 59.4 million samples per second for encryption, utilising just 43 slices on a Virtex 6 FPGA and 16.3 million samples per second for signatures with 179 slices on a Spartan 6 device.},
+  number = {3},
+  journaltitle = {IEEE Transactions on Computers},
+  date = {2018-03},
+  pages = {322-334},
+  keywords = {Hardware,cryptography,field programmable gate arrays,Encryption,Gaussian distribution,lattice-based cryptography,Standards,constant-time Bernoulli,Cumulative Distribution Table sampler,discrete Gaussian sampling methods,discrete Ziggurat sampler hardware designs,FPGA devices,Gaussian processes,hardware CDT design,independent-time design,Lattice-based cryptography; post-quantum cryptography; discrete Gaussian sampling; hardware security; cryptography,lattice-based cryptosystems,optimised discrete Gaussian sampler hardware architectures,optimised samplers,practical discrete gaussian samplers,Quantum computing,quantum cryptography,quantum resilient cryptography,sampling methods,side-channel timing attacks,Spartan 6 device,Virtex 6 FPGA},
+  author = {Howe, J. and Khalid, A. and Rafferty, C. and Regazzoni, F. and O’Neill, M.},
+  file = {/Users/kamyar/Zotero/storage/9T23LWQE/Howe et al. - 2018 - On Practical Discrete Gaussian Samplers for Lattic.pdf;/Users/kamyar/Zotero/storage/6MAX4RBF/7792671.html}
+}
+
+@inproceedings{khali18,
+  title = {Compact, {{Scalable}}, and {{Efficient Discrete Gaussian Samplers}} for {{Lattice}}-{{Based Cryptography}}},
+  doi = {10.1109/ISCAS.2018.8351009},
+  abstract = {Lattice-based cryptography, one of the leading candidates for post-quantum security, relies heavily on discrete Gaussian samplers to provide necessary uncertainty, obfuscating computations on secret information. For reconfigurable hardware, the cumulative distribution table (CDT) scheme has previously been shown to achieve the highest throughput and the smallest resource utilisation, easily outperforming other existing samplers. However, the CDT sampler does not scale well. In fact, for large parameters, the lookup tables required are far too large to be practically implemented. This research proposes a hierarchy of multiple smaller samplers, extending the Gaussian convolution lemma to compute optimal parameters, where the individual samplers require much smaller lookup tables. A large range of parameter sets, covering encryption, signatures, and key exchange are evaluated. Hardware-optimised parameters are formulated and a practical implementation on Xilinx Artix-7 FPGA device is realised. The proposed sampling designs demonstrate promising performance on reconfigurable hardware, even for large parameters, that were otherwise thought infeasible.},
+  eventtitle = {2018 {{IEEE International Symposium}} on {{Circuits}} and {{Systems}} ({{ISCAS}})},
+  booktitle = {2018 {{IEEE International Symposium}} on {{Circuits}} and {{Systems}} ({{ISCAS}})},
+  date = {2018-05},
+  pages = {1-5},
+  keywords = {Hardware,hardware security,Encryption,lattice-based cryptography,Standards,FPGA,post-quantum cryptography,Convolution,Gaussian samplers,Runtime},
+  author = {Khalid, A. and Howe, J. and Rafferty, C. and Regazzoni, F. and O'Neill, M.},
+  file = {/Users/kamyar/Zotero/storage/MB4QKKST/Khalid et al. - 2018 - Compact, Scalable, and Efficient Discrete Gaussian.pdf;/Users/kamyar/Zotero/storage/JDLIJMUL/8351009.html}
+}
+
+@article{nedja,
+  langid = {english},
+  title = {A {{Review}} of {{Modular Multiplication Methods}} and {{Respective Hardware Implementations}}},
+  pages = {20},
+  author = {Nedjah, Nadia and Mourelle, Luiza de Macedo},
+  file = {/Users/kamyar/Zotero/storage/N54F4AWQ/Nedjah and Mourelle - A Review of Modular Multiplication Methods and Res.pdf}
+}
+
+@article{butle,
+  langid = {english},
+  title = {Fast {{Hardware Computation}} of x Mod Z},
+  abstract = {We show a high-speed hardware implementation of x mod z that can be pipelined in O(n − m) stages, where x is represented in n bits and z is represented in m bits. It is suitable for large x. We offer two versions. In the ﬁrst, the value of z is ﬁxed by the hardware. For example, using this circuit, we show a random number generator that produces more than 11 million random numbers per second on the SRC-6 reconﬁgurable computer. In the second, z is an independent input. This is suitable for RNS number system applications, for example. The second version can be pipelined in O(n) stages.},
+  pages = {5},
+  author = {Butler, J T and Sasao, T},
+  file = {/Users/kamyar/Zotero/storage/TUNHF5D2/Butler and Sasao - Fast Hardware Computation of x mod z.pdf}
+}
+
+@report{chatt18,
+  title = {Side-Channel {{Assisted Existential Forgery Attack}} on {{Dilithium}} - {{A NIST PQC}} Candidate},
+  url = {https://eprint.iacr.org/2018/821},
+  abstract = {The recent lattice-based signature scheme Dilithium, submitted as part of the CRYSTALS (Cryptographic Suite for Algebraic Lattices) package, is one of a number of strong candidates submitted for the NIST standardisation process of post-quantum cryptography. The Dilithium signature scheme is based on the Fiat-Shamir paradigm and can be seen as a variant of the Bai-Galbraith scheme (BG) combined with several improvements from previous ancestor lattice-based schemes like GLP and BLISS signature schemes. One of the main features of Dilithium is the compressed public-key, which is a rounded version of the LWE instance. This implies that Dilithium is not breakable with the knowledge of only the secret or the error of the LWE instance, unlike its ancestor lattice-based signature schemes. In this paper, we investigate the security of Dilithium against a combination of side-channel and classical attacks. Side-channel attacks on schoolbook and optimised polynomial multiplication algorithms in the signing procedure are shown to extract the secret component of the LWE instance, which is just one among the multiple components of the secret-key of Dilithium. We then propose an alternative signing procedure, through which it is possible to forge signatures with only the extracted portion of the secret-key, without requiring the knowledge of all its elements. Thus showing that Dilithium too breaks on just knowing the secret portion of the LWE instance, similar to previous lattice-based schemes.},
+  number = {821},
+  urldate = {2018-11-15},
+  date = {2018},
+  keywords = {Lattice based cryptography,Digital Signatures,Dilithium,post quantum cryptography,side channel attack},
+  author = {Chattopadhyay, Mahabir Prasad Jhanwar, James Howe, Anupam, Prasanna Ravi and Bhasin, Shivam},
+  file = {/Users/kamyar/Zotero/storage/R24UUDQY/Chattopadhyay and Bhasin - 2018 - Side-channel Assisted Existential Forgery Attack o.pdf;/Users/kamyar/Zotero/storage/AY33A8KE/821.html}
+}
+
+@inproceedings{espit17,
+  location = {{New York, NY, USA}},
+  title = {Side-{{Channel Attacks}} on {{BLISS Lattice}}-{{Based Signatures}}: {{Exploiting Branch Tracing Against strongSwan}} and {{Electromagnetic Emanations}} in {{Microcontrollers}}},
+  isbn = {978-1-4503-4946-8},
+  url = {http://doi.acm.org/10.1145/3133956.3134028},
+  doi = {10.1145/3133956.3134028},
+  shorttitle = {Side-{{Channel Attacks}} on {{BLISS Lattice}}-{{Based Signatures}}},
+  abstract = {In this paper, we investigate the security of the BLISS lattice-based signature scheme, one of the most promising candidates for postquantum-secure signatures, against side-channel attacks. Several works have been devoted to its efficient implementation on various platforms, from desktop CPUs to microcontrollers and FPGAs, and more recent papers have also considered its security against certain types of physical attacks, notably fault injection and cache attacks. We turn to more traditional side-channel analysis, and describe several attacks that can yield a full key recovery. We first identify a serious source of leakage in the rejection sampling algorithm used during signature generation. Existing implementations of that rejection sampling step, which is essential for security, actually leak the "relative norm" of the secret key. We show how an extension of an algorithm due to Howgrave-Graham and Szydlo can be used to recover the key from that relative norm, at least when the absolute norm is easy to factor (which happens for a significant fraction of secret keys). We describe how this leakage can be exploited in practice both on an embedded device (an 8-bit AVR microcontroller) using electromagnetic analysis (EMA), and a desktop computer (recent Intel CPU running Linux) using branch tracing. The latter attack has been mounted against the open source VPN software strongSwan. We also show that other parts of the BLISS signing algorithm can leak secrets not just for a subset of secret keys, but for 100\% of them. The BLISS Gaussian sampling algorithm in strongSwan is intrinsically variable time. This would be hard to exploit using a noisy source of leakage like EMA, but branch tracing allows to recover the entire randomness and hence the key: we show that a single execution of the strongSwan signature algorithm is actually sufficient for full key recovery. We also describe a more traditional side-channel attack on the sparse polynomial multiplications carried out in BLISS: classically, multiplications can be attacked using DPA; however, our target 8-bit AVR target implementation uses repeated shifted additions instead. Surprisingly, we manage to obtain a full key recovery in that setting using integer linear programming from a single EMA trace.},
+  booktitle = {Proceedings of the 2017 {{ACM SIGSAC Conference}} on {{Computer}} and {{Communications Security}}},
+  series = {{{CCS}} '17},
+  publisher = {{ACM}},
+  urldate = {2018-11-15},
+  date = {2017},
+  pages = {1857--1874},
+  keywords = {side-channel analysis,digital signatures,number theory,lattices,postquantum cryptography,bliss,branch tracing,ema},
+  author = {Espitau, Thomas and Fouque, Pierre-Alain and Gérard, Benoît and Tibouchi, Mehdi},
+  file = {/Users/kamyar/Zotero/storage/YSVHBGJ9/Espitau et al. - 2017 - Side-Channel Attacks on BLISS Lattice-Based Signat.pdf}
+}
+
+@article{oder18,
+  langid = {english},
+  title = {Practical {{CCA2}}-{{Secure}} and {{Masked Ring}}-{{LWE Implementation}}},
+  issn = {2569-2925},
+  url = {https://tches.iacr.org/index.php/TCHES/article/view/836},
+  doi = {10.13154/tches.v2018.i1.142-174},
+  journaltitle = {IACR Transactions on Cryptographic Hardware and Embedded Systems},
+  shortjournal = {1},
+  urldate = {2018-11-15},
+  date = {2018-02-14},
+  pages = {142-174},
+  keywords = {Hiding,Masking,ring-LWE,ARM Cortex-M,CCA2 security,Ideal Lattices,Implementation,Sampling},
+  author = {Oder, Tobias and Schneider, Tobias and Pöppelmann, Thomas and Güneysu, Tim},
+  file = {/Users/kamyar/Zotero/storage/HHPGYSHA/Oder et al. - 2018 - Practical CCA2-Secure and Masked Ring-LWE Implemen.pdf;/Users/kamyar/Zotero/storage/JIDY7AN5/836.html}
+}
+
+@inproceedings{repar16a,
+  langid = {english},
+  title = {Additively {{Homomorphic Ring}}-{{LWE Masking}}},
+  isbn = {978-3-319-29360-8},
+  abstract = {In this paper, we present a new masking scheme for ring-LWE decryption. Our scheme exploits the additively-homomorphic property of the existing ring-LWE encryption schemes and computes an additive-mask as an encryption of a random message. Our solution differs in several aspects from the recent masked ring-LWE implementation by Reparaz et al. presented at CHES 2015; most notably we do not require a masked decoder but work with a conventional, unmasked decoder. As such, we can secure a ring-LWE implementation using additive masking with minimal changes. Our masking scheme is also very generic in the sense that it can be applied to other additively-homomorphic encryption schemes.},
+  booktitle = {Post-{{Quantum Cryptography}}},
+  series = {Lecture {{Notes}} in {{Computer Science}}},
+  publisher = {{Springer International Publishing}},
+  date = {2016},
+  pages = {233-244},
+  keywords = {Differential Power Analysis,Decryption Operation,Elliptic Curve Cryptography,Encryption Scheme,Homomorphic Encryption Scheme},
+  author = {Reparaz, Oscar and family=Clercq, given=Ruan, prefix=de, useprefix=true and Roy, Sujoy Sinha and Vercauteren, Frederik and Verbauwhede, Ingrid},
+  editor = {Takagi, Tsuyoshi},
+  file = {/Users/kamyar/Zotero/storage/HIXVSVXX/Reparaz et al. - 2016 - Additively Homomorphic Ring-LWE Masking.pdf}
+}
+
+@article{saari18,
+  langid = {english},
+  title = {Arithmetic Coding and Blinding Countermeasures for Lattice Signatures},
+  volume = {8},
+  issn = {2190-8516},
+  url = {https://doi.org/10.1007/s13389-017-0149-6},
+  doi = {10.1007/s13389-017-0149-6},
+  abstract = {We describe new arithmetic coding techniques and side-channel blinding countermeasures for lattice-based cryptography. Using these techniques, we develop a practical, compact, and more quantum-resistant variant of the BLISS Ideal Lattice Signature Scheme. We first show how the BLISS parameters and hash-based random oracle can be modified to be more secure against quantum pre-image attacks while optimizing signature size. Arithmetic Coding offers an information theoretically optimal compression for stationary and memoryless sources, such as the discrete Gaussian distributions often present in lattice-based cryptography. We show that this technique gives better signature sizes than the previously proposed advanced Huffman-based signature compressors. We further demonstrate that arithmetic decoding from an uniform source to target distribution is also an optimal non-uniform sampling method in the sense that a minimal amount of true random bits is required. Performance of this new Binary Arithmetic Coding sampler is comparable to other practical samplers. The same code, tables, or circuitry can be utilized for both tasks, eliminating the need for separate sampling and compression components. We then describe simple randomized blinding techniques that can be applied to anti-cyclic polynomial multiplication to mask timing- and power consumption side-channels in ring arithmetic. We further show that the Gaussian sampling process can also be blinded by a split-and-permute techniques as an effective countermeasure against side-channel attacks.},
+  number = {1},
+  journaltitle = {Journal of Cryptographic Engineering},
+  shortjournal = {J Cryptogr Eng},
+  urldate = {2018-11-15},
+  date = {2018-04-01},
+  pages = {71-84},
+  keywords = {Arithmetic coding,BLISS,Lattice signatures,Quantum-resistant cryptography,Side-channel countermeasures},
+  author = {Saarinen, Markku-Juhani O.}
+}
+
+@article{chen15,
+  title = {High-{{Speed Polynomial Multiplication Architecture}} for {{Ring}}-{{LWE}} and {{SHE Cryptosystems}}},
+  volume = {62},
+  issn = {1549-8328},
+  doi = {10.1109/TCSI.2014.2350431},
+  abstract = {Polynomial multiplication is the basic and most computationally intensive operation in ring-learning with errors (ring-LWE) encryption and "somewhat" homomorphic encryption (SHE) cryptosystems. In this paper, the fast Fourier transform (FFT) with a linearithmic complexity of O(nlogn), is exploited in the design of a high-speed polynomial multiplier. A constant geometry FFT datapath is used in the computation to simplify the control of the architecture. The contribution of this work is three-fold. First, parameter sets which support both an efficient modular reduction design and the security requirements for ring-LWE encryption and SHE are provided. Second, a versatile pipelined architecture accompanied with an improved dataflow are proposed to obtain a high-speed polynomial multiplier. Third, the proposed architecture supports polynomial multiplications for different lengths n and moduli p. The experimental results on a Spartan-6 FPGA show that the proposed design results in a speedup of 3.5 times on average when compared with the state of the art. It performs a polynomial multiplication in the ring-LWE scheme (n=256,p=1049089) and the SHE scheme (n=1024,p=536903681) in only 6.3 μs and 33.1 μs, respectively.},
+  number = {1},
+  journaltitle = {IEEE Transactions on Circuits and Systems I: Regular Papers},
+  date = {2015-01},
+  pages = {157-166},
+  keywords = {Computer architecture,integrated circuit design,cryptography,field programmable gate arrays,Cryptography,Encryption,Spartan-6 FPGA,polynomials,fast Fourier transform,fast Fourier transforms,Polynomials,Ring-LWE,multiplying circuits,ring-LWE encryption,Complexity theory,Convolution,constant geometry FFT datapath,data flow,FFT polynomial multiplication,Field-programmable gate array (FPGA),linearithmic complexity,modular reduction design,Number theoretic transform (NTT),Pipelined architecture,Polynomial multiplication,polynomial multiplication architecture,polynomial multiplier,ring-learning with errors,ring-LWE scheme,SHE,SHE cryptosystems,SHE scheme,somewhat homomorphic encryption},
+  author = {Chen, D. D. and Mentens, N. and Vercauteren, F. and Roy, S. S. and Cheung, R. C. C. and Pao, D. and Verbauwhede, I.},
+  file = {/Users/kamyar/Zotero/storage/KCGC8DHC/Chen et al. - 2015 - High-Speed Polynomial Multiplication Architecture .pdf;/Users/kamyar/Zotero/storage/WLDH3RQM/6918547.html}
+}
+
+@inproceedings{du16,
+  title = {High-Speed Polynomial Multiplier Architecture for Ring-{{LWE}} Based Public Key Cryptosystems},
+  doi = {10.1145/2902961.2902969},
+  abstract = {Many lattice-based cryptosystems are based on the security of the Ring learning with errors (Ring-LWE) problem. The most critical and computationally intensive operation of these Ring-LWE based cryptosystems is polynomial multiplication. In this paper, we exploit the number theoretic transform to build a high-speed polynomial multiplier for the Ring-LWE based public key cryptosystems. We present a versatile pipelined polynomial multiplication architecture to calculate the product of two η-degree polynomials in about ((n lg n)/4+n/2) clock cycles. In addition, we introduce several optimization techniques to reduce the required ROM storage. The experimental results on a Spartan-6 FPGA show that the proposed hardware architecture can achieve a speedup of on average 2.25 than the state of the art of high-speed design. Meanwhile, our design is able to save up to 47.06\% memory blocks.},
+  eventtitle = {2016 {{International Great Lakes Symposium}} on {{VLSI}} ({{GLSVLSI}})},
+  booktitle = {2016 {{International Great Lakes Symposium}} on {{VLSI}} ({{GLSVLSI}})},
+  date = {2016-05},
+  pages = {9-14},
+  keywords = {Computer architecture,Hardware,field programmable gate arrays,optimisation,computational complexity,lattice-based cryptography,Spartan-6 FPGA,number theoretic transform,polynomial multiplication,Quantum computing,public key cryptography,Public key cryptography,Ring-LWE,n-degree polynomials,number theory,read-only storage,ring-LWE based public key cryptosystems,ROM storage,Transforms,versatile pipelined polynomial multiplication architecture,post-quantum cryptography,((n lg n)/4+n/2) clock cycles,Computers,hardware architecture,high-speed polynomial multiplier,high-speed polynomial multiplier architecture,optimization,pipeline processing,ring learning with errors},
+  author = {Du, C. and Bai, G. and Wu, X.},
+  file = {/Users/kamyar/Zotero/storage/WPTNT7UV/Du et al. - 2016 - High-speed polynomial multiplier architecture for .pdf;/Users/kamyar/Zotero/storage/7GURVGI6/7543189.html}
+}
+
+@article{liu17,
+  langid = {english},
+  title = {High-{{Performance Ideal Lattice}}-{{Based Cryptography}} on 8-{{Bit AVR Microcontrollers}}},
+  volume = {16},
+  issn = {15399087},
+  url = {http://dl.acm.org/citation.cfm?doid=3092956.3092951},
+  doi = {10.1145/3092951},
+  number = {4},
+  journaltitle = {ACM Transactions on Embedded Computing Systems},
+  urldate = {2018-11-15},
+  date = {2017-07-13},
+  pages = {1-24},
+  author = {Liu, Zhe and Pöppelmann, Thomas and Oder, Tobias and Seo, Hwajeong and Roy, Sujoy Sinha and Güneysu, Tim and Großschädl, Johann and Kim, Howon and Verbauwhede, Ingrid},
+  file = {/Users/kamyar/Zotero/storage/HRI9WEL9/Liu et al. - 2017 - High-Performance Ideal Lattice-Based Cryptography .pdf}
+}
+
+@article{poppe17,
+  langid = {english},
+  title = {Efficient Implementation of Ideal Lattice-Based Cryptography},
+  volume = {59},
+  issn = {1611-2776, 2196-7032},
+  url = {http://www.degruyter.com/view/j/itit.2017.59.issue-6/itit-2017-0030/itit-2017-0030.xml},
+  doi = {10.1515/itit-2017-0030},
+  number = {6},
+  journaltitle = {it - Information Technology},
+  urldate = {2018-11-15},
+  date = {2017-12-20},
+  author = {Pöppelmann, Thomas},
+  file = {/Users/kamyar/Zotero/storage/H9MYF26Y/Pöppelmann - 2017 - Efficient implementation of ideal lattice-based cr.pdf}
+}
+
+@report{seile18,
+  title = {Faster {{AVX2}} Optimized {{NTT}} Multiplication for {{Ring}}-{{LWE}} Lattice Cryptography},
+  url = {https://eprint.iacr.org/2018/039},
+  abstract = {Constant-time polynomial multiplication is one of the most time-consuming operations in many lattice-based cryptographic constructions. For schemes based on the hardness of Ring-LWE in power-of-two cyclotomic fields with completely splitting primes, the AVX2 optimized implementation of the Number-Theoretic Transform (NTT) from the NewHope key-exchange scheme is the state of the art for fast multiplication. It uses floating point vector instructions. We show that by using a modification of the Montgomery reduction algorithm that enables a fast approach with integer instructions, we can improve on the polynomial multiplication speeds of NewHope and Kyber by a factor ofandon Skylake, respectively.},
+  number = {039},
+  urldate = {2018-11-15},
+  date = {2018},
+  keywords = {implementation,NTT,AVX,lattice cryptography},
+  author = {Seiler, Gregor},
+  file = {/Users/kamyar/Zotero/storage/8P2BKCPJ/Seiler - 2018 - Faster AVX2 optimized NTT multiplication for Ring-.pdf;/Users/kamyar/Zotero/storage/4A8V5QCF/039.html}
+}
+
+@article{du,
+  langid = {english},
+  title = {A {{Family}} of {{Scalable Polynomial Multiplier Architectures}} for {{Ring}}-{{LWE Based Cryptosystems}}},
+  abstract = {Many lattice based cryptosystems are based on the Ring learning with errors (Ring-LWE) problem. The most critical and computationally intensive operation of these Ring-LWE based cryptosystems is polynomial multiplication over rings. In this paper, we exploit the number theoretic transform (NTT) to build a family of scalable polynomial multiplier architectures, which provide designers with a trade-off choice of speed vs. area. Our polynomial multipliers are capable to calculate the product of two n-degree polynomials in about (1.5n lg n+1.5n)/b clock cycles, where b is the number of the butterﬂy operators. In addition, we exploit the cancellation lemma to reduce the required ROM storage. The experimental results on a Spartan-6 FPGA show that the proposed polynomial multiplier architectures achieve a speedup of 3 times on average and consume less Block RAMs and slices when compared with the compact design. Compared with the state of the art of high-speed design, the proposed hardware architectures save up to 46.64\% clock cycles and improve the utilization rate of the main data processing units by 42.27\%. Meanwhile, our designs can save up to 29.41\% block RAMs.},
+  pages = {10},
+  author = {Du, Chaohui and Bai, Guoqiang},
+  file = {/Users/kamyar/Zotero/storage/PCPWJUMI/Du and Bai - A Family of Scalable Polynomial Multiplier Archite.pdf}
+}
+
+@online{zotero-2406,
+  title = {Accelerated Modular Arithmetic for Low-Performance Devices - {{IEEE Conference Publication}}},
+  url = {https://ieeexplore.ieee.org/document/6043757},
+  urldate = {2018-11-16},
+  file = {/Users/kamyar/Zotero/storage/KBEFHVNW/6043757.html}
+}
+
+@inproceedings{malin11,
+  title = {Accelerated Modular Arithmetic for Low-Performance Devices},
+  doi = {10.1109/TSP.2011.6043757},
+  abstract = {The paper deals with efficient modular arithmetic algorithms for resource restricted devices like smart-cards or sensors. The modular arithmetic is important for a wide variety of computations in these devices, from communication to signal processing. To speed up some cryptographic operations, the most widespread devices often have some cryptographic support provided by a dedicated chip. Our goal is to use the resources of a crypto-coprocessor to accelerate general modular operations. The paper describes our implementation of modular arithmetic operations with large integers, and provides the comparison of the accelerated method with three classical methods for (modular) multiplication. The standard methods are represented by the operand-scanning multiplication algorithm (the school-book method), the product-scanning method (Comba's method) and the Montgomery multiplication. The accelerated method is based on using the RSA encryption support for multiplication tunnelling. The performance characteristics of standard methods and the advanced method called `RSA tunnel' are compared and concluded.},
+  eventtitle = {2011 34th {{International Conference}} on {{Telecommunications}} and {{Signal Processing}} ({{TSP}})},
+  booktitle = {2011 34th {{International Conference}} on {{Telecommunications}} and {{Signal Processing}} ({{TSP}})},
+  date = {2011-08},
+  pages = {131-135},
+  keywords = {cryptography,Acceleration,Arrays,RSA,Cryptography,Protocols,Encryption,modular multiplication,coprocessors,crypto-coprocessor,.NET,accelerated method,accelerated modular arithmetic,Comba's method,cryptographic operations,cryptographic support,dedicated chip,Educational institutions,Java,low-performance devices,modular arithmetic,modular arithmetic algorithms,modular arithmetic operations,Montgomery multiplication,multiplication,multiplication tunnelling,operand-scanning multiplication algorithm,performance characteristics,product-scanning method,resource restricted devices,RSA encryption support,RSA tunnel,school-book method,sensors,signal processing,smart cards,smart-cards},
+  author = {Malina, L. and Hajny, J.},
+  file = {/Users/kamyar/Zotero/storage/87YBE8S6/Malina and Hajny - 2011 - Accelerated modular arithmetic for low-performance.pdf;/Users/kamyar/Zotero/storage/LGUN2TTD/6043757.html}
+}
+
+@book{st.d06,
+  langid = {english},
+  location = {{Rockland, Mass.}},
+  title = {{{BigNum}} Math Implementing Cryptographic Multiple Precision Arithmetic},
+  url = {http://www.books24x7.com/marc.asp?bookid=14605},
+  publisher = {{Syngress Pub.}},
+  urldate = {2018-11-16},
+  date = {2006},
+  author = {St. Denis, Tom and Rose, Greg},
+  file = {/Users/kamyar/Zotero/storage/S66AEBXM/St. Denis and Rose - 2006 - BigNum math implementing cryptographic multiple pr.pdf},
+  note = {OCLC: 300222158}
+}
+
+@article{fan,
+  langid = {english},
+  title = {Lightweight {{Hardware Implementation}} of {{R}}-{{LWE Lattice}}-{{Based Cryptography}}},
+  abstract = {Lattice based cryptography (LBC) is one of the most promising post-quantum cryptographic candidates. Ringlearning with errors (R-LWE) is an encryption scheme of LBC. In this paper, a lightweight hardware implementation is presented including key generation, encryption, and decryption. The RLWE encryption scheme consists of a Gaussian sampler and polynomial multiplication. This paper uses cumulative distribution table (CDT) as the Gaussian sampler and schoolbook approach for the polynomial multiplication. The purpose of this architecture is to achieve small area consumption with high frequency. The hardware implementation results on the Xilinx Kintex-7 FPGA shows that the design consumes 808 slices and the frequency can be up to 288.35MHz.},
+  pages = {5},
+  author = {Fan, Sailong and Liu, Weiqiang and Howe, James and Khalid, Ayesha and O’Neill, Maire},
+  file = {/Users/kamyar/Zotero/storage/BLLWS7P8/Fan et al. - Lightweight Hardware Implementation of R-LWE Latti.pdf}
+}
+
+@article{hoang,
+  langid = {english},
+  title = {Optimization of the {{NTT}} Function on {{ARMv8}}-{{A SVE}}},
+  pages = {71},
+  author = {Hoang, Gia Linh and Schwabe, Dr Peter},
+  file = {/Users/kamyar/Zotero/storage/B69KI9PC/Hoang and Schwabe - Optimization of the NTT function on ARMv8-A SVE.pdf}
+}
+
+@inproceedings{berto12,
+  langid = {english},
+  location = {{Vancouver, BC, Canada}},
+  title = {Power Analysis of Hardware Implementations Protected with Secret Sharing},
+  isbn = {978-0-7695-4920-0 978-1-4673-4920-8},
+  url = {http://ieeexplore.ieee.org/document/6472486/},
+  doi = {10.1109/MICROW.2012.12},
+  abstract = {We analyze the security of three-share hardware implementations against differential power analysis and advanced variants such as mutual information analysis. We present dedicated distinguishers that allow to recover secret key bits from any cryptographic primitive that is implemented as a sequence of quadratic functions. Starting from the analytical treatment of such distinguishers and information-theoretic arguments, we derive the success probability and required number of traces in the presence of algorithmic noise. We show that attacks on three-share hardware implementation require a number of traces that scales in the third power of the algorithmic noise variance. Finally, we apply and test our model on KECCAK in a keyed mode.},
+  eventtitle = {2012 45th {{Annual IEEE}}/{{ACM International Symposium}} on {{Microarchitecture Workshops}} ({{MICROW}})},
+  booktitle = {2012 45th {{Annual IEEE}}/{{ACM International Symposium}} on {{Microarchitecture Workshops}}},
+  publisher = {{IEEE}},
+  urldate = {2018-11-27},
+  date = {2012-12},
+  pages = {9-16},
+  author = {Bertoni, Guido and Daemen, Joan and Debande, Nicolas and Le, Thanh-Ha and Peeters, Michael and Van Assche, Gilles},
+  file = {/Users/kamyar/Zotero/storage/J4TCK6TS/Bertoni et al. - 2012 - Power analysis of hardware implementations protect.pdf}
+}
+
+@article{kaiha,
+  langid = {english},
+  title = {Studies on {{Modular Arithmetic Hardware Algorithms}} for {{Public}}-Key {{Cryptography}}},
+  pages = {104},
+  author = {Kaihara, Marcelo E},
+  file = {/Users/kamyar/Zotero/storage/9AV7MNBK/Kaihara - Studies on Modular Arithmetic Hardware Algorithms .pdf}
+}
+
+@report{longa16,
+  title = {Speeding up the {{Number Theoretic Transform}} for {{Faster Ideal Lattice}}-{{Based Cryptography}}},
+  url = {https://eprint.iacr.org/2016/504},
+  abstract = {The Number Theoretic Transform (NTT) provides efficient algorithms for cyclic and nega-cyclic convolutions, which have many applications in computer arithmetic, e.g., for multiplying large integers and large degree polynomials. It is commonly used in cryptographic schemes that are based on the hardness of the Ring Learning With Errors (R-LWE) problem to efficiently implement modular polynomial multiplication.
+
+We present a new modular reduction technique that is tailored for the special moduli required by the NTT. Based on this reduction, we speed up the NTT and propose faster, multi-purpose algorithms. We present two implementations of these algorithms: a portable C implementation and a high-speed implementation using assembly with AVX2 instructions. To demonstrate the improved efficiency in an application example, we benchmarked the algorithms in the context of the R-LWE key exchange protocol that has recently been proposed by Alkim, Ducas, Pöppelmann and Schwabe. In this case, our C and assembly implementations compute the full key exchange 1.49 and 1.13 times faster, respectively. These results are achieved with full protection against timing attacks.},
+  number = {504},
+  urldate = {2018-11-28},
+  date = {2016},
+  keywords = {implementation,Post-quantum cryptography,efficient implementation.,fast modular reduction,number theoretic transform (NTT),ring learning with errors (R-LWE)},
+  author = {Longa, Patrick and Naehrig, Michael},
+  file = {/Users/kamyar/Zotero/storage/ITZ54YZ3/Longa and Naehrig - 2016 - Speeding up the Number Theoretic Transform for Fas.pdf;/Users/kamyar/Zotero/storage/2DLDBMUG/504.html}
+}
+
+@online{zotero-2433,
+  title = {Make Your Donation Now - {{Payments}}},
+  url = {https://payments.wikimedia.org/index.php/Special:AmazonGateway#access_token=Atza%7CIwEBIKEG2twBfGiwvhIl8F_spO5U9_EUN7Z_fJ4FLlnoy0o6R69O_tQ7qKPDlnH1YsFDScLe3DiRA760hTi4Xnxi23i9DRSwQSx-P3KLEEY21Zo9f5Zaesxh9XjWFg2yeZIRhQ7uX8wOBbZAYD5auFgZGfTyHxiimbZueU9EYmoaUeYEtrjskr3nf9dRzoxg-Nlcn8wCrjGSXoPDGvWq9icrqQe0aqpdx7DbEcjHAkG2OBrir8dN4I8jHn3ywtDJ52_HJ7Vn2qFezrQiATFyMUiCtjNm7uccG486ZQ_gxMTHeCfBRMJifjXBAdgwwwe1suaXRmQyAyiUUW-NUhJnAIt9mFk_XkA2UUzz2tt-6Taa8XDw62IbAZRgBN36F7AuykS_HwDIZfRZ2QS4wk5rRUDXdx9jf2ZntzJJ8faCedVgsifIZPO_NaPf4npcYoerA7l-jVs&token_type=bearer&expires_in=3574&scope=payments%3Awidget},
+  urldate = {2018-11-28},
+  file = {/Users/kamyar/Zotero/storage/EKFBP9SC/SpecialAmazonGateway.html}
+}
+
+@article{berto,
+  langid = {english},
+  title = {Implementation Aspects of {{Keccak}}},
+  pages = {61},
+  author = {Bertoni, Guido and Daemen, Joan and Peeters, Michaël},
+  file = {/Users/kamyar/Zotero/storage/N59PXWD4/Bertoni et al. - Implementation aspects of Keccak.pdf}
+}
+
+@incollection{pessl13,
+  langid = {english},
+  location = {{Berlin, Heidelberg}},
+  title = {Pushing the {{Limits}} of {{SHA}}-3 {{Hardware Implementations}} to {{Fit}} on {{RFID}}},
+  volume = {8086},
+  isbn = {978-3-642-40348-4 978-3-642-40349-1},
+  url = {http://link.springer.com/10.1007/978-3-642-40349-1_8},
+  abstract = {There exists a broad range of RFID protocols in literature that propose hash functions as cryptographic primitives. Since Keccak has been selected as the winner of the NIST SHA-3 competition in 2012, there is the question of how far we can push the limits of Keccak to fulﬁll the stringent requirements of passive low-cost RFID. In this paper, we address this question by presenting a hardware implementation of Keccak that aims for lowest power and lowest area. Our smallest (fullstate) design requires only 2 927 GEs (for designs with external memory available) and 5 522 GEs (total size including memory). It has a power consumption of 12.5 µW at 1 MHz on a low leakage 130 nm CMOS process technology. As a result, we provide a design that needs 40 \% less resources than related work. Our design is even smaller than the smallest SHA-1 and SHA-2 implementations.},
+  booktitle = {Cryptographic {{Hardware}} and {{Embedded Systems}} - {{CHES}} 2013},
+  publisher = {{Springer Berlin Heidelberg}},
+  urldate = {2018-11-29},
+  date = {2013},
+  pages = {126-141},
+  author = {Pessl, Peter and Hutter, Michael},
+  editor = {Bertoni, Guido and Coron, Jean-Sébastien},
+  editorb = {Hutchison, David and Kanade, Takeo and Kittler, Josef and Kleinberg, Jon M. and Mattern, Friedemann and Mitchell, John C. and Naor, Moni and Nierstrasz, Oscar and Pandu Rangan, C. and Steffen, Bernhard and Sudan, Madhu and Terzopoulos, Demetri and Tygar, Doug and Vardi, Moshe Y. and Weikum, Gerhard},
+  editorbtype = {redactor},
+  file = {/Users/kamyar/Zotero/storage/NETT59K7/Pessl and Hutter - 2013 - Pushing the Limits of SHA-3 Hardware Implementatio.pdf},
+  doi = {10.1007/978-3-642-40349-1_8}
+}
+
+@thesis{dunst14,
+  langid = {english},
+  location = {{Graz, Austria}},
+  title = {Towards a {{DPA}}-Secure and High-Speed Authenticated Encryption System Based on {{Keccak}}},
+  url = {https://diglib.tugraz.at/download.php?id=576a78d3856fb&location=browse},
+  pagetotal = {111},
+  institution = {{Technische Universität Graz}},
+  urldate = {2018-12-01},
+  date = {2014},
+  author = {Dunst, Philipp},
+  file = {/Users/kamyar/Zotero/storage/KY77IDAG/download.pdf}
+}
+
+@article{molle11,
+  langid = {english},
+  title = {Improved {{Division}} by {{Invariant Integers}}},
+  volume = {60},
+  issn = {0018-9340},
+  url = {http://ieeexplore.ieee.org/document/5487506/},
+  doi = {10.1109/TC.2010.143},
+  abstract = {This paper considers the problem of dividing a two-word integer by a single-word integer, together with a few extensions and applications. Due to lack of efﬁcient division instructions in current processors, the division is performed as a multiplication using a precomputed single-word approximation of the reciprocal of the divisor, followed by a couple of adjustment steps. There are three common types of unsigned multiplication instructions; we deﬁne full word multiplication (umul) which produces the two-word product of two single-word integers, low multiplication (umullo) which produces only the least signiﬁcant word of the product, and high multiplication (umulhi), which produces only the most signiﬁcant word. We describe an algorithm which produces a quotient and remainder using one umul and one umullo. This is an improvement over earlier methods, since the new method uses cheaper multiplication operations. It turns out we also get some additional savings from simpler adjustment conditions. The algorithm has been implemented in version 4.3 of the GMP library. When applied to the problem of dividing a large integer by a single word, the new algorithm gives a speedup of roughly 30\%, benchmarked on AMD and Intel processors in the x86 64 family.},
+  number = {2},
+  journaltitle = {IEEE Transactions on Computers},
+  urldate = {2019-01-12},
+  date = {2011-02},
+  pages = {165-175},
+  author = {Moller, Niels and Granlund, Torbjorn},
+  file = {/Users/kamyar/Zotero/storage/UPZYFZU3/Moller and Granlund - 2011 - Improved Division by Invariant Integers.pdf}
+}
+
+@article{granl94,
+  title = {Division by Invariant Integers Using Multiplication},
+  volume = {29},
+  issn = {0362-1340},
+  url = {http://dl.acm.org/citation.cfm?id=178243.178249},
+  doi = {10.1145/178243.178249},
+  number = {6},
+  journaltitle = {ACM SIGPLAN Notices},
+  urldate = {2019-01-12},
+  date = {1994-01-08},
+  pages = {61-72},
+  author = {Granlund, Torbjörn and Montgomery, Peter L. and Granlund, Torbjörn and Montgomery, Peter L.},
+  file = {/Users/kamyar/Zotero/storage/4U7ZGPJX/Granlund et al_1994_Division by invariant integers using multiplication.pdf;/Users/kamyar/Zotero/storage/27VMV3R3/citation.html}
+}
+
+@report{dwork15,
+  langid = {english},
+  title = {{{SHA}}-3 {{Standard}}: {{Permutation}}-{{Based Hash}} and {{Extendable}}-{{Output Functions}}},
+  url = {https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.202.pdf},
+  shorttitle = {{{SHA}}-3 {{Standard}}},
+  abstract = {Extendable-output functions are different from hash functions, but it is possible to use them in similar ways, with the flexibility to be adapted directly to the requirements of individual applications, subject to additional security considerations.},
+  number = {NIST FIPS 202},
+  institution = {{National Institute of Standards and Technology}},
+  urldate = {2019-01-16},
+  date = {2015-07},
+  author = {Dworkin, Morris J.},
+  file = {/Users/kamyar/Zotero/storage/4CQGIABN/Dworkin - 2015 - SHA-3 Standard Permutation-Based Hash and Extenda.pdf},
+  doi = {10.6028/NIST.FIPS.202}
+}
+
+@online{zotero-2456,
+  title = {Keccak {{Team}}},
+  url = {https://keccak.team/keccak.html},
+  urldate = {2019-01-16},
+  file = {/Users/kamyar/Zotero/storage/7BG5KC7I/keccak.html}
+}
+
+@article{guido11,
+  title = {Cryptographic Sponge Functions},
+  date = {2011},
+  author = {Guido, Bertoni and Joan, Daemen and Michaël, P and Gilles, VA},
+  file = {/Users/kamyar/Zotero/storage/PF7X3CT5/CSF-0.1.pdf}
+}
+
+

@@ -1,0 +1,33 @@
+%%%% Time-stamp: <2012-08-20 17:41:39 vk>
+
+%% example text content
+%% scrartcl and scrreprt starts with section, subsection, subsubsection, ...
+%% scrbook starts with part (optional), chapter, section, ...
+\chapter{Example Chapter}
+
+This is my text with an example Figure~\ref{fig:example} and example
+citation~\cite{StrunkWhite} or \textcite{Bringhurst1993}. And there is another
+\enquote{citation} which is located at the bottom\footcite{tagstore}.
+
+\myfig{TU_Graz_Logo}%% filename in figures folder
+  {width=0.1\textwidth,height=0.1\textheight}%% maximum width/height, aspect ratio will be kept
+  {Example figure.}%% caption
+  {}%% optional (short) caption for table of figures
+  {fig:example}%% label
+
+Now you are able to write your own document. Always keep in mind: it's
+the \emph{content} that matters, not the form. But good typography is
+able to deliver the content much better than information set with bad
+typography. This template allows you to focus on writing good content
+while the form is done by the template definitions.
+
+
+%% vim:foldmethod=expr
+%% vim:fde=getline(v\:lnum)=~'^%%%%\ .\\+'?'>1'\:'='
+%%% Local Variables: 
+%%% mode: latex
+%%% mode: auto-fill
+%%% mode: flyspell
+%%% eval: (ispell-change-dictionary "en_US")
+%%% TeX-master: "main"
+%%% End: 

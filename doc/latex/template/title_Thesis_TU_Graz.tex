@@ -1,0 +1,99 @@
+%%%% Time-stamp: <2017-02-05 16:21:48 vk>
+%% ========================================================================
+%%%% Disclaimer
+%% ========================================================================
+%%
+%% created by
+%%
+%%      Stefan Kroboth and Karl Voit
+%%
+%% this title page fulfills the requirements of the corporate design
+%% of Graz University of Technology (correct placement of logo)
+
+\begin{titlepage}
+
+{\sffamily
+
+\begin{center}
+
+\includegraphics[width=30mm]{figures/TU_Graz_Logo}
+
+\vfill\vfill\vfill
+\vfill\vfill\vfill
+
+\myauthorwithexistingtitles
+
+\vfill\vfill\vfill
+
+{\LARGE\bfseries\mytitle}
+
+
+\vfill\vfill\vfill
+\vfill\vfill\vfill
+
+
+{\bfseries\large\myworktitle}
+
+to achieve the university degree of
+
+\mygrade
+
+\mydegreeprogramme
+
+
+\vfill\vfill\vfill
+
+
+submitted to
+
+\vfill
+
+{\bfseries\large\myuniversity}
+
+
+\vfill\vfill\vfill
+
+
+Supervisor
+
+\mysupervisor
+%usually not mentioned on titlepage:% Evaluator: \myevaluator
+
+\vfill
+
+\myinstitute\\
+Head: \myinstitutehead\\
+
+\vfill
+
+%% OPTIONAL: second supervisor/name of the faculty, etc.
+
+
+\vfill\vfill\vfill
+
+
+\mysubmissiontown, \mysubmissionmonth~\mysubmissionyear
+
+\end{center}
+}%% end sffamily
+\end{titlepage}
+
+%% if myaddcolophon is set to "true", colophon is added:
+\ifthenelse{\boolean{myaddcolophon}}{
+  \newpage
+  \thispagestyle{empty}  %% no page header or footer
+
+  ~
+  \vfill
+  \mycolophon
+}{}
+\newpage
+
+%% end of title page
+%%% Local Variables:
+%%% mode: latex
+%%% mode: auto-fill
+%%% mode: flyspell
+%%% eval: (ispell-change-dictionary "en_US")
+%%% TeX-master: "../main"
+%%% End:
