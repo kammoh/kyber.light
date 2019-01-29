@@ -33,14 +33,14 @@ KEM:
     \begin{table}
         \begin{adjustbox}{width=1.2\textwidth,center=\textwidth}
             \rowcolors{2}{lightgray!45}{white}   
-            \begin{tabular}{l*{7}{r}}
+            \begin{tabular}{l*{8}{r}}
                 \rowcolor{DispositionColor!50}              % Heading with different color to highlight it      
-                         {}            & Slices & Block RAMs &  Slice LUTs & Slice Registers & F7/8 Muxes & DSPs  & Complete \\ 
+                         {}            & Slices & Block RAMs &  Slice LUTs & Slice Regs & F7/8 Muxes & DSPs  & Complete & Cycles for Permutation \\ 
                 \hline
-                This implementation  & 71   &  1 x RAMB18  &  261        &    151         &      1/0    & 0     & Yes\\
-                Kaps et al           & 238  &  1 x RAMB36  &  704        &    490         &      31/12  & 0     & No \\
-                Keccak team Coproc   & 321  &  0           &  1104       &    233         &     335/3   & 0     & No \\
-                Keccak team Mid Core & 559  &  0           &  1867       &    1683        &      1/0    & 0      & Yes \\
+                This implementation    & 71     & 1 x RAMB18 &  261        &    151         &      1/0    & 0       & Yes      & 26001  \\
+                Kaps et al             & 238    & 1 x RAMB36 &  704        &    490         &      31/12  & 0       & No       &        \\
+                Keccak team Coproc     & 321    & 0          &  1104       &    233         &     335/3   & 0       & No       & 5160   \\
+                Keccak team Mid Core   &  559   & 0          &  1867       &    1683        &      1/0    & 0       & Yes      & 844    \\
                  \hline
             \end{tabular}
             \end{adjustbox}

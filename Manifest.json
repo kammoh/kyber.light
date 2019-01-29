@@ -79,12 +79,12 @@
 		"polymac_dp" : {
 			"path": "vhdl",
 			"top": "polymac_dp",
-			"tb_top": "tb_polymac_dp",
+			"tb_top": "polymac_dp_tb",
 			"files": [
 				"polymac_dp.vhdl"
 			],
 			"tb_files": [
-				"tb_polymac_dp.vhdl"
+				"polymac_dp_tb.vhdl"
 			],
 			"depends": [
 				"divider"

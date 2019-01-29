@@ -102,9 +102,9 @@ begin
 			clk => clk,
 			ce  => mem_re,
 			we  => mem_we,
-			a   => mem_addr,
-			d   => to_mem_din,
-			q   => from_mem_dout
+			in_addr   => mem_addr,
+			in_data   => to_mem_din,
+			out_data   => from_mem_dout
 		);
 
 	controller : entity work.controller
