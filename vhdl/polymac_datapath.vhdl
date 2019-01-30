@@ -15,7 +15,7 @@ use ieee.numeric_std_unsigned.all;
 
 use work.kyber_pkg.all;
 
-entity polymac_dp is
+entity polymac_datapath is
 	port(
 		clk   : in  std_logic;
 		--- Control
@@ -28,9 +28,9 @@ entity polymac_dp is
 		in_r  : in  std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0);
 		out_r : out std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0)
 	);
-end entity polymac_dp;
+end entity polymac_datapath;
 
-architecture RTL of polymac_dp is
+architecture RTL of polymac_datapath is
 	-- Registers/FF
 	signal r_reg      : t_ucoef;
 	signal a_times_b  : std_logic_vector(2 * log2ceil(KYBER_Q) - 1 downto 0);

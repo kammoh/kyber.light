@@ -1,9 +1,10 @@
-from cocorun.sim.ghdl import Ghdl
+from cocorun.sim import Ghdl
+from cocorun.conf import Manifest
 import os
 import subprocess
 import pathlib
 
-g
+
 # os.system('ghdl --remove --std=08 --work=PoC --workdir=PoC/PoC/08')
 # os.system('mkdir -p PoC/PoC/08')
 # os.system('rm -rf PoC/PoC/08/*')
@@ -17,23 +18,13 @@ import os
 import shutil
 
 
-poc_srcs = [
-    "PoC/src/common/my_config.vhdl", "PoC/src/common/my_project.vhdl", "PoC/src/common/utils.vhdl", "PoC/src/common/config.vhdl", "PoC/src/common/strings.vhdl",
-    "PoC/src/common/vectors.vhdl",
-    "PoC/src/mem/mem.pkg.vhdl", 
-    "PoC/src/mem/ocram/ocram_sp.vhdl",  "PoC/src/mem/ocram/ocram.pkg.vhdl",
-]
+manifest = Manifest.load_from_file()
 
-sim = Ghdl(vhdl_version="08")
-sim.add_library(name='PoC', path='./PoC', sources=poc_srcs)
+sim = Ghdl.from_manifest(manifest, 'keccak')
 
-srcs = sources = ['keccak_pkg.vhdl', 'rho_rom.vhdl',  'controller.vhdl',  'iota_lut.vhdl',
-                  'shift_reg.vhdl', 'slice_unit.vhdl',  'datapath.vhdl',  'keccak_core.vhdl']
 
-top='keccak_core'
-sim.add_sources(srcs)
-sim.vcd_file = 'dump.ghw'
-sim.run_test(top=top, test_modules=['tests'])
+# sim.vcd_file = 'dump.ghw'
+sim.run_test(test_modules=['keccak_core_tb'])
 
 
 def synth_vivado(srcs, top):

@@ -34,14 +34,14 @@ architecture TB of polymac_dp_tb is
 begin
 	clk <= not clk after G_CLK_PERIOD / 2;
 
-	rst_proc : process
+	reset_proc : process
 	begin
 		wait until falling_edge(clk);
 		rst <= '1';
 		wait until falling_edge(clk);
 		rst <= '0';
 		wait;                           -- forever
-	end process rst_proc;
+	end process reset_proc;
 
 	tb_proc : process
 		variable RndR  : RandomPType;
@@ -118,7 +118,7 @@ begin
 		wait;
 	end process;
 
-	dut : entity work.polymac_dp
+	dut : entity work.polymac_datapath
 		port map(
 			clk    => clk,
 			nega   => nega,

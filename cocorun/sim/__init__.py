@@ -10,9 +10,7 @@ import platform
 import pathlib
 
 class Sim(object):
-    ### Sim init
-
-    def __init__(self):
+    def __init__(self,top):
         self.sim_name = self.__class__.__name__
         self.cmd = None
         self.warn_opts = None
@@ -22,7 +20,7 @@ class Sim(object):
         lib_dir = os.path.join(share_dir, 'lib')
         platform_libs_dir = os.path.join(lib_dir, 'build','libs', platform.machine())
         self.cocotb_path = prefix_dir
-        self.top = None
+        self.top = top
         self.top_lang=''
         self.seed=None
         self.phases = collections.OrderedDict()
@@ -100,9 +98,16 @@ class Sim(object):
             
         return proc
     
-    def run_test(self, top, test_modules: List[str], test_case: str = None):
+    def run_test(self, test_modules: List[str], test_case: str = None):
         assert isinstance(test_modules, list), "test_modules needs to be a list of strings" 
-            
+        
+        if isinstance(test_modules, str):
+            test_modules = test_modules.split(",")
+        
+        for py in test_modules:
+            if not pathlib.Path(py + ".py").exists():
+                raise FileNotFoundError(f"test module {py}: file {py}.py not found")
+        
         env=dict(os.environ)
         env['PATH'] += ":/usr/local/bin"
         env['PYTHONPATH'] = ':'.join([self.vpi_dir, self.cocotb_path, os.getcwd()])
@@ -113,8 +118,7 @@ class Sim(object):
         if self.seed:
             env['RANDOM_SEED'] = self.seed
         
-        self.top = top
-        env['TOPLEVEL'] = top # TODO what about top_arch? Do we need this AT ALL?!
+        env['TOPLEVEL'] = self.top # TODO what about top_arch? Do we need this AT ALL?!
         
         env['TOPLEVEL_LANG'] = self.top_lang
         env['COCOTB_LOG_LEVEL'] = 'INFO'
@@ -128,4 +132,11 @@ class Sim(object):
             proc = self.run_cmd(cmd, env)
             if proc.returncode != 0:
                 raise ValueError(f"{name} failed. \n command={' '.join(proc.args)} \n returncode={proc.returncode}")
+ 
+
+from .ghdl import Ghdl
+           
+__all__ = [
+    'Ghdl'
+    ]
         

@@ -1,3 +1,17 @@
+----------------------------------------------------------------------------------------------------------------------------------
+--  @description: VUnit testbench for keccak core
+--
+--       ** INCOMPLETE AND NOT CURRENTLY USED   **
+--
+--   >>>> Use Cocotb (python) testbench instead <<<<
+--
+----------------------------------------------------------------------------------------------------------------------------------
+--
+--
+-- TODO *** finish as an alternative ***
+----
+----
+----------------------------------------------------------------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -15,59 +29,70 @@ use osvvm.CoveragePkg.all;
 
 entity keccak_tb is
 	generic(
-		runner_cfg : string;
-		G_IN_FILE  : string := "../../keccak/test_vectors/Sources/keccak_in.txt";
-		G_OUT_FILE : string := "../../keccak/test_vectors/keccak_out_compact_mid_vhdl.out.txt"
+		runner_cfg     : string;
+		G_CLOCK_PERIOD : time   := 10 ns;
+		G_IN_FILE      : string := "../../keccak/test_vectors/Sources/keccak_in.txt";
+		G_OUT_FILE     : string := "../../keccak/test_vectors/keccak_out_compact_mid_vhdl.out.txt"
 	);
 end keccak_tb;
 
 architecture tb of keccak_tb is
 
-
 	-- signal declarations
 
-	signal clk   : std_logic;
+	signal clk : std_logic;
 	signal rst : std_logic;
 
 	signal init, go, absorb, ready, squeeze : std_logic;
-	signal din, dout                        : std_logic_vector(C_WORD_WIDTH - 1 downto 0);
+	signal din_data, dout_data              : std_logic_vector(C_WORD_WIDTH - 1 downto 0);
 
 	type st_type is (initial, read_first_input, st0, st1, st1a, END_HASH1, END_HASH2, STOP);
-	signal st : st_type;
-	signal do_squeeze : std_logic;
-	signal din_valid : std_logic;
-	signal din_ready : std_logic;
+	signal st         : st_type;
+	signal din_valid  : std_logic;
+	signal din_ready  : std_logic;
 	signal dout_valid : std_logic;
 	signal dout_ready : std_logic;
-	signal from_mem_dout : std_logic_vector(C_WORD_WIDTH - 1 downto 0);
-	signal to_mem_din : std_logic_vector(C_WORD_WIDTH - 1 downto 0);
-	signal mem_addr : unsigned(log2ceil(C_NUM_MEM_WORDS) - 1 downto 0);
-	signal mem_we : std_logic;
-	signal mem_re : std_logic;
+	signal done       : std_logic;
+	signal rate       : unsigned(log2ceil(C_SLICE_WIDTH) - 1 downto 0);
 
-begin                                   -- Rtl
+begin
 
-	-- port map
-
-	keccak: entity work.keccak_core
+	keccak_core : entity work.keccak_core
 		port map(
-			do_squeeze => do_squeeze,
-			clk           => clk,
-			rst           => rst,
-			din           => din,
-			din_valid     => din_valid,
-			din_ready     => din_ready,
-			dout          => dout,
-			dout_valid    => dout_valid,
-			dout_ready    => dout_ready,
-			from_mem_dout => from_mem_dout,
-			to_mem_din    => to_mem_din,
-			mem_addr      => mem_addr,
-			mem_we        => mem_we,
-			mem_re        => mem_re
+			clk          => clk,
+			rst          => rst,
+			i_init       => init,
+			i_squeeze    => squeeze,
+			i_absorb     => absorb,
+			o_done       => done,
+			i_din_data   => din_data,
+			i_din_valid  => din_valid,
+			o_din_ready  => din_ready,
+			i_rate       => rate,
+			o_dout_data  => dout_data,
+			o_dout_valid => dout_valid,
+			i_dout_ready => dout_ready
 		);
 
-	rst <= '1', '0' after 19 ns;
+	reset_proc : process
+	begin
+		rst <= '0';
+		wait until falling_edge(clk);
+		rst <= '1';
+		wait until falling_edge(clk);
+		rst <= '0';
+		-- then wait forever
+		wait;
+	end process reset_proc;
+
+	clkgen : process
+	begin
+		clk <= '1';
+		loop
+			wait for G_CLOCK_PERIOD / 2;
+			clk <= not clk;
+		end loop;
+	end process;
 
 	vu_proc : process
 	begin
@@ -85,10 +110,10 @@ begin                                   -- Rtl
 		file filein                            : text open read_mode is G_IN_FILE;
 		file fileout                           : text open write_mode is G_OUT_FILE;
 	begin
-		if rst = '1' then             -- asynchronous rst_n (active low)
+		if rst = '1' then               -- asynchronous rst_n (active low)
 			st         <= initial;
 			counter    := 0;
-			din        <= (others => '0');
+			din_data   <= (others => '0');
 			count_hash := 0;
 			init       <= '0';
 			absorb     <= '0';
@@ -119,8 +144,8 @@ begin                                   -- Rtl
 
 						else
 							hread(line_in, temp);
-							din    <= temp;
-							absorb <= '1';
+							din_data <= temp;
+							absorb   <= '1';
 
 							st      <= st0;
 							counter := 0;
@@ -134,8 +159,8 @@ begin                                   -- Rtl
 						if (counter < 15) then
 							readline(filein, line_in);
 							hread(line_in, temp);
-							din    <= temp;
-							absorb <= '1';
+							din_data <= temp;
+							absorb   <= '1';
 						end if;
 
 						counter := counter + 1;
@@ -167,7 +192,7 @@ begin                                   -- Rtl
 				when END_HASH2 =>
 					squeeze <= '1';
 
-					temp := dout;
+					temp := dout_data;
 					hwrite(line_out, temp);
 					writeline(fileout, line_out);
 					if (counter < 3) then
@@ -184,16 +209,6 @@ begin                                   -- Rtl
 			end case;
 
 		end if;
-	end process;
-
-	-- clock generation
-	clkgen : process
-	begin
-		clk <= '1';
-		loop
-			wait for 10 ns;
-			clk <= not clk;
-		end loop;
 	end process;
 
 end tb;

@@ -15,7 +15,7 @@
 				"tb_polyvec_mac.vhdl"
 			],
 			"depends": [
-				"polymac_dp",
+				"polymac_datapath",
 				"poc"
 			],
 			"tb_configs": [
@@ -76,15 +76,15 @@
 				"pkg"
 			]
 		},
-		"polymac_dp" : {
+		"polymac_datapath" : {
 			"path": "vhdl",
-			"top": "polymac_dp",
-			"tb_top": "polymac_dp_tb",
+			"top": "polymac_datapath",
+			"tb_top": "polymac_datapath_tb",
 			"files": [
-				"polymac_dp.vhdl"
+				"polymac_datapath.vhdl"
 			],
 			"tb_files": [
-				"polymac_dp_tb.vhdl"
+				"polymac_datapath_tb.vhdl"
 			],
 			"depends": [
 				"divider"

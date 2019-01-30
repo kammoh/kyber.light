@@ -5,9 +5,9 @@ import subprocess
 import os
 
 class Ghdl(Sim):
-    def __init__(self, vhdl_version: str = '08'):
+    def __init__(self, vhdl_version: str, top: str):
 
-        super(Ghdl, self).__init__()
+        super(Ghdl, self).__init__(top=top)
 
         self.sim_name = 'ghdl'
         self.cmd = 'ghdl'
@@ -23,7 +23,7 @@ class Ghdl(Sim):
 
         self.vcd_file = None
 
-        self.libs = []
+        self.libs = set()
 
         self.warn_opts = ['-Wbinding', '-Wreserved', '-Wlibrary',
                           '-Wvital-generic', '-Wdelayed-checks', '-Wbody -Wspecs', '-Wunused']
@@ -35,26 +35,40 @@ class Ghdl(Sim):
             # 'make': '{cmd} --gen-makefile {common_args} {opts} {warn_opts} {top} {gen} ',
             'run': '{cmd} -r {top} --vpi={vpi} {gen} {vcd_arg} --ieee-asserts=disable'
         }
+        
+    @classmethod
+    def from_manifest(cls, manifest, module_name):
+        mod=manifest.get_module(module_name)
+        vhdl_version = mod.vhdl_version
+        if not vhdl_version:
+            vhdl_version = "08"
+        sim = cls(vhdl_version=vhdl_version, top=mod.top)
+        
+        for file, library in manifest.module_dependencies(module_name).items():
+            sim.add_source(file=file, library=library)
+            
+        return sim
+
+        
     
     def libs_arg_str(self):
         return ' '.join(['-P' + p for p in self.libs ])
-    
-    def add_sources(self, sources):
-        l = self.libs_arg_str()
-        for source in sources:
-            subprocess.run(f'ghdl -a --work=work --workdir={self.workdir} --std={self.vhdl_version} {l} {source}'.split()).check_returncode()
-    
-    def add_library(self, name, path, sources):
-        lib_path=f'{path}/{name}/{self.vhdl_version}'
-        pathlib.Path(lib_path).mkdir(parents=True, exist_ok=True)
-        for source in sources:
-            subprocess.run(f'ghdl -a --work={name} --workdir={lib_path} --std={self.vhdl_version} {source}'.split()).check_returncode()
-        self.libs.append(lib_path)
+
+    def add_source(self, file, build_path=".", library=None):
+        if library:
+            lib_path=f'{build_path}/{library}/{self.vhdl_version}'
+            pathlib.Path(lib_path).mkdir(parents=True, exist_ok=True)
+            subprocess.run(f'ghdl -a --work={library} --workdir={lib_path} --std={self.vhdl_version} {file}'.split()).check_returncode()
+            self.libs.add(lib_path)
+        else:
+            l = self.libs_arg_str()
+            subprocess.run(f'ghdl -a --work=work --workdir={self.workdir} --std={self.vhdl_version} {l} {file}'.split()).check_returncode()
+
         #self.common_args = self.common_args + ' ' + f'-P{lib_path}'
 
-    def run_test(self, top, test_modules: List[str], test_case: str = None):
-        subprocess.run(f'ghdl -e --work=work --workdir={self.workdir} --std={self.vhdl_version} {self.libs_arg_str()} {top}'.split()).check_returncode()
-        super(Ghdl, self).run_test(top, test_modules, test_case)
+    def run_test(self, test_modules: List[str], test_case: str = None):
+        subprocess.run(f'ghdl -e --work=work --workdir={self.workdir} --std={self.vhdl_version} {self.libs_arg_str()} {self.top}'.split()).check_returncode()
+        super(Ghdl, self).run_test(test_modules, test_case)
 
 
     @property
@@ -73,7 +87,7 @@ class Ghdl(Sim):
         if pre:
             return pre + self.vcd_file  # + ' --write-wave-opt=wave.options'
         else:
-            return None
+            return ""
         
 
 
