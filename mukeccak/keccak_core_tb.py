@@ -1,3 +1,13 @@
+############################################################################################################
+##
+## @description:  CocoTB testbench for keccak_core
+##
+## @author:       Kamyar Mohajerani
+##
+## @requirements: Python 3.5+, CocoTB 1.1+
+## @copyright:    (c) 2019
+##
+############################################################################################################
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import Timer, RisingEdge, FallingEdge, Edge, Join, NextTimeStep
@@ -5,6 +15,7 @@ from cocotb.binary import BinaryValue
 from cocotb.result import TestFailure, TestError, TestSuccess, ReturnValue
 from cocotb.log import SimLog
 from cocotb.wavedrom import Wavedrom
+from cocotb.monitors import BusMonitor
 import random
 from collections import deque
 import tiny_keccak
@@ -39,6 +50,29 @@ def reset(clk, rst):
     yield FallingEdge(clk)
     rst <= 0
     yield RisingEdge(clk)
+
+
+class ValidReadyMonitor(BusMonitor):
+    _signals = ["valid", "data", "ready"]
+    
+    def fire(self):
+        return self.bus.valid.value and self.bus.ready.value
+
+    @coroutine
+    def _monitor_recv(self):
+        """Watch the pins and reconstruct transactions"""
+
+        # Avoid spurious object creation by recycling
+        clkedge = RisingEdge(self.clock)
+        rdonly = ReadOnly()
+
+        # NB could yield on valid here more efficiently?
+        while True:
+            yield clkedge
+            yield rdonly
+            if self.fire():
+                vec = self.bus.data.value
+                self._recv(vec.buff)
 
 
 

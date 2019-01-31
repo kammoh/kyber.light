@@ -14,8 +14,8 @@ entity divider is
 	);
 	port(
 		i_u   : in  std_logic_vector(G_IN_WIDTH - 1 downto 0);
-		o_rem : out t_coef;
-		o_div : out t_coef
+		o_rem : out t_coef_slv;
+		o_div : out t_coef_slv
 	);
 end entity divider;
 

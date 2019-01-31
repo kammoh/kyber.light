@@ -16,7 +16,7 @@ entity cbd4 is
 		in_hword_valid  : in  std_logic;
 		in_hword_ready  : out std_logic;
 		-- out coefficient stream
-		out_coeff_data  : out t_coef;
+		out_coeff_data  : out t_coef_slv;
 		out_coeff_valid : out std_logic;
 		out_coeff_ready : in  std_logic
 	);

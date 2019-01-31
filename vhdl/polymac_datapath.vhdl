@@ -17,27 +17,31 @@ use work.kyber_pkg.all;
 
 entity polymac_datapath is
 	port(
-		clk   : in  std_logic;
+		clk              : in  std_logic;
 		--- Control
-		nega  :     std_logic;
-		en_r  :     std_logic;
-		ld_r  :     std_logic;
+		nega             :     std_logic;
+		en_r             :     std_logic;
+		ld_r             :     std_logic;
 		--- Data
-		in_a  : in  std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0);
-		in_b  : in  std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0);
-		in_r  : in  std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0);
-		out_r : out std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0)
+		in_a             : in  std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0);
+		in_b             : in  std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0);
+		in_r             : in  std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0);
+		out_r            : out std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0);
+		-- Div
+		i_ext_div_select :     std_logic;
+		i_ext_div        : in  std_logic_vector(2 * log2ceil(KYBER_Q) - 1 downto 0);
+		o_ext_div        : out t_coef_slv
 	);
 end entity polymac_datapath;
 
 architecture RTL of polymac_datapath is
 	-- Registers/FF
-	signal r_reg      : t_ucoef;
-	signal a_times_b  : std_logic_vector(2 * log2ceil(KYBER_Q) - 1 downto 0);
-	signal nega_piped : std_logic;
+	signal r_reg                    : t_coef_us;
+	signal a_times_b, divider_input : std_logic_vector(2 * log2ceil(KYBER_Q) - 1 downto 0);
+	signal nega_piped               : std_logic;
 
 	-- Wires
-	signal a_times_b_reduced : t_coef;
+	signal a_times_b_reduced : t_coef_slv;
 	signal add_sub           : unsigned(r_reg'length + 1 downto 0);
 	signal add_sub_minus_q   : unsigned(r_reg'length downto 0);
 
@@ -48,9 +52,12 @@ begin
 			G_IN_WIDTH => 2 * log2ceil(KYBER_Q)
 		)
 		port map(
-			i_u   => a_times_b,
-			o_rem => a_times_b_reduced
+			i_u   => divider_input,
+			o_rem => a_times_b_reduced,
+			o_div => o_ext_div
 		);
+
+	divider_input <= i_ext_div when i_ext_div_select else a_times_b;
 
 	add_sub         <= ("00" & r_reg) - unsigned(a_times_b_reduced) when nega_piped else ("00" & r_reg) + unsigned(a_times_b_reduced);
 	add_sub_minus_q <= resize(add_sub - KYBER_Q, add_sub_minus_q'length);

@@ -1,9 +1,13 @@
 ----------------------------------------------------------------------------------------------------------------------------------
 --  @description: VUnit testbench for keccak core
+--  @author: Kamyar Mohajerani
+--  @rights: (c) 2019 GMU CERG LAB
 --
---       ** INCOMPLETE AND NOT CURRENTLY USED   **
 --
---   >>>> Use Cocotb (python) testbench instead <<<<
+--
+--            ** INCOMPLETE AND NOT CURRENTLY USED   **
+--
+--   >>>> Use Cocotb testbench (keccak_core_tb.py) instead <<<<
 --
 ----------------------------------------------------------------------------------------------------------------------------------
 --

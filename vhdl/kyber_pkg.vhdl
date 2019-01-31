@@ -10,7 +10,6 @@ package kyber_pkg is
 	function imax(arg1 : integer; arg2 : integer; arg3 : integer) return integer;
 	function log2ceil(arg : positive) return natural;
 	function log2ceilnz(arg : positive) return positive;
-
 	-------------------------------------------------------------------------------------------------------------------
 	----------------------------------------------- Constants ---------------------------------------------------------	
 	constant KYBER_Q         : positive := 7681;
@@ -18,10 +17,9 @@ package kyber_pkg is
 	constant KYBER_K         : positive := 3; -- 2: Kyber512, 3: Kyber768 (recommended), 4: KYBER1024
 	constant KYBER_ETA       : positive := 4; -- 5: Kyber512, 4: Kyber768 (recommended), 3: KYBER1024
 	constant KYBER_COEF_BITS : positive := log2ceilnz(KYBER_Q); -- 13
-
 	----------------------------------------------- Types (2) ---------------------------------------------------------
-	subtype t_coef is std_logic_vector(KYBER_COEF_BITS - 1 downto 0);
-	subtype t_ucoef is unsigned(KYBER_COEF_BITS - 1 downto 0);
+	subtype t_coef_slv is std_logic_vector(KYBER_COEF_BITS - 1 downto 0);
+	subtype t_coef_us is unsigned(KYBER_COEF_BITS - 1 downto 0);
 	-------------------------------------------------------------------------------------------------------------------
 	----------------------------------------- std_logic_1164_additions ------------------------------------------------
 	---------------------------------------- only required for VHDL < 2008 --------------------------------------------
@@ -32,7 +30,6 @@ package kyber_pkg is
 	--	function to_string(value : integer) return STRING;
 	--	function to_string(value : time) return STRING;
 	--	function to_hstring(value : bit_vector) return STRING;
-
 end package kyber_pkg;
 
 package body kyber_pkg is
