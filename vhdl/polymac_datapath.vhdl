@@ -19,16 +19,16 @@ entity polymac_datapath is
 	port(
 		clk              : in  std_logic;
 		--- Control
-		nega             :     std_logic;
-		en_r             :     std_logic;
-		ld_r             :     std_logic;
+		nega             : in  std_logic;
+		en_r             : in  std_logic;
+		ld_r             : in  std_logic;
 		--- Data
 		in_a             : in  std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0);
 		in_b             : in  std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0);
 		in_r             : in  std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0);
 		out_r            : out std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0);
 		-- Div
-		i_ext_div_select :     std_logic;
+		i_ext_div_select : in  std_logic;
 		i_ext_div        : in  std_logic_vector(2 * log2ceil(KYBER_Q) - 1 downto 0);
 		o_ext_div        : out t_coef_slv
 	);

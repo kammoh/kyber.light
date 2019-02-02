@@ -15,10 +15,10 @@ entity polyvec_mac is
 		clk                : in  std_logic;
 		rst                : in  std_logic;
 		-- Control
-		i_rec_a            : in  std_logic;
-		i_rec_b            : in  std_logic;
-		i_rec_r            : in  std_logic;
-		i_snd_r            : in  std_logic;
+		i_recv_a           : in  std_logic;
+		i_recv_b           : in  std_logic;
+		i_recv_r           : in  std_logic;
+		i_send_r           : in  std_logic;
 		i_do_mac           : in  std_logic;
 		i_subtract         : in  std_logic;
 		o_done             : out std_logic;
@@ -39,8 +39,8 @@ end entity polyvec_mac;
 architecture RTL of polyvec_mac is
 	------------------------------------------ Constants ----------------------------------------------
 	------------------------------------------ Types --------------------------------------------------
-	type t_state is (s_init, s_receive_a, s_receive_b, s_receive_r, s_mac_rd_r, s_mac_piped, s_mac_flush_0,
-	                 s_mac_wr_r, s_send_r, s_done
+	type t_state is (s_init, s_receive_a, s_receive_b, s_receive_r, s_mac_rd_r, s_mac_piped, s_mac_flush,
+	                 s_mac_wr_r, s_send_r, s_send_r_flush, s_done
 	                );
 	-- data-path constants
 	--	constant N_minus_one        : unsigned := to_unsigned(KYBER_N - 1, log2ceil(KYBER_N - 1) - 1);
@@ -82,7 +82,6 @@ architecture RTL of polyvec_mac is
 	signal a_ram_ce             : std_logic;
 	signal a_ram_we             : std_logic;
 	signal a_ram_addr           : unsigned(log2ceil(KYBER_K * KYBER_N) - 1 downto 0);
-	signal a_ram_in_data        : std_logic_vector(KYBER_COEF_BITS - 1 downto 0);
 	signal a_ram_out_data       : std_logic_vector(KYBER_COEF_BITS - 1 downto 0);
 
 begin
@@ -144,7 +143,7 @@ begin
 			ce       => a_ram_ce,
 			we       => a_ram_we,
 			in_addr  => a_ram_addr,
-			in_data  => a_ram_in_data,
+			in_data  => i_din_data,
 			out_data => a_ram_out_data
 		);
 
@@ -159,39 +158,48 @@ begin
 	regs_proc : process(clk)
 	begin
 		if rising_edge(clk) then
-			en_r_piped_reg <= en_r;
-			ld_r_piped_reg <= ld_r;
 			if rst = '1' then
-				state <= s_init;
+				state                <= s_init;
+				dout_valid_piped_reg <= '0';
 			else
+				en_r_piped_reg <= en_r;
+				ld_r_piped_reg <= ld_r;
 				case state is
 					when s_init =>
 						r_idx_reg <= (others => '0');
 						k_reg     <= (others => '0');
 						b_idx_reg <= (others => '0');
-						if i_rec_a then
+						if i_recv_a then
 							state <= s_receive_a;
-						elsif i_rec_b then
+						elsif i_recv_b then
 							state <= s_receive_b;
-						elsif i_rec_r then
+						elsif i_recv_r then
 							state <= s_receive_r;
 						elsif i_do_mac then
 							state <= s_mac_rd_r;
-						elsif i_snd_r then
+						elsif i_send_r then
 							state <= s_send_r;
 						end if;
 					when s_receive_a =>
 						if i_din_valid then
 							r_idx_reg <= r_idx_reg_next;
 							if r_idx_plus_one_carry then
-								state <= s_done;
+								k_reg <= k_reg + 1;
+								if k_reg = (KYBER_K - 1) then
+									k_reg <= (others => '0');
+									state <= s_done;
+								end if;
 							end if;
 						end if;
 					when s_receive_b =>
 						if i_din_valid then
 							b_idx_reg <= b_idx_reg_next;
 							if b_idx_plus_one_carry then
-								state <= s_done;
+								k_reg <= k_reg + 1;
+								if k_reg = (KYBER_K - 1) then
+									k_reg <= (others => '0');
+									state <= s_done;
+								end if;
 							end if;
 						end if;
 					when s_receive_r =>
@@ -209,10 +217,10 @@ begin
 							k_reg <= k_reg + 1;
 							if k_reg = (KYBER_K - 1) then
 								k_reg <= (others => '0');
-								state <= s_mac_flush_0;
+								state <= s_mac_flush;
 							end if;
 						end if;
-					when s_mac_flush_0 =>
+					when s_mac_flush =>
 						state <= s_mac_wr_r;
 					when s_mac_wr_r =>
 						r_idx_reg <= r_idx_reg_next;
@@ -222,14 +230,19 @@ begin
 							state <= s_mac_rd_r;
 						end if;
 					when s_send_r =>
-						if i_dout_ready then
+						dout_valid_piped_reg <= '1';
+						if i_dout_ready or not dout_valid_piped_reg then -- "FIFO" to be consumed or "FIFO" is empty
 							r_idx_reg <= r_idx_reg_next;
 							if r_idx_plus_one_carry then
 								state <= s_done;
 							end if;
 						end if;
+					when s_send_r_flush =>
+						if i_dout_ready then
+							dout_valid_piped_reg <= '0';
+						end if;
 					when s_done =>
-						if not (i_rec_a or i_rec_b or i_rec_r or i_do_mac or i_snd_r) then
+						if not (i_recv_a or i_recv_b or i_recv_r or i_do_mac or i_send_r) then
 							state <= s_init;
 						end if;
 
@@ -242,7 +255,6 @@ begin
 	comb_proc : process(all) is
 	begin
 		-- memory address generation and nega
-		r_idx_minus_b_idx  <= ("0" & r_idx_reg) - b_idx_reg;
 		if r_idx_minus_b_idx(r_idx_minus_b_idx'length - 1) then -- r_idx < b_idx
 			a_idx <= resize(r_idx_minus_b_idx + KYBER_N, a_idx'length);
 			nega  <= not i_subtract;
@@ -250,13 +262,12 @@ begin
 			a_idx <= resize(r_idx_minus_b_idx, a_idx'length);
 			nega  <= i_subtract;
 		end if;
-		r_addr             <= (to_unsigned(KYBER_K, k_reg'length) & b_idx_reg);
-		a_ram_addr         <= (k_reg & a_idx); --  MAC: a_idx, s_receive_a: b_idx_reg == 0 
+		----
 		b_r_ram_addr       <= (k_reg & b_idx_reg); -- default: b
+		b_r_ram_in_data    <= i_din_data;
 		-- control signals defaults
 		o_done             <= '0';
 		o_din_ready        <= '0';
-		o_dout_valid       <= '0';
 		nega               <= '0';
 		en_r               <= '0';
 		ld_r               <= '0';
@@ -270,42 +281,52 @@ begin
 			when s_init =>
 				null;
 			when s_receive_a =>
-				a_ram_ce    <= '1';
-				a_ram_we    <= '1';
+				a_ram_ce    <= i_din_valid;
+				a_ram_we    <= i_din_valid;
 				o_din_ready <= '1';
 			when s_receive_b =>
-				b_r_ram_ce  <= '1';
-				b_r_ram_we  <= '1';
+				b_r_ram_ce  <= i_din_valid;
+				b_r_ram_we  <= i_din_valid;
 				o_din_ready <= '1';
 			when s_receive_r =>
-				b_r_ram_ce   <= '1';
-				b_r_ram_we   <= '1';
+				b_r_ram_ce   <= i_din_valid;
+				b_r_ram_we   <= i_din_valid;
 				b_r_ram_addr <= r_addr;
 				o_din_ready  <= '1';
 			when s_mac_rd_r =>
-				b_r_ram_ce   <= '1';
-				b_r_ram_addr <= r_addr;
-				en_r         <= '1';
-				ld_r         <= '1';
+				b_r_ram_ce      <= '1';
+				b_r_ram_addr    <= r_addr;
+				en_r            <= '1';
+				ld_r            <= '1';
+				b_r_ram_in_data <= rout;
 			when s_mac_piped =>
 				a_ram_ce           <= '1';
 				b_r_ram_ce         <= '1';
 				en_r               <= '1';
 				o_ext_div_selected <= '0';
-			when s_mac_flush_0 =>
+			when s_mac_flush =>
 				o_ext_div_selected <= '0';
 			when s_mac_wr_r =>
 				b_r_ram_ce   <= '1';
 				b_r_ram_we   <= '1';
 				b_r_ram_addr <= r_addr;
 			when s_send_r =>
-				b_r_ram_ce   <= '1';
+				b_r_ram_ce   <= i_dout_ready or not dout_valid_piped_reg;
 				b_r_ram_addr <= r_addr;
-				o_dout_valid <= '1';
+			when s_send_r_flush =>
+				null;
 			when s_done =>
 				o_done <= '1';
 		end case;
 
 	end process comb_proc;
 
+	r_idx_minus_b_idx <= ("0" & r_idx_reg) - b_idx_reg;
+	r_addr            <= (to_unsigned(KYBER_K, k_reg'length) & r_idx_reg);
+	rin               <= b_r_ram_out_data;
+	o_dout_valid      <= dout_valid_piped_reg;
+	o_dout_data       <= b_r_ram_out_data;
+	-- 
+	-- MAC: a_idx, s_receive_a: b_idx_reg == 0  -> a_idx = r_idx_minus_b_idx = r_idx
+	a_ram_addr        <= (k_reg & a_idx);
 end architecture RTL;

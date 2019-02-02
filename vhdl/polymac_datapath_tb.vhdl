@@ -17,20 +17,23 @@ entity polymac_dp_tb is
 		runner_cfg        : string;
 		G_CLK_PERIOD      : time    := 1 ns;
 		G_EXTRA_RND_SEED  : string  := "3.14159265";
-		G_TEST_ITERATIONS : integer := 2 ** 17
+		G_TEST_ITERATIONS : integer := 2 ** 16
 	);
 end entity polymac_dp_tb;
 
 architecture TB of polymac_dp_tb is
-	signal clk    : std_logic := '0';
-	signal rst    : std_logic;
-	signal nega   : std_logic;
-	signal r_en   : std_logic;
-	signal r_load : std_logic;
-	signal a      : std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0);
-	signal b      : std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0);
-	signal rin    : std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0);
-	signal rout   : std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0);
+	signal clk              : std_logic := '0';
+	signal rst              : std_logic;
+	signal nega             : std_logic;
+	signal r_en             : std_logic;
+	signal r_load           : std_logic;
+	signal a                : std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0);
+	signal b                : std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0);
+	signal rin              : std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0);
+	signal rout             : std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0);
+	signal i_ext_div_select : std_logic;
+	signal i_ext_div        : std_logic_vector(2 * log2ceil(KYBER_Q) - 1 downto 0);
+	signal o_ext_div        : t_coef_slv;
 begin
 	clk <= not clk after G_CLK_PERIOD / 2;
 
@@ -44,10 +47,11 @@ begin
 	end process reset_proc;
 
 	tb_proc : process
-		variable RndR  : RandomPType;
-		variable rin_v : std_logic_vector(rin'length - 1 downto 0);
-		variable a_v   : std_logic_vector(a'length - 1 downto 0);
-		variable b_v   : std_logic_vector(b'length - 1 downto 0);
+		variable RndR      : RandomPType;
+		variable rin_v     : std_logic_vector(rin'length - 1 downto 0);
+		variable a_v       : std_logic_vector(a'length - 1 downto 0);
+		variable b_v       : std_logic_vector(b'length - 1 downto 0);
+		variable ext_div_v : std_logic_vector(2 * log2ceil(KYBER_Q) - 1 downto 0);
 	begin
 		test_runner_setup(runner, runner_cfg);
 
@@ -63,6 +67,8 @@ begin
 
 			wait until rst = '0';
 			wait for 2 * G_CLK_PERIOD;
+
+			i_ext_div_select <= '0';
 
 			if run("positive") then
 				for i in 0 to G_TEST_ITERATIONS loop
@@ -107,9 +113,15 @@ begin
 
 					check_equal(unsigned(rout), resize((("00" & rin) + KYBER_Q - ((a * b) mod KYBER_Q)) mod KYBER_Q, rout'length), " for a=" & to_string(to_integer(a)) & " b=" & to_String(to_integer(b)) & " r0=" & to_string(to_integer(rin))
 					);
-
 				end loop;
-
+			elsif run("External access to divider") then
+				for i in 0 to 2 * G_TEST_ITERATIONS loop
+					i_ext_div_select <= '1';
+					ext_div_v        := RndR.RandSlv(2**log2ceil(KYBER_Q) * (KYBER_Q - 1), i_ext_div'length);
+					i_ext_div        <= ext_div_v;
+					wait until falling_edge(clk);
+					check_equal(unsigned(o_ext_div), ext_div_v / KYBER_Q);
+				end loop;
 			end if;
 
 		end loop while_test_suite_loop;
@@ -120,14 +132,17 @@ begin
 
 	dut : entity work.polymac_datapath
 		port map(
-			clk    => clk,
-			nega   => nega,
-			en_r   => r_en,
-			ld_r => r_load,
-			in_a      => a,
-			in_b      => b,
-			in_r    => rin,
-			out_r   => rout
+			clk              => clk,
+			nega             => nega,
+			en_r             => r_en,
+			ld_r             => r_load,
+			in_a             => a,
+			in_b             => b,
+			in_r             => rin,
+			out_r            => rout,
+			i_ext_div_select => i_ext_div_select,
+			i_ext_div        => i_ext_div,
+			o_ext_div        => o_ext_div
 		);
 
 end architecture TB;

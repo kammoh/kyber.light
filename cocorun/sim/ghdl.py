@@ -21,7 +21,7 @@ class Ghdl(Sim):
         pathlib.Path(work_path).mkdir(parents=True, exist_ok=True)
         self.workdir = work_path
 
-        self.vcd_file = None
+        self.wave_dump = None
 
         self.libs = set()
 
@@ -74,18 +74,18 @@ class Ghdl(Sim):
     @property
     def vcd_arg(self):
         pre = None
-        if self.vcd_file:
-            if self.vcd_file.endswith('.vcd.gz'):
+        if self.wave_dump:
+            if self.wave_dump.endswith('.vcd.gz'):
                 pre = '--vcdgz='
-            if self.vcd_file.endswith('.ghw'):
+            if self.wave_dump.endswith('.ghw'):
                 pre = '--wave='
-            elif self.vcd_file.endswith('.fst'):
+            elif self.wave_dump.endswith('.fst'):
                 pre = '--fst='
             else:
                 pre = '--vcd='
             # return self.vcd_arg + self.vcd_file + ' --write-wave-opt=wave.options'
         if pre:
-            return pre + self.vcd_file  # + ' --write-wave-opt=wave.options'
+            return pre + self.wave_dump  # + ' --write-wave-opt=wave.options'
         else:
             return ""
         

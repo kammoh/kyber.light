@@ -7,26 +7,37 @@
 		"polyvec_mac": {
 			"path": "vhdl",
 			"top": "polyvec_mac",
-			"tb_top": "tb_polyvec_mac",
+			"tb_top": "polyvec_mac_tb",
 			"files": [
 				"polyvec_mac.vhdl"
 			],
 			"tb_files": [
-				"tb_polyvec_mac.vhdl"
+				"polyvec_mac_tb.vhdl"			
 			],
 			"depends": [
 				"polymac_datapath",
-				"poc"
+				"poc_ram"
 			],
 			"tb_configs": [
 			]
 		},
-		"poc": {
-			"path": "vhdl/PoC",
-			"files": [
-				"*/*.vhdl"
+		"poc_ram": 
+		{
+			"path": "PoC/src",
+			"files": 
+			[
+				"common/my_config.vhdl",
+				"common/my_project.vhdl",
+				"common/utils.vhdl",
+				"common/config.vhdl",
+				"common/strings.vhdl",
+				"common/vectors.vhdl",
+				"mem/mem.pkg.vhdl",
+				"mem/ocram/ocram_sp.vhdl",
+				"mem/ocram/ocram.pkg.vhdl"
 			],
-			"library_name": "PoC"
+
+			"library": "PoC"
 		},
 		"barret": {
 			"path": "vhdl",
@@ -88,40 +99,6 @@
 			],
 			"depends": [
 				"divider"
-			]
-		},
-		"keccak_mid": {
-			"path": "keccak/mid_range_core",
-			"top": "keccak",
-			"tb_top": "keccak_tb",
-			"files": "*.vhd",
-			"tb_files": [
-				"tb_keccak.vhd"
-			],
-			"tb_configs": [
-				{
-					"G_IN_FILE": "keccak/test_vectors/Sources/keccak_in.txt",
-					"G_OUT_FILE": "keccak/outputs/keccak_out_compact_mid_vhdl.txt"
-				}
-			]
-		},
-		"keccak_coproc": {
-			"path": "keccak/low_area_coproc",
-			"top": "keccak_copro",
-			"tb_top": "keccak_coproc_tb",
-			"files": "*.vhd",
-			"tb_files": [
-				"tb_keccak_copro.vhd",
-				"system_mem.vhd"
-			]
-		},
-		"keccak_lw": {
-			"path": "vhdl/Keccak_LW",
-			"top": "keccak",
-			"tb_top": "testbench1",
-			"files": ["sources/*.vhd", "sources/*.vhdl"],
-			"tb_files": [
-				"tb/testbench1.vhd"
 			]
 		}
 	}
