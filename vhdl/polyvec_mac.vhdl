@@ -39,8 +39,11 @@ end entity polyvec_mac;
 architecture RTL of polyvec_mac is
 	------------------------------------------ Constants ----------------------------------------------
 	------------------------------------------ Types --------------------------------------------------
-	type t_state is (s_init, s_receive_a, s_receive_b, s_receive_r, s_mac_rd_r, s_mac_fill, s_mac_piped, s_mac_flush,
-	                 s_mac_wr_r, s_send_r, s_send_r_flush, s_done
+	type t_state is (s_init,
+	                 s_receive_a, s_receive_b, s_receive_r,
+	                 s_mac_rd_r, s_mac_fill, s_mac_piped, s_mac_flush_1, s_mac_flush_2, s_mac_wr_r,
+	                 s_send_r, s_send_r_flush,
+	                 s_done
 	                );
 	------------------------------------------ Registers/FFs ------------------------------------------
 	-- state
@@ -217,10 +220,12 @@ begin
 							k_reg <= k_reg + 1;
 							if k_reg = (KYBER_K - 1) then
 								k_reg <= (others => '0');
-								state <= s_mac_flush;
+								state <= s_mac_flush_1;
 							end if;
 						end if;
-					when s_mac_flush =>
+					when s_mac_flush_1 =>
+						state <= s_mac_flush_2;
+					when s_mac_flush_2 =>
 						state <= s_mac_wr_r;
 					when s_mac_wr_r =>
 						r_idx_reg <= r_idx_reg_next;
@@ -279,52 +284,58 @@ begin
 		b_r_ram_we         <= '0';
 		a_ram_ce           <= '0';
 		a_ram_we           <= '0';
-		o_ext_div_selected <= '1';      -- normally asserted unless this module is utilizing the divider (remainder)
+		o_ext_div_selected <= '0';
 
 		case state is
 			when s_init =>
-				null;
+				o_ext_div_selected <= '1';
 			when s_receive_a =>
-				a_ram_ce    <= i_din_valid;
-				a_ram_we    <= i_din_valid;
-				o_din_ready <= '1';
+				a_ram_ce           <= i_din_valid;
+				a_ram_we           <= i_din_valid;
+				o_din_ready        <= '1';
+				o_ext_div_selected <= '1';
 			when s_receive_b =>
-				b_r_ram_ce  <= i_din_valid;
-				b_r_ram_we  <= i_din_valid;
-				o_din_ready <= '1';
+				b_r_ram_ce         <= i_din_valid;
+				b_r_ram_we         <= i_din_valid;
+				o_din_ready        <= '1';
+				o_ext_div_selected <= '1';
 			when s_receive_r =>
-				b_r_ram_ce   <= i_din_valid;
-				b_r_ram_we   <= i_din_valid;
-				b_r_ram_addr <= r_addr;
-				o_din_ready  <= '1';
+				b_r_ram_ce         <= i_din_valid;
+				b_r_ram_we         <= i_din_valid;
+				b_r_ram_addr       <= r_addr;
+				o_din_ready        <= '1';
+				o_ext_div_selected <= '1';
 			when s_mac_rd_r =>
-				b_r_ram_ce   <= '1';
-				b_r_ram_addr <= r_addr;
-				en_r         <= '1';
-				ld_r         <= '1';
-			when s_mac_fill =>
-				a_ram_ce           <= '1';
 				b_r_ram_ce         <= '1';
-				o_ext_div_selected <= '0';
-			when s_mac_piped =>
-				a_ram_ce           <= '1';
-				b_r_ram_ce         <= '1';
+				b_r_ram_addr       <= r_addr;
 				en_r               <= '1';
-				o_ext_div_selected <= '0';
-			when s_mac_flush =>
-				o_ext_div_selected <= '0';
+				ld_r               <= '1';
+				o_ext_div_selected <= '1';
+			when s_mac_fill =>
+				a_ram_ce   <= '1';
+				b_r_ram_ce <= '1';
+			when s_mac_piped =>
+				a_ram_ce   <= '1';
+				b_r_ram_ce <= '1';
+				en_r       <= '1';
+			when s_mac_flush_1 =>
+				en_r <= '1';
+			when s_mac_flush_2 =>
+				null;
 			when s_mac_wr_r =>
 				b_r_ram_ce      <= '1';
 				b_r_ram_we      <= '1';
 				b_r_ram_addr    <= r_addr;
 				b_r_ram_in_data <= rout;
 			when s_send_r =>
-				b_r_ram_ce   <= i_dout_ready or not dout_valid_piped_reg;
-				b_r_ram_addr <= r_addr;
+				b_r_ram_ce         <= i_dout_ready or not dout_valid_piped_reg;
+				b_r_ram_addr       <= r_addr;
+				o_ext_div_selected <= '1';
 			when s_send_r_flush =>
-				null;
+				o_ext_div_selected <= '1';
 			when s_done =>
-				o_done <= '1';
+				o_ext_div_selected <= '1';
+				o_done             <= '1';
 		end case;
 
 	end process comb_proc;

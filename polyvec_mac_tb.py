@@ -260,7 +260,7 @@ class ValidReadyMonitor(BusMonitor):
 
 
 class CmdDoneTester(object):
-    def __init__(self, dut, input_name, output_name, num_out_words, valid_gen=None, debug=False):
+    def __init__(self, dut, input_name, output_name, num_out_words, valid_gen=None, debug=False, seed=None):
         self.dut = dut
         self.nwords = num_out_words
         self.stream_in = ValidReadyDriver(dut, input_name, dut.clk)
@@ -270,7 +270,9 @@ class CmdDoneTester(object):
         self.expected_output = []
         self.scoreboard = Scoreboard(dut)
         self.scoreboard.add_interface(self.stream_out, self.expected_output, strict_type=True)
+        self.rnd = random.Random()
 
+        self.rnd.seed(seed)
 
         if valid_gen:
             self.stream_in.set_valid_generator(valid_gen())
@@ -293,7 +295,7 @@ class CmdDoneTester(object):
     def gen_output_ready(self):
         edge = RisingEdge(self.dut.clk)
         while True:
-            self.stream_out.bus.ready <= random.randrange(2)
+            self.stream_out.bus.ready <= self.rnd.randrange(2)
             yield edge
 
 
@@ -358,21 +360,15 @@ def run_test(dut, valid_gen=None, ready_gen=None):
 
     yield clkedge
 
-    a = PolynomialVector.zero()
-    a.polys[0].coeffs[0] = 1
-    a.polys[1].coeffs[0] = 1
-    a.polys[2].coeffs[0] = 1
-    print("a--------")
-    a.dump()
-    b = PolynomialVector.zero()
-    b.polys[0].coeffs[0] = KYBER_Q - 1
-    b.polys[1].coeffs[0] = KYBER_Q - 1
-    b.polys[2].coeffs[0] = KYBER_Q - 1
-    print("\nb--------")
-    b.dump()
-    r = Polynomial.zero()
-    print("r--------")
-    r.dump()
+    a = PolynomialVector.random(tb.rnd)
+    # print("a--------")
+    # a.dump()
+    b = PolynomialVector.random(tb.rnd)
+    # print("\nb--------")
+    # b.dump()
+    r = Polynomial.random(tb.rnd)
+    # print("r--------")
+    # r.dump()
 
     exp = polyvec_nega_mac(r, a, b)
     print("exp--------")

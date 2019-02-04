@@ -38,7 +38,7 @@ architecture RTL of polymac_datapath is
 	-- Registers/FF
 	signal r_reg                    : t_coef_us;
 	signal a_times_b, divider_input : std_logic_vector(2 * log2ceil(KYBER_Q) - 1 downto 0);
-	signal nega_piped               : std_logic;
+	signal nega_delayed_1, nega_delayed_2               : std_logic;
 
 	-- Wires
 	signal a_times_b_reduced : t_coef_slv;
@@ -59,7 +59,7 @@ begin
 
 	divider_input <= i_ext_div when i_ext_div_select else a_times_b;
 
-	add_sub         <= ("00" & r_reg) - unsigned(a_times_b_reduced) when nega_piped else ("00" & r_reg) + unsigned(a_times_b_reduced);
+	add_sub         <= ("00" & r_reg) - unsigned(a_times_b_reduced) when nega_delayed_2 else ("00" & r_reg) + unsigned(a_times_b_reduced);
 	add_sub_minus_q <= resize(add_sub - KYBER_Q, add_sub_minus_q'length);
 
 	name : process(clk) is
@@ -67,7 +67,8 @@ begin
 		if rising_edge(clk) then
 			-- pipeline:
 			a_times_b  <= in_a * in_b;  -- TODO replace with mult module
-			nega_piped <= nega;
+			nega_delayed_1 <= nega;
+			nega_delayed_2 <= nega_delayed_1;
 
 			if en_r then                -- register enable
 				if ld_r then

@@ -17,13 +17,17 @@ KYBER_ETA = pyber_clib.KYBER_ETA
 class Polynomial():
     def __init__(self, coeffs: IterableType[int]):
         assert isinstance(coeffs, Iterable) and all(isinstance(c, int) for c in coeffs) and len(coeffs) == KYBER_N, "wrong argument type"
-        self.coeffs = coeffs
+        self.coeffs = list(coeffs) # need to make a copy!!!
 
     @classmethod
-    def random(cls):
+    def random(cls, rnd=None):
         """create new Polynomial of order KYBER_N with random coefficients over Z/KYBER_Q """
+        if not rnd:
+            rnd = random.Random()
+            rnd.seed(1)
+        
         def random_word(min, max):
-            return (random.randint(min, max))
+            return (rnd.randint(min, max))
 
         return cls(coeffs=[random_word(0, KYBER_Q - 1) for _ in range(KYBER_N)])
     
@@ -58,8 +62,8 @@ class PolynomialVector():
         self.polys = polys
 
     @classmethod
-    def random(cls):
-        return cls(polys=[Polynomial.random() for _ in range(KYBER_K)])
+    def random(cls, rnd=None):
+        return cls(polys=[Polynomial.random(rnd) for _ in range(KYBER_K)])
 
     @classmethod
     def zero(cls):
@@ -96,7 +100,7 @@ def polyvec_nega_mac(p_r: Polynomial, pv_a: PolynomialVector, pv_b: PolynomialVe
     pyber_clib.polyvec_nega_mac(
         cpoly_r, cpolyvec_a, cpolyvec_b, 1 if subtract else 0)
 
-    return Polynomial(cpoly_r.coeffs)
+    return Polynomial(cpoly_r.coeffs) # need to copy!!!
 
 
 __all__ = ['polyvec_nega_mac', 'KYBER_N',
@@ -104,22 +108,16 @@ __all__ = ['polyvec_nega_mac', 'KYBER_N',
 
 
 if __name__ == '__main__':
-    a = PolynomialVector.zero()
-    a.polys[0].coeffs[0] = 1
-    a.polys[1].coeffs[0] = 1
-    a.polys[2].coeffs[0] = 1
+    a = PolynomialVector.random()
     print("a--------")
-    # a.dump()
-    b = PolynomialVector.zero()
-    b.polys[0].coeffs[0] = KYBER_Q - 1
-    b.polys[1].coeffs[0] = KYBER_Q - 1
-    b.polys[2].coeffs[0] = KYBER_Q - 1
+    a.dump()
+    b = PolynomialVector.random()
     print("\nb--------")
-    # b.dump()
-    r = Polynomial.zero()
+    b.dump()
+    r = Polynomial.random()
     print("r--------")
-    # r.dump()
+    r.dump()
 
     exp = polyvec_nega_mac(r, a, b)
     print("exp--------")
-    # exp.dump()
+    exp.dump()
