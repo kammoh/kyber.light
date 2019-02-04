@@ -1,64 +1,125 @@
 from _pyber import ffi
 import _pyber.lib as pyber_clib
+import random
+from collections.abc import Iterable
+from typing import List, Iterable as IterableType
+import shutil
+from math import log2, ceil
+import os
 
 
 KYBER_N = pyber_clib.KYBER_N
 KYBER_K = pyber_clib.KYBER_K
+KYBER_Q = pyber_clib.KYBER_Q
+KYBER_ETA = pyber_clib.KYBER_ETA
 
 
-__all__=['polyvec_nega_mac', 'KYBER_N', 'KYBER_K']
+class Polynomial():
+    def __init__(self, coeffs: IterableType[int]):
+        assert isinstance(coeffs, Iterable) and all(isinstance(c, int) for c in coeffs) and len(coeffs) == KYBER_N, "wrong argument type"
+        self.coeffs = coeffs
 
-def polyvec_nega_mac(pr, pa, pb, subtract=False):
-    print(f"KYBER_N={KYBER_N} KYBER_K={KYBER_K}")
+    @classmethod
+    def random(cls):
+        """create new Polynomial of order KYBER_N with random coefficients over Z/KYBER_Q """
+        def random_word(min, max):
+            return (random.randint(min, max))
 
-    def to_poly(p):
-        print(type(p))
-        return [ [ [[x] for x in p] ] ]
-
+        return cls(coeffs=[random_word(0, KYBER_Q - 1) for _ in range(KYBER_N)])
     
-    def to_polyvec(pv):
-        print('pv: ',type(pv[0]))
-        return [ to_poly(p) for p in pv ]
+    @classmethod
+    def zero(cls):
+        """create new Polynomial of order KYBER_N with all coefficients set to 0 """
+        return cls(coeffs=[0 for _ in range(KYBER_N)])
 
-    poly_a = ffi.new('polyvec *')
-    poly_b = ffi.new('polyvec *')
-    poly_r = ffi.new('poly *')
+    def __iter__(self):
+        for c in self.coeffs:
+            yield c
 
-    for k in range(KYBER_K):
-        for i in range(KYBER_N):
-            if k == 0:
-                poly_r.coeffs[i] = pr[i]
-            poly_a.vec[k].coeffs[i] = pa[k][i]
-            poly_b.vec[k].coeffs[i] = pb[k][i]
-    pyber_clib.polyvec_nega_mac(poly_r, poly_a, poly_b, 1 if subtract else 0)
-    pr = []
-    for i in range(KYBER_N):
-        pr.append(poly_r.coeffs[i])
+    def dump(self):
+        term_width, _ = shutil.get_terminal_size()
+        col = 0
+        nibles = (int(ceil(log2(KYBER_Q))) + 3) // 4
+        for c in self.coeffs:
+            col += nibles + 1
+            if col + nibles >= term_width:
+                end = os.linesep
+                col = 0
+            else:
+                end = " "
+            print(f"{c:0>{nibles}X}", end=end)
 
-    return pr
+        print("")
+
+
+class PolynomialVector():
+    def __init__(self, polys: IterableType[Polynomial]):
+        assert isinstance(polys, Iterable) and all(isinstance(p, Polynomial) for p in polys) and len(polys) == KYBER_K, "wrong argument type"
+        self.polys = polys
+
+    @classmethod
+    def random(cls):
+        return cls(polys=[Polynomial.random() for _ in range(KYBER_K)])
+
+    @classmethod
+    def zero(cls):
+        return cls(polys=[Polynomial.zero() for _ in range(KYBER_K)])
+
+    def __iter__(self):
+        for p in self.polys:
+            yield list(p)
+
+    def dump(self):
+        for i, p in enumerate(self.polys):
+            print(f" Poly[{i}]:")
+            p.dump()
+
+
+def polyvec_nega_mac(p_r: Polynomial, pv_a: PolynomialVector, pv_b: PolynomialVector, subtract=False) -> Polynomial:
+    """ 
+
+        @returns: Polynomial  (pv_a * pv_b - p_r) if subtract==True else (pv_a * pv_b + p_r) 
+    """
+    assert isinstance(p_r, Polynomial) and isinstance(
+        pv_a, PolynomialVector) and isinstance(pv_b, PolynomialVector)
+
+    def to_cpoly(p):
+        return [list(p)]
+
+    def to_cpolyvec(pv):
+        return [[to_cpoly(p) for p in pv.polys]]
+
+    cpolyvec_a = ffi.new('polyvec *', to_cpolyvec(pv_a))
+    cpolyvec_b = ffi.new('polyvec *', to_cpolyvec(pv_b))
+    cpoly_r = ffi.new('poly *', to_cpoly(p_r))
+
+    pyber_clib.polyvec_nega_mac(
+        cpoly_r, cpolyvec_a, cpolyvec_b, 1 if subtract else 0)
+
+    return Polynomial(cpoly_r.coeffs)
+
+
+__all__ = ['polyvec_nega_mac', 'KYBER_N',
+           'KYBER_K', 'KYBER_Q', 'KYBER_ETA', 'Polynomial', 'PolynomialVector']
 
 
 if __name__ == '__main__':
-    a = []
-    b = []
-    r = []
-    for k in range(KYBER_K):
-        p1 = []
-        p2 = []
-        for i in range(KYBER_N):
-            p1.append(k*256 + i)
-            p2.append(k*256 + i)
-        a.append(p1)
-        b.append(p2)
+    a = PolynomialVector.zero()
+    a.polys[0].coeffs[0] = 1
+    a.polys[1].coeffs[0] = 1
+    a.polys[2].coeffs[0] = 1
+    print("a--------")
+    # a.dump()
+    b = PolynomialVector.zero()
+    b.polys[0].coeffs[0] = KYBER_Q - 1
+    b.polys[1].coeffs[0] = KYBER_Q - 1
+    b.polys[2].coeffs[0] = KYBER_Q - 1
+    print("\nb--------")
+    # b.dump()
+    r = Polynomial.zero()
+    print("r--------")
+    # r.dump()
 
-    for i in range(KYBER_N):
-        r.append(255 - i)
-
-
-    rr = polyvec_nega_mac(r, a, b)
-
-
-    for x in rr:
-        print(f"{x:0>4X}", end=' ')
-
-    print()
+    exp = polyvec_nega_mac(r, a, b)
+    print("exp--------")
+    # exp.dump()

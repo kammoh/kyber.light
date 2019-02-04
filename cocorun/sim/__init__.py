@@ -23,6 +23,7 @@ class Sim(object):
         self.top = top
         self.top_lang=''
         self.seed=None
+        self.log_level=None
         self.phases = collections.OrderedDict()
         self.python_lib_path = sysconfig.get_config_var('LIBDIR')
         self.python_include_path = sysconfig.get_config_var('INCLUDEPY')
@@ -121,7 +122,7 @@ class Sim(object):
         env['TOPLEVEL'] = self.top # TODO what about top_arch? Do we need this AT ALL?!
         
         env['TOPLEVEL_LANG'] = self.top_lang
-        env['COCOTB_LOG_LEVEL'] = 'INFO'
+        env['COCOTB_LOG_LEVEL'] = self.log_level if self.log_level else 'INFO'
         env['COCOTB_REDUCED_LOG_FMT'] = 'true'
         print(f"sys.stdout.isatty()={sys.stdout.isatty()}")
         env['COCOTB_ANSI_OUTPUT'] = '1' #str(int(os.isatty(1)))

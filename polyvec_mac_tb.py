@@ -17,17 +17,29 @@ from cocotb.binary import BinaryValue
 from cocotb.result import ReturnValue, TestError
 from cocotb.drivers import BusDriver, ValidatedBusDriver
 from cocotb.monitors import BusMonitor
-from cocotb.triggers import RisingEdge, FallingEdge, ReadOnly, NextTimeStep, Event
+from cocotb.triggers import RisingEdge, FallingEdge, Edge, ReadOnly, NextTimeStep, Event
 from cocotb.regression import TestFactory
 from cocotb.scoreboard import Scoreboard
-from cocotb.decorators import coroutine
-from cocotb.generators.bit import (wave, intermittent_single_cycles, random_50_percent)
-from cocotb.generators.byte import random_data, random_word, get_bytes, get_words
+from cocotb.generators.bit import (
+    wave, intermittent_single_cycles, random_50_percent)
+from cocotb.generators.byte import random_data, get_bytes
+import math
+import pyber
+from pyber import *
+from collections import Iterable
 
-from pyber.lib import polyvec_nega_mac
+
+def get_words(nwords, generator):
+    result = []
+    for _ in range(nwords):
+        result.append(next(generator))
+    return result
+
+
 
 class ValidReadyProtocolError(Exception):
     pass
+
 
 class ValidReadyDriver(ValidatedBusDriver):
     """Valid-Ready stream Driver"""
@@ -35,7 +47,6 @@ class ValidReadyDriver(ValidatedBusDriver):
     _signals = ["valid", "data", "ready"]
 
     _default_config = {
-        "dataBitsPerSymbol": 8,
         "firstSymbolInHighOrderBits": True,
     }
 
@@ -61,20 +72,20 @@ class ValidReadyDriver(ValidatedBusDriver):
         self.bus.valid <= 0
         self.bus.data <= word
 
-    @coroutine
+    @cocotb.coroutine
     def _wait_ready(self):
         """Wait for a ready cycle on the bus before continuing.
 
             Can no longer drive values this cycle...
-
-            FIXME assumes readyLatency of 0
         """
-        yield ReadOnly()
+        rdonly = ReadOnly()
+        clkedge = RisingEdge(self.clock)
+        yield rdonly
         while not self.bus.ready.value:
-            yield RisingEdge(self.clock)
-            yield ReadOnly()
+            yield clkedge
+            yield rdonly
 
-    @coroutine
+    @cocotb.coroutine
     def _send_bytes(self, byte_string, sync=True):
         """Args:
             byte_string (bytes): A string of hex to send over the bus.
@@ -82,10 +93,11 @@ class ValidReadyDriver(ValidatedBusDriver):
         self.log.info(f"send_butes {len(byte_string)}")
         # Avoid spurious object creation by recycling
         clkedge = RisingEdge(self.clock)
-        
+
         bus_width = len(self.bus.data) // 8
 
-        word = BinaryValue(n_bits=len(self.bus.data), bigEndian=self.config['firstSymbolInHighOrderBits'])
+        word = BinaryValue(n_bits=len(self.bus.data),
+                           bigEndian=self.config['firstSymbolInHighOrderBits'])
         self.bus.valid <= 0
 
         while len(byte_string) > 0:
@@ -97,7 +109,7 @@ class ValidReadyDriver(ValidatedBusDriver):
                     yield clkedge
                 # Grab the next set of on/off values
                 self._next_valids()
-            
+
             # Consume a valid cycle
             if self.on is not True and self.on:
                 self.on -= 1
@@ -112,7 +124,7 @@ class ValidReadyDriver(ValidatedBusDriver):
                 self.bus.data <= word
             else:
                 byte_string = b""
-            
+
             yield self._wait_ready()
 
         yield clkedge
@@ -121,8 +133,7 @@ class ValidReadyDriver(ValidatedBusDriver):
         self.bus.data <= word
 
 
-
-    @coroutine
+    @cocotb.coroutine
     def _send_iterable(self, words_iterable, sync=True):
         """Args:
             words_iterable (iterable): Will yield words of input data.
@@ -136,13 +147,12 @@ class ValidReadyDriver(ValidatedBusDriver):
         dump_line_width = 140
 
         dumped_chars = 0
-
-        for word in words_iterable:
+        for i, word in enumerate(words_iterable):
             if not firstword or (firstword and sync):
                 yield clkedge
                 firstword = False
 
-            
+
             # Insert a gap where valid is low
             if not self.on:
                 self.bus.valid <= 0
@@ -158,45 +168,57 @@ class ValidReadyDriver(ValidatedBusDriver):
 
             self.bus.valid <= 1
             self.bus.data <= word
-            nibles = (bus_width + 3) // 4
-            dumped_chars += nibles + 1
-            if dumped_chars > dump_line_width:
-                print("")
-                dumped_chars = nibles + 1
-            print(f"{word:0{nibles}X}", end=' ')
+            # print(f"i={i}")
             yield self._wait_ready()
+            
 
-        print("")
+            #     nibles = (bus_width + 3) // 4
+            #     dumped_chars += nibles + 1
+            #     if dumped_chars > dump_line_width:
+            #         print("")
+            #         dumped_chars = nibles + 1
+            #     print(f"{word:0{nibles}X}", end=' ')
+
+
+        # print("")
         yield clkedge
         self.bus.valid <= 0
 
-
-
-    @coroutine
+    @cocotb.coroutine
     def _driver_send(self, pkt, sync=True):
+        def flatten_to_list(items):
+            def flatten(items):
+                for x in items:
+                    if isinstance(x, Iterable) and not isinstance(x, (str, bytes)):
+                        yield from flatten(x)
+                    else:
+                        yield x
+            return list(flatten(items))
+
         dut = self.entity
         if isinstance(pkt, bytes):
+            assert len(self.bus.data) % 8 == 0
             dut.log.info("Sending packet of length %d bytes" % len(pkt))
             dut.log.info(hexdump(pkt))
             yield self._send_bytes(pkt, sync=sync)
-            dut.log.info("Successfully sent packet of length %d bytes" % len(pkt))
+            dut.log.info(
+                "Successfully sent packet of length %d bytes" % len(pkt))
         elif isinstance(pkt, str):
-            dut.log.error('not implemented <<< hex string')
+            dut.log.error('TODO not implemented <<< hex string')
         else:
-            yield self._send_iterable(pkt, sync=sync)
+            yield self._send_iterable(flatten_to_list(pkt), sync=sync)
 
 
 class ValidReadyMonitor(BusMonitor):
     _signals = ["valid", "data", "ready"]
 
     _default_config = {
-        "dataBitsPerSymbol"             : 8,
         "firstSymbolInHighOrderBits"    : True,
     }
 
-
     def __init__(self, *args, **kwargs):
         config = kwargs.pop('config', {})
+        self.num_out_words = kwargs.pop('num_out_words', 1)
         BusMonitor.__init__(self, *args, **kwargs)
 
         self.config = self._default_config.copy()
@@ -206,18 +228,21 @@ class ValidReadyMonitor(BusMonitor):
             self.log.debug("Setting config option %s to %s" %
                            (configoption, str(value)))
 
-    def fire(self):
-        return self.bus.valid.value and self.bus.ready.value
 
-    @coroutine
+
+
+    @cocotb.coroutine
     def _monitor_recv(self):
         """Watch the pins and reconstruct transactions."""
-
+        
         # Avoid spurious object creation by recycling
         clkedge = RisingEdge(self.clock)
         rdonly = ReadOnly()
-        pkt = ""
 
+        def fire():
+            return self.bus.valid.value and self.bus.ready.value
+
+        words = []
 
         while True:
             yield clkedge
@@ -225,62 +250,83 @@ class ValidReadyMonitor(BusMonitor):
 
             if self.in_reset:
                 continue
-
-            if self.fire():
-                vec = self.bus.data.value
-                vec.big_endian = self.config['firstSymbolInHighOrderBits']
-                pkt += vec.buff
+            
+            if fire():
+                words.append(self.bus.data.value)
+                # print(f"received words {len(words)}/{self.num_out_words} ")
+                if len(words) >= self.num_out_words:
+                    self._recv(words)
+                    words = []
 
 
 class CmdDoneTester(object):
-    def __init__(self, dut, input_name, output_name , debug=False):
+    def __init__(self, dut, input_name, output_name, num_out_words, valid_gen=None, debug=False):
         self.dut = dut
-        self.stream_in  = ValidReadyDriver(dut, input_name, dut.clk)
-        self.stream_out = ValidReadyMonitor(dut, output_name, dut.clk)
+        self.nwords = num_out_words
+        self.stream_in = ValidReadyDriver(dut, input_name, dut.clk)
+        self.stream_out = ValidReadyMonitor(
+            dut, output_name, dut.clk, num_out_words=num_out_words, callback=self.model)
 
-        self.pkts_sent = 0
         self.expected_output = []
         self.scoreboard = Scoreboard(dut)
-        self.scoreboard.add_interface(self.stream_out, self.expected_output)
+        self.scoreboard.add_interface(self.stream_out, self.expected_output, strict_type=True)
 
-        # Reconstruct the input transactions from the pins and send them to our 'model'
-        self.stream_in_recovered = ValidReadyMonitor(dut, input_name, dut.clk, callback=self.model)
 
-        level = logging.DEBUG if debug else logging.WARNING
+        if valid_gen:
+            self.stream_in.set_valid_generator(valid_gen())
+        
+        self.output_ready_thread = cocotb.fork(self.gen_output_ready())
+
+        level = logging.DEBUG if debug else logging.INFO
         self.stream_in.log.setLevel(level)
-        self.stream_in_recovered.log.setLevel(level)
-
 
     def model(self, transaction):
         """Model the DUT based on the input transaction"""
-        self.expected_output.append(transaction)
-        self.pkts_sent += 1
+
+        # if not transaction or len(transaction) < self.nwords:
+            # raise TestError("empty transaction passed to model")
+
+        print("model:")
+        print(f"len(transaction)={len(transaction)}")
 
     @cocotb.coroutine
-    def wait_for_done(self):
+    def gen_output_ready(self):
+        edge = RisingEdge(self.dut.clk)
+        while True:
+            self.stream_out.bus.ready <= random.randrange(2)
+            yield edge
+
+
+    @cocotb.coroutine
+    def wait_for_done(self, value=1):
         done = self.dut.o_done
-        if done != 1:
-            yield RisingEdge(done)
+        while done != value:
+            yield Edge(done)
+        
+
 
     @cocotb.coroutine
-    def transaction(self, input_gen, *signals):
+    def command(self, signals, input=None):
+        if not isinstance(signals, list):
+            signals = [signals]
+
+        yield self.wait_for_done(value=0)
+
         for s in signals:
-            self.dut._log.info(f"transaction: {s._name}")
+            self.dut._log.info(f"command: {s._name}")
             s <= 1
 
-        yield RisingEdge(self.dut.clk)
-
-        for input in input_gen or []:
+        if input:
+            print(f"len(input)={len(input)}")
             yield self.stream_in.send(input)
 
         self.dut._log.info("waiting for done...")
         yield self.wait_for_done()
         self.dut._log.info(">> received done")
-        # deassert all 
+        # deassert all
         for s in signals:
             s <= 0
         yield RisingEdge(self.dut.clk)
-
 
     @cocotb.coroutine
     def reset(self):
@@ -293,15 +339,17 @@ class CmdDoneTester(object):
         self.dut._log.debug("Out of reset")
 
 
-@cocotb.coroutine
-def run_test(dut, data_in=None, idle_inserter=None):
-    clkedge = RisingEdge(dut.clk)
-    cocotb.fork(Clock(dut.clk, 5000).start())
-    tb = CmdDoneTester(dut, input_name="din", output_name="dout")
-    yield tb.reset()
-    if idle_inserter:
-        tb.stream_in.set_valid_generator(idle_inserter())
 
+
+@cocotb.coroutine
+def run_test(dut, valid_gen=None, ready_gen=None):
+    clkedge = RisingEdge(dut.clk)
+    tb = CmdDoneTester(dut, input_name="din", output_name="dout", num_out_words=pyber.KYBER_N)
+    cocotb.fork(Clock(dut.clk, 10, 'ns').start())
+    yield tb.reset()
+
+    dut.i_subtract <= 0
+    ###
     dut.i_recv_a <= 0
     dut.i_recv_b <= 0
     dut.i_recv_r <= 0
@@ -310,32 +358,50 @@ def run_test(dut, data_in=None, idle_inserter=None):
 
     yield clkedge
 
-    yield tb.transaction(data_in(3), dut.i_recv_a)
-    yield tb.transaction(data_in(3), dut.i_recv_b)
-    yield tb.transaction(data_in(1), dut.i_recv_r)
-    yield tb.transaction(None, dut.i_do_mac)
-    # yield tb.transaction(None, dut.i_send_r)
+    a = PolynomialVector.zero()
+    a.polys[0].coeffs[0] = 1
+    a.polys[1].coeffs[0] = 1
+    a.polys[2].coeffs[0] = 1
+    print("a--------")
+    a.dump()
+    b = PolynomialVector.zero()
+    b.polys[0].coeffs[0] = KYBER_Q - 1
+    b.polys[1].coeffs[0] = KYBER_Q - 1
+    b.polys[2].coeffs[0] = KYBER_Q - 1
+    print("\nb--------")
+    b.dump()
+    r = Polynomial.zero()
+    print("r--------")
+    r.dump()
 
-    for _ in range(2):
+    exp = polyvec_nega_mac(r, a, b)
+    print("exp--------")
+    exp.dump()
+
+    tb.expected_output.clear()
+    tb.expected_output.append(list(exp))
+
+    yield tb.command(dut.i_recv_a, list(a)) 
+    yield tb.command(dut.i_recv_b, list(b))
+    yield tb.command(dut.i_recv_r, list(r))
+    yield tb.command(dut.i_do_mac)
+    yield tb.command(dut.i_send_r)
+
+
+    for _ in range(3):
         yield clkedge
 
     raise tb.scoreboard.result
 
-def random_packet_sizes(npackets=4):
-    """random string data of a random length"""
-    for _ in range(npackets):
-        yield get_bytes(256, random_data())
 
-def random_polynomial_vector(dims):
-    """polynomial over Z/Q """
-    for _ in range(dims):
-        yield get_words(256, random_word(0,7681 - 1))
+
+# Tests
 
 factory = TestFactory(run_test)
-factory.add_option("data_in",
-                   [random_polynomial_vector])
-factory.add_option("idle_inserter",
-                   [intermittent_single_cycles])
+
+# factory.add_option("valid_gen",
+#                    [intermittent_single_cycles])
 # factory.add_option("idle_inserter",
 #                    [None, wave, intermittent_single_cycles, random_50_percent])
+
 factory.generate_tests()
