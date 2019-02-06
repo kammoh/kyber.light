@@ -13,18 +13,18 @@ entity divider is
 		G_IN_WIDTH : positive := 25     -- <= 26 bits, while u = <u1,u0> u0,u1 < 2^13 , u1 < KYBER_Q
 	);
 	port(
-		i_u   : in  std_logic_vector(G_IN_WIDTH - 1 downto 0);
-		o_rem : out t_coef_slv;
-		o_div : out t_coef_slv
+		i_u   : in  unsigned(G_IN_WIDTH - 1 downto 0);
+		o_rem : out t_coef_us;
+		o_div : out t_coef_us
 	);
 end entity divider;
 
 architecture RTL of divider is
-	signal u0, u1             : unsigned(12 downto 0);
+	signal u0, u1             : t_coef_us;
 	signal u1_times_v         : unsigned(17 downto 0); -- u1 * v,  23 bits >= (G_IN_WIDTH -13) + 10
 	signal q                  : unsigned(25 downto 0); -- q = u1 * v + u , G_IN_WIDTH
-	signal q0, q1, q1_times_d : unsigned(12 downto 0);
-	signal r0, r0_minus_d     : unsigned(12 downto 0);
+	signal q0, q1, q1_times_d : t_coef_us;
+	signal r0, r0_minus_d     : t_coef_us;
 	signal adjust             : boolean;
 begin
 	-- i_u = <u1,u0>
@@ -49,6 +49,6 @@ begin
 	r0_minus_d <= r0 - KYBER_Q;
 	adjust     <= (r0_minus_d <= q0);
 
-	o_div <= std_logic_vector(q1 + 1) when adjust else std_logic_vector(q1);
-	o_rem <= std_logic_vector(r0_minus_d) when adjust else std_logic_vector(r0);
+	o_div <= q1 + 1 when adjust else q1;
+	o_rem <= r0_minus_d when adjust else r0;
 end architecture RTL;

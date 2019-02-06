@@ -23,15 +23,15 @@ entity polyvec_mac is
 		i_subtract         : in  std_logic;
 		o_done             : out std_logic;
 		-- Data
-		i_din_data         : in  t_coef_slv;
+		i_din_data         : in  t_coef_us;
 		i_din_valid        : in  std_logic;
 		o_din_ready        : out std_logic;
-		o_dout_data        : out t_coef_slv;
+		o_dout_data        : out t_coef_us;
 		o_dout_valid       : out std_logic;
 		i_dout_ready       : in  std_logic;
 		-- External divide provider
-		i_ext_div_a        : in  std_logic_vector(2 * log2ceil(KYBER_Q) - 1 downto 0);
-		o_ext_div_a_div_q  : out t_coef_slv;
+		i_ext_div_a        : in  unsigned(2 * log2ceil(KYBER_Q) - 1 downto 0);
+		o_ext_div_a_div_q  : out t_coef_us;
 		o_ext_div_selected : out std_logic
 	);
 end entity polyvec_mac;
@@ -62,10 +62,10 @@ architecture RTL of polyvec_mac is
 	signal nega                 : std_logic;
 	signal en_r                 : std_logic;
 	signal ld_r                 : std_logic;
-	signal a                    : std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0);
-	signal b                    : std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0);
-	signal rin                  : std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0);
-	signal rout                 : std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0);
+	signal a                    : t_coef_us;
+	signal b                    : t_coef_us;
+	signal rin                  : t_coef_us;
+	signal rout                 : t_coef_us;
 	signal r_idx_plus_one       : unsigned(log2ceil(KYBER_N) downto 0);
 	signal r_idx_plus_one_carry : std_logic;
 	signal r_idx_reg_next       : unsigned(log2ceil(KYBER_N) - 1 downto 0);
@@ -143,7 +143,7 @@ begin
 			ce       => a_ram_ce,
 			we       => a_ram_we,
 			in_addr  => a_ram_addr,
-			in_data  => i_din_data,
+			in_data  => std_logic_vector(i_din_data),
 			out_data => a_ram_out_data
 		);
 
@@ -264,9 +264,9 @@ begin
 	r_idx_minus_b_idx <= ("0" & r_idx_reg) - b_idx_reg;
 	r_addr            <= (to_unsigned(KYBER_K, k_reg'length) & r_idx_reg);
 	--
-	rin               <= b_r_ram_out_data;
-	a                 <= a_ram_out_data;
-	b                 <= b_r_ram_out_data;
+	rin               <= unsigned(b_r_ram_out_data);
+	a                 <= unsigned(a_ram_out_data);
+	b                 <= unsigned(b_r_ram_out_data);
 	-- MAC: a_idx, s_receive_a: b_idx_reg == 0  -> a_idx = r_idx_minus_b_idx = r_idx
 	a_ram_addr        <= (k_reg & a_idx);
 
@@ -274,7 +274,7 @@ begin
 	begin
 		----
 		b_r_ram_addr       <= (k_reg & b_idx_reg); -- default: b
-		b_r_ram_in_data    <= i_din_data;
+		b_r_ram_in_data    <= std_logic_vector(i_din_data);
 		-- control signals defaults
 		o_done             <= '0';
 		o_din_ready        <= '0';
@@ -326,7 +326,7 @@ begin
 				b_r_ram_ce      <= '1';
 				b_r_ram_we      <= '1';
 				b_r_ram_addr    <= r_addr;
-				b_r_ram_in_data <= rout;
+				b_r_ram_in_data <= std_logic_vector(rout);
 			when s_send_r =>
 				b_r_ram_ce         <= i_dout_ready or not dout_valid_piped_reg;
 				b_r_ram_addr       <= r_addr;
@@ -341,6 +341,6 @@ begin
 	end process comb_proc;
 
 	o_dout_valid <= dout_valid_piped_reg;
-	o_dout_data  <= b_r_ram_out_data;
+	o_dout_data  <= unsigned(b_r_ram_out_data);
 	-- 
 end architecture RTL;

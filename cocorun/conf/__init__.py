@@ -6,7 +6,17 @@ import json
 from collections import OrderedDict
 
 logger = logging.getLogger(__name__)
-    
+
+class HdlSource():
+    def __init__(self, path, lang='vhdl2008', lib= 'work'):
+        self.path = path
+        self.lang = lang
+        self.lib = lib
+
+class XdcSource():
+    def __init__(self, path):
+        self.path = path
+
 class Module:
     def __init__(self, name, d):
         def get_as_list(key, is_file_list=True):
@@ -31,6 +41,7 @@ class Module:
             return ret_list
         
         self.name = name
+        self.lang = 'vhdl'
         self.vhdl_version = d.get('vhdl_version',  None)
         self.library = d.get('library',  None)
         self.path = d.get('path', ".")
@@ -63,7 +74,6 @@ class Manifest:
         return self.modules[mod_name]
     
     
-    
     def module_dependencies(self, module_name):
         deps = OrderedDict()
         
@@ -79,4 +89,18 @@ class Manifest:
         add_dependencies_rec(module_name)
         
         return deps
+
+    def hdl_sources(self, top_module_name):
+        ret = []
+        top = self.get_module(top_module_name)
+
+        # TODO FIXME
+        if not top.vhdl_version or top.vhdl_version == "08":
+            lang = 'vhdl2008'
+        else:
+            lang = 'vhdl'
+        for path, lib in self.module_dependencies(top_module_name).items():
+            ret.append(HdlSource(path=path, lib=lib, lang=lang) )
+
+        return ret
 

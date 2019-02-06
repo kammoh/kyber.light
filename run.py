@@ -22,11 +22,11 @@ class Module:
                     ret_list += glob.glob(join(self.path,item))
                 else:
                     ret_list.append(item)
-            print('get_as_list ', key, ' ret=', ret_list)
+            # print('get_as_list ', key, ' ret=', ret_list)
             return ret_list
         
         self.name = name
-        self.library_name = d.get('library_name',  None)
+        self.library_name = d.get('library',  None)
         self.path = d.get('path', ".")
         self.tb_files = get_as_list('tb_files')
         files = get_as_list('files')
@@ -111,7 +111,7 @@ def synth_vivado(srcs, top):
         if proc.wait() != 0:
             logger.error("There were some errors")
     except ValueError as e:
-        print("got ", e.message)
+        print("got ", e)
         exit(1)
 
 
@@ -158,7 +158,7 @@ if __name__ == '__main__':
         print(top_module.name, top_module.top, len(top_module.tb_files), top_module.tb_top)
         if top_module.top:
             
-            manifest.add_module(vu, top_module, top_module.name + '_lib' )
+            manifest.add_module(vu, top_module, top_module.name + '_work' )
                     
             if args.synth != None:
                 file_list = manifest.module_files(top_module.name) # FIXME TODO

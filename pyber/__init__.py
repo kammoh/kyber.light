@@ -32,6 +32,10 @@ class Polynomial():
         return cls(coeffs=[random_word(0, KYBER_Q - 1) for _ in range(KYBER_N)])
     
     @classmethod
+    def from_cpoly(cls,cpoly):
+        return cls(cpoly.coeffs)
+
+    @classmethod
     def zero(cls):
         """create new Polynomial of order KYBER_N with all coefficients set to 0 """
         return cls(coeffs=[0 for _ in range(KYBER_N)])
@@ -55,7 +59,34 @@ class Polynomial():
 
         print("")
 
+    def to_cpoly(self):
+        return [list(self)]
+    
+    def __add__(self, other):
+        """ add two Polynomials and return result """
+        cpoly_a = ffi.new('poly *', self.to_cpoly())
+        cpoly_b = ffi.new('poly *', other.to_cpoly())
+        cpoly_r = ffi.new('poly *')
 
+        pyber_clib.poly_add(cpoly_r, cpoly_a, cpoly_b)
+        pyber_clib.poly_freeze(cpoly_r)
+
+        return Polynomial.from_cpoly(cpoly_r)
+
+    def __sub__(self, other):
+        """ add two Polynomials and return result """
+        cpoly_a = ffi.new('poly *', self.to_cpoly())
+        cpoly_b = ffi.new('poly *', other.to_cpoly())
+        cpoly_r = ffi.new('poly *')
+
+        pyber_clib.poly_sub(cpoly_r, cpoly_a, cpoly_b)
+        pyber_clib.poly_freeze(cpoly_r)
+
+        return Polynomial.from_cpoly(cpoly_r)
+
+    def __eq__(self, other):
+        return self.coeffs == other.coeffs
+        
 class PolynomialVector():
     def __init__(self, polys: IterableType[Polynomial]):
         assert isinstance(polys, Iterable) and all(isinstance(p, Polynomial) for p in polys) and len(polys) == KYBER_K, "wrong argument type"
@@ -78,27 +109,37 @@ class PolynomialVector():
             print(f" Poly[{i}]:")
             p.dump()
 
+    def to_cpolyvec(self):
+        return [[p.to_cpoly() for p in self.polys]]
+
+    def __mul__(self, other):
+        cpolyvec_a = ffi.new('polyvec *', self.to_cpolyvec())
+        cpolyvec_b = ffi.new('polyvec *', other.to_cpolyvec())
+        cpoly_r = ffi.new('poly *')
+
+        pyber_clib.polyvec_ntt(cpolyvec_a)
+        pyber_clib.polyvec_ntt(cpolyvec_b)
+        pyber_clib.polyvec_pointwise_acc(cpoly_r, cpolyvec_a, cpolyvec_b)
+        pyber_clib.poly_invntt(cpoly_r)
+
+        return Polynomial.from_cpoly(cpoly_r)
+
+
 
 def polyvec_nega_mac(p_r: Polynomial, pv_a: PolynomialVector, pv_b: PolynomialVector, subtract=False) -> Polynomial:
     """ 
 
-        @returns: Polynomial  (pv_a * pv_b - p_r) if subtract==True else (pv_a * pv_b + p_r) 
+        @returns: Polynomial  (pv_a * pv_b - p_r) if subtract:True else (pv_a * pv_b + p_r) 
     """
     assert isinstance(p_r, Polynomial) and isinstance(
         pv_a, PolynomialVector) and isinstance(pv_b, PolynomialVector)
 
-    def to_cpoly(p):
-        return [list(p)]
 
-    def to_cpolyvec(pv):
-        return [[to_cpoly(p) for p in pv.polys]]
+    cpolyvec_a = ffi.new('polyvec *', pv_a.to_cpolyvec())
+    cpolyvec_b = ffi.new('polyvec *', pv_b.to_cpolyvec())
+    cpoly_r = ffi.new('poly *', p_r.to_cpoly())
 
-    cpolyvec_a = ffi.new('polyvec *', to_cpolyvec(pv_a))
-    cpolyvec_b = ffi.new('polyvec *', to_cpolyvec(pv_b))
-    cpoly_r = ffi.new('poly *', to_cpoly(p_r))
-
-    pyber_clib.polyvec_nega_mac(
-        cpoly_r, cpolyvec_a, cpolyvec_b, 1 if subtract else 0)
+    pyber_clib.polyvec_nega_mac(cpoly_r, cpolyvec_a, cpolyvec_b, 1 if subtract else 0)
 
     return Polynomial(cpoly_r.coeffs) # need to copy!!!
 
@@ -109,15 +150,26 @@ __all__ = ['polyvec_nega_mac', 'KYBER_N',
 
 if __name__ == '__main__':
     a = PolynomialVector.random()
-    print("a--------")
-    a.dump()
+    # print("a--------")
+    # a.dump()
     b = PolynomialVector.random()
-    print("\nb--------")
-    b.dump()
+    # print("\nb--------")
+    # b.dump()
     r = Polynomial.random()
-    print("r--------")
-    r.dump()
+    # print("r--------")
+    # r.dump()
 
     exp = polyvec_nega_mac(r, a, b)
-    print("exp--------")
+    print("a*b + r --------")
+    # exp.dump()
+
+    # e2 = (a * b) + r
+    # e2.dump()
+    # assert exp == e2
+
+    exp = polyvec_nega_mac(r, a, b, subtract=True)
+    e2 = (a * b) - r
+
     exp.dump()
+    e2.dump()
+    assert exp == e2

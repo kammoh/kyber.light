@@ -72,7 +72,10 @@ class Sim(object):
                          warn_opts=' '.join(self.warn_opts),work=self.work, top=top, opts=opts, 
                          vpi=self.vpi, top_arch=top_arch, workdir=self.workdir, common_args=self.common_args)
         cmd = cmd.split()
-        # print("running: {}".format(' '.join(cmd)))
+
+        if self.log_level == 'DEBUG':
+            print(f'running {" ".join(cmd)}' )
+
         proc = subprocess.Popen(cmd, env=env) #, stdout=subprocess.PIPE
 #         proc = subprocess.run(cmd, env=env)
 #         print("result:", proc.stdout.decode(), proc.stderr.decode(), proc.returncode)

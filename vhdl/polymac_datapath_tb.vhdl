@@ -27,13 +27,13 @@ architecture TB of polymac_dp_tb is
 	signal nega             : std_logic;
 	signal r_en             : std_logic;
 	signal r_load           : std_logic;
-	signal a                : std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0);
-	signal b                : std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0);
-	signal rin              : std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0);
-	signal rout             : std_logic_vector(log2ceil(KYBER_Q) - 1 downto 0);
+	signal a                : t_coef_us;
+	signal b                : t_coef_us;
+	signal rin              : t_coef_us;
+	signal rout             : t_coef_us;
 	signal i_ext_div_select : std_logic;
-	signal i_ext_div        : std_logic_vector(2 * log2ceil(KYBER_Q) - 1 downto 0);
-	signal o_ext_div        : t_coef_slv;
+	signal i_ext_div        : unsigned(2 * log2ceil(KYBER_Q) - 1 downto 0);
+	signal o_ext_div        : t_coef_us;
 begin
 	clk <= not clk after G_CLK_PERIOD / 2;
 
@@ -48,10 +48,10 @@ begin
 
 	tb_proc : process
 		variable RndR      : RandomPType;
-		variable rin_v     : std_logic_vector(rin'length - 1 downto 0);
-		variable a_v       : std_logic_vector(a'length - 1 downto 0);
-		variable b_v       : std_logic_vector(b'length - 1 downto 0);
-		variable ext_div_v : std_logic_vector(2 * log2ceil(KYBER_Q) - 1 downto 0);
+		variable rin_v     : t_coef_us;
+		variable a_v       : t_coef_us;
+		variable b_v       : t_coef_us;
+		variable ext_div_v : unsigned(2 * log2ceil(KYBER_Q) - 1 downto 0);
 	begin
 		test_runner_setup(runner, runner_cfg);
 
@@ -70,20 +70,20 @@ begin
 
 			i_ext_div_select <= '0';
 
-			if run("positive") then
+			if run("Add  r <= r + a.b") then
 				for i in 0 to G_TEST_ITERATIONS loop
 					wait until falling_edge(clk);
 					r_en   <= '1';
 					r_load <= '1';
-					rin_v  := RndR.RandSlv(KYBER_Q - 1, rin'length);
+					rin_v  := RndR.RandUnsigned(KYBER_Q - 1, rin'length);
 					rin    <= rin_v;
 					wait until falling_edge(clk);
 					r_load <= '0';
 					r_en   <= '0';
 					nega   <= '0';
-					a_v    := RndR.RandSlv(KYBER_Q - 1, a'length);
+					a_v    := RndR.RandUnsigned(KYBER_Q - 1, a'length);
 					a      <= a_v;
-					b_v    := RndR.RandSlv(KYBER_Q - 1, b'length);
+					b_v    := RndR.RandUnsigned(KYBER_Q - 1, b'length);
 					b      <= b_v;
 					wait until falling_edge(clk);
 					r_en   <= '1';
@@ -92,20 +92,20 @@ begin
 					check_equal(unsigned(rout), resize((rin_v + (a_v * b_v)) mod KYBER_Q, rout'length));
 
 				end loop;
-			elsif run("negative") then
+			elsif run("Subtract r <= r - a.b") then
 				for i in 0 to G_TEST_ITERATIONS loop
 					wait until falling_edge(clk);
 					r_en   <= '1';
 					r_load <= '1';
-					rin_v  := RndR.RandSlv(KYBER_Q - 1, rin'length);
+					rin_v  := RndR.RandUnsigned(KYBER_Q - 1, rin'length);
 					rin    <= rin_v;
+					nega   <= '1';
 					wait until falling_edge(clk);
 					r_load <= '0';
 					r_en   <= '0';
-					nega   <= '1';
-					a_v    := RndR.RandSlv(KYBER_Q - 1, a'length);
+					a_v    := RndR.RandUnsigned(KYBER_Q - 1, a'length);
 					a      <= a_v;
-					b_v    := RndR.RandSlv(KYBER_Q - 1, b'length);
+					b_v    := RndR.RandUnsigned(KYBER_Q - 1, b'length);
 					b      <= b_v;
 					wait until falling_edge(clk);
 					r_en   <= '1';
@@ -117,7 +117,7 @@ begin
 			elsif run("External access to divider") then
 				for i in 0 to 2 * G_TEST_ITERATIONS loop
 					i_ext_div_select <= '1';
-					ext_div_v        := RndR.RandSlv(2**log2ceil(KYBER_Q) * (KYBER_Q - 1), i_ext_div'length);
+					ext_div_v        := RndR.RandUnsigned(2**log2ceil(KYBER_Q) * (KYBER_Q - 1), i_ext_div'length);
 					i_ext_div        <= ext_div_v;
 					wait until falling_edge(clk);
 					check_equal(unsigned(o_ext_div), ext_div_v / KYBER_Q);
