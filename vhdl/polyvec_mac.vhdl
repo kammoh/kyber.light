@@ -11,6 +11,11 @@ library poc;
 use poc.ocram_sp;
 
 entity polyvec_mac is
+	generic(
+		G_PIPELINE_LEVELS          : positive := 7;
+		G_PROVIDE_EXTERNAL_DIVIDER : boolean  := True -- @ provide external access to "divide by KYBER_Q" component 
+		-- @ note: divider is pipelined with 2 clock cycle delay
+	);
 	port(
 		clk                : in  std_logic;
 		rst                : in  std_logic;
@@ -39,29 +44,34 @@ end entity polyvec_mac;
 architecture RTL of polyvec_mac is
 	------------------------------------------ Constants ----------------------------------------------
 	------------------------------------------ Types --------------------------------------------------
-	type t_state is (s_init,
-	                 s_receive_a, s_receive_b, s_receive_r,
-	                 s_mac_rd_r, s_mac_fill, s_mac_piped, s_mac_flush_1, s_mac_flush_2, s_mac_wr_r,
-	                 s_send_r, s_send_r_flush,
-	                 s_done
-	                );
+	type t_state is (
+		s_init,
+		--
+		s_receive_a, s_receive_b, s_receive_r,
+		--
+		s_mac_rd_r,
+		s_mac_piped, s_mac_flush,
+		s_mac_wr_r,
+		--
+		s_send_r, s_send_r_flush,
+		--
+		s_done
+	);
 	------------------------------------------ Registers/FFs ------------------------------------------
 	-- state
 	signal state                : t_state;
 	-- counters
 	-- address counts
+	constant K_REG_SIZE         : positive := maximum(log2ceil(KYBER_K), log2ceil(G_PIPELINE_LEVELS));
 	signal r_idx_reg            : unsigned(log2ceil(KYBER_N) - 1 downto 0);
 	signal b_idx_reg            : unsigned(log2ceil(KYBER_N) - 1 downto 0);
-	signal k_reg                : unsigned(log2ceil(KYBER_K) - 1 downto 0);
-	signal en_r_piped_reg       : std_logic;
-	signal ld_r_piped_reg       : std_logic;
+	signal k_reg                : unsigned(K_REG_SIZE - 1 downto 0);
 	signal dout_valid_piped_reg : std_logic;
 	------------------------------------------ Wires --------------------------------------------------
 	signal a_idx                : unsigned(log2ceil(KYBER_N) - 1 downto 0);
 	signal r_idx_minus_b_idx    : unsigned(log2ceil(KYBER_N) downto 0);
 	signal nega                 : std_logic;
-	signal en_r                 : std_logic;
-	signal ld_r                 : std_logic;
+	signal en_r, ld_r           : std_logic;
 	signal a                    : t_coef_us;
 	signal b                    : t_coef_us;
 	signal rin                  : t_coef_us;
@@ -72,6 +82,7 @@ architecture RTL of polyvec_mac is
 	signal b_idx_plus_one       : unsigned(log2ceil(KYBER_N) downto 0);
 	signal b_idx_plus_one_carry : std_logic;
 	signal b_idx_reg_next       : unsigned(log2ceil(KYBER_N) - 1 downto 0);
+	signal ext_div_a_div_q      : t_coef_us;
 	---------------------------------------- RAM signals ----------------------------------------------
 	signal b_r_ram_ce           : std_logic;
 	signal b_r_ram_we           : std_logic;
@@ -86,20 +97,43 @@ architecture RTL of polyvec_mac is
 
 begin
 
-	ploymac_datapath : entity work.polymac_datapath
-		port map(
-			clk              => clk,
-			nega             => nega,
-			en_r             => en_r_piped_reg,
-			ld_r             => ld_r_piped_reg,
-			in_a             => a,
-			in_b             => b,
-			in_r             => rin,
-			out_r            => rout,
-			i_ext_div_select => o_ext_div_selected,
-			i_ext_div        => i_ext_div_a,
-			o_ext_div        => o_ext_div_a_div_q
-		);
+	gen_polymac_dp : if G_PROVIDE_EXTERNAL_DIVIDER generate
+		ploymac_datapath : entity work.polymac_datapath
+			generic map(
+				G_PIPELINE_LEVELS => G_PIPELINE_LEVELS
+			)
+			port map(
+				clk              => clk,
+				i_nega           => nega,
+				i_en_r           => en_r,
+				i_ld_r           => ld_r,
+				in_a             => a,
+				in_b             => b,
+				in_r             => rin,
+				out_r            => rout,
+				i_ext_div_select => o_ext_div_selected,
+				i_ext_div        => i_ext_div_a,
+				o_ext_div        => ext_div_a_div_q
+			);
+		o_ext_div_a_div_q <= ext_div_a_div_q;
+	else generate
+		ploymac_datapath : entity work.polymac_datapath
+			generic map(
+				G_PIPELINE_LEVELS => G_PIPELINE_LEVELS
+			)
+			port map(
+				clk              => clk,
+				i_nega           => nega,
+				i_en_r           => en_r,
+				i_ld_r           => ld_r,
+				in_a             => a,
+				in_b             => b,
+				in_r             => rin,
+				out_r            => rout,
+				i_ext_div_select => '0',
+				i_ext_div        => (others => '0')
+			);
+	end generate;
 
 	----------------------------
 	-- b_r_ram address layout --
@@ -162,8 +196,6 @@ begin
 				state                <= s_init;
 				dout_valid_piped_reg <= '0';
 			else
-				en_r_piped_reg <= en_r;
-				ld_r_piped_reg <= ld_r;
 				case state is
 					when s_init =>
 						r_idx_reg <= (others => '0');
@@ -210,23 +242,22 @@ begin
 							end if;
 						end if;
 					when s_mac_rd_r =>
-						state <= s_mac_fill;
-					when s_mac_fill =>
-						b_idx_reg <= b_idx_reg_next;
-						state     <= s_mac_piped;
+						state <= s_mac_piped;
 					when s_mac_piped =>
 						b_idx_reg <= b_idx_reg_next;
 						if b_idx_plus_one_carry then
 							k_reg <= k_reg + 1;
 							if k_reg = (KYBER_K - 1) then
 								k_reg <= (others => '0');
-								state <= s_mac_flush_1;
+								state <= s_mac_flush;
 							end if;
 						end if;
-					when s_mac_flush_1 =>
-						state <= s_mac_flush_2;
-					when s_mac_flush_2 =>
-						state <= s_mac_wr_r;
+					when s_mac_flush =>
+						k_reg <= k_reg + 1;
+						if k_reg = G_PIPELINE_LEVELS - 1 then
+							k_reg <= (others => '0');
+							state <= s_mac_wr_r;
+						end if;
 					when s_mac_wr_r =>
 						r_idx_reg <= r_idx_reg_next;
 						if r_idx_plus_one_carry then
@@ -262,18 +293,18 @@ begin
 	nega              <= r_idx_minus_b_idx(r_idx_minus_b_idx'length - 1) xor i_subtract;
 	--
 	r_idx_minus_b_idx <= ("0" & r_idx_reg) - b_idx_reg;
-	r_addr            <= (to_unsigned(KYBER_K, k_reg'length) & r_idx_reg);
+	r_addr            <= (to_unsigned(KYBER_K, log2ceil(KYBER_K)) & r_idx_reg);
 	--
 	rin               <= unsigned(b_r_ram_out_data);
 	a                 <= unsigned(a_ram_out_data);
 	b                 <= unsigned(b_r_ram_out_data);
 	-- MAC: a_idx, s_receive_a: b_idx_reg == 0  -> a_idx = r_idx_minus_b_idx = r_idx
-	a_ram_addr        <= (k_reg & a_idx);
+	a_ram_addr        <= k_reg(log2ceil(KYBER_K) - 1 downto 0) & a_idx;
 
 	comb_proc : process(all) is
 	begin
 		----
-		b_r_ram_addr       <= (k_reg & b_idx_reg); -- default: b
+		b_r_ram_addr       <= k_reg(log2ceil(KYBER_K) - 1 downto 0) & b_idx_reg; -- default: b
 		b_r_ram_in_data    <= std_logic_vector(i_din_data);
 		-- control signals defaults
 		o_done             <= '0';
@@ -308,25 +339,19 @@ begin
 			when s_mac_rd_r =>
 				b_r_ram_ce         <= '1';
 				b_r_ram_addr       <= r_addr;
-				en_r               <= '1';
 				ld_r               <= '1';
 				o_ext_div_selected <= '1';
-			when s_mac_fill =>
-				a_ram_ce   <= '1';
-				b_r_ram_ce <= '1';
 			when s_mac_piped =>
 				a_ram_ce   <= '1';
 				b_r_ram_ce <= '1';
 				en_r       <= '1';
-			when s_mac_flush_1 =>
-				en_r <= '1';
-			when s_mac_flush_2 =>
-				null;
 			when s_mac_wr_r =>
 				b_r_ram_ce      <= '1';
 				b_r_ram_we      <= '1';
 				b_r_ram_addr    <= r_addr;
 				b_r_ram_in_data <= std_logic_vector(rout);
+			when s_mac_flush =>
+				null;
 			when s_send_r =>
 				b_r_ram_ce         <= i_dout_ready or not dout_valid_piped_reg;
 				b_r_ram_addr       <= r_addr;

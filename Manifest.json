@@ -12,14 +12,16 @@
 				"polyvec_mac.vhdl"
 			],
 			"tb_files": [
-				"polyvec_mac_tb.vhdl"			
+				"polyvec_mac_tb.vhdl",			
+				"polyvec_mac_tb.py"			
 			],
 			"depends": [
 				"polymac_datapath",
 				"poc_ram"
 			],
 			"tb_configs": [
-			]
+            ],
+            "language": "vhdl.2008"
 		},
 		"poc_ram": 
 		{
@@ -70,7 +72,8 @@
 					"G_IN_WIDTH": 27,
 					"G_OUT_WIDTH": 13
 				}
-			]
+            ],
+            "language": "vhdl.2008"
 		},
 		"divider": {
 			"path": "vhdl",
@@ -84,7 +87,8 @@
 			],
 			"depends": [
 				"pkg"
-			]
+            ],
+            "language": "vhdl.2008"
 		},
 		"polymac_datapath" : {
 			"path": "vhdl",
@@ -98,7 +102,32 @@
 			],
 			"depends": [
 				"divider"
-			]
+            ],
+            "language": "vhdl.2008"
+        },
+        "tiny_keccak": 
+		{
+			"path": "tiny_keccak",
+            "top": "keccak_core",
+            "tb_files": ["keccak_core_tb.py"],
+			"tb_top": "keccak_core_tb",
+			"depends": 
+			[
+				"poc_ram"
+			],
+
+			"files": 
+			[   
+				"keccak_pkg.vhdl",
+				"rho_rom.vhdl",
+				"keccak_controller.vhdl",
+				"iota_lut.vhdl",
+				"shift_reg.vhdl",
+				"slice_unit.vhdl",
+				"keccak_datapath.vhdl",
+				"keccak_core.vhdl"
+			],
+			"language": "vhdl.2008"
 		}
 	}
 }

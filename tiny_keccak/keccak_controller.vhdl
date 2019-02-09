@@ -112,14 +112,15 @@ begin
 	begin
 		if rising_edge(clk) then
 			if rst = '1' then
-				state                <= init_state_mem;
+				state                <= init;
 				dout_valid_piped_reg <= '0';
 			else
 				case state is
 					when init =>
 						lane_cntr  <= FIRST_LANE;
 						round_cntr <= (others => '0');
-
+						hword_cntr <= (others => '0');
+						
 						if i_squeeze then -- i_squeeze should have priority over i_init for the protocol (2.1)
 							state <= squeeze_out;
 						elsif i_absorb then

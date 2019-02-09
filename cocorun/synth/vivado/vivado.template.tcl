@@ -3,13 +3,21 @@ set CHECKPOINTS_DIR {{output_dir}}/checkpoints
 
 set parts [get_parts]
 
-puts {{part}}s
+puts "available devices: $parts"
 
-if { $argc != 2 } {
-        puts "The script requires two numbers to be input."
-} else {
-        puts "[lindex $argv 0] [lindex $argv 1]"
+if {[lsearch -exact $parts {{part}}] < 0} {
+    puts "ERROR: device {{part}} is not supported"
+    quit
 }
+
+puts "using {{part}}"
+
+
+# if { $argc != 2 } {
+#         puts "The script requires two numbers to be input."
+# } else {
+#         puts "[lindex $argv 0] [lindex $argv 1]"
+# }
 
 file mkdir {{output_dir}}
 file mkdir $REPORTS_DIR
@@ -50,11 +58,11 @@ proc reportCriticalPaths { fileName } {
 
 
 {% for source in hdl_sources %}
-    {% if source.lang == 'vhdl2008' %}
+    {% if source.language == 'vhdl.2008' %}
 read_vhdl -vhdl2008 {{source.path}} -library {{source.lib}}
-    {% elif source.lang == 'vhdl' %}
+    {% elif source.language == 'vhdl' %}
 read_vhdl {{source.path}} -library {{source.lib}}
-    {% elif source.lang == 'verilog' %}
+    {% elif source.language == 'verilog' %}
 read_verilog {{source.path}} -library {{source.lib}}
     {% endif%}
 {% endfor %}
@@ -62,40 +70,31 @@ read_verilog {{source.path}} -library {{source.lib}}
 {% for xdc in xdcs %}
 read_xdc {{xdc.path}}
 {% endfor %}
-#synth_design -top {{top_module_name}} -rtl -name rtl_1 
-#write_verilog -force {{output_dir}}/{{top_module_name}}_rtl.v
-#write_vhdl -force {{output_dir}}/{{top_module_name}}_rtl.vhdl
-#create_clock -period 10.000 -name clk -waveform {0.000 5.000} [get_ports clk]
 
-#-max_dsp 0 
-#synth_design -mode out_of_context -resource_sharing on -top {{top_module_name}} -part {{part}} -directive AreaOptimized_high -max_dsp 0  -flatten_hierarchy rebuilt
-synth_design -resource_sharing on -top {{top_module_name}} -part "{{part}}" -directive AreaOptimized_high -flatten_hierarchy rebuilt
-# -retiming  -assert  -resource_sharing on -max_dsp 0
-# write_checkpoint -force {{output_dir}}/post_synth
-report_timing_summary -file $REPORTS_DIR/post_synth_timing_summary.rpt
-report_utilization -file $REPORTS_DIR/post_synth_util.rpt
-reportCriticalPaths $REPORTS_DIR/post_synth_critpath_report.csv
-report_power -file $REPORTS_DIR/post_synth_power.rpt
-
-report_methodology  -file $REPORTS_DIR/post_synth_methodology.rpt
-
-
-write_schematic -format pdf {{top_module_name}}.pdf -orientation landscape
+synth_design {{synth_options}}
 
 # directive: Default, RuntimeOptimized, ExploreArea, Explore, etc
-opt_design -directive ExploreArea 
 # OR # -merge_equivalent_drivers -control_set_merge -resynth_area -remap  -propconst 
+opt_design {{opt_options}}
+
+write_checkpoint -force {{output_dir}}/post_synth
+
+report_timing_summary -file $REPORTS_DIR/post_synth_timing_summary.rpt 
+report_utilization -file $REPORTS_DIR/post_synth_util.rpt
+reportCriticalPaths $REPORTS_DIR/post_synth_critpath_report.csv
+report_methodology  -file $REPORTS_DIR/post_synth_methodology.rpt
+# report_power -file $REPORTS_DIR/post_synth_power.rpt
+
 
 place_design
 phys_opt_design -retime -hold_fix  -rewire
 #write_checkpoint -force $CHECKPOINTS_DIR/post_place
 report_timing_summary -file $REPORTS_DIR/post_place_timing_summary.rpt
 
-
 route_design
 #write_checkpoint -force $CHECKPOINTS_DIR/post_route
 report_timing_summary -file $REPORTS_DIR/post_route_timing_summary.rpt
-report_timing -sort_by group -max_paths 100 -path_type summary -file $REPORTS_DIR/post_route_timing.rpt
+report_timing  -sort_by group -max_paths 100 -path_type summary -file $REPORTS_DIR/post_route_timing.rpt
 report_clock_utilization -file $REPORTS_DIR/clock_util.rpt
 report_utilization -file $REPORTS_DIR/post_route_util.rpt
 report_utilization -hierarchical  -file   $REPORTS_DIR/post_route_util_hierarchical.rpt
@@ -108,3 +107,9 @@ report_utilization -hierarchical  -file   $REPORTS_DIR/post_route_util_hierarchi
 # write_xdc -no_fixed_only -force {{output_dir}}/{{top_module_name}}_impl.xdc
 
 # write_bitstream -force {{output_dir}}/{{top_module_name}}.bit
+
+puts "\n\n** Vivado run completed **\n"
+puts "** Number of Critical Warnings: [get_msg_config -severity {CRITICAL WARNING} -count]"
+puts "** Number of Warnings: [get_msg_config -severity {WARNING} -count]\n\n"
+
+quit

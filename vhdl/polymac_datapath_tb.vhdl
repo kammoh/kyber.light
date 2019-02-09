@@ -15,9 +15,10 @@ use osvvm.CoveragePkg.all;
 entity polymac_dp_tb is
 	generic(
 		runner_cfg        : string;
-		G_CLK_PERIOD      : time    := 1 ns;
-		G_EXTRA_RND_SEED  : string  := "3.14159265";
-		G_TEST_ITERATIONS : integer := 2 ** 16
+		G_CLK_PERIOD      : time     := 1 ns;
+		G_PIPELINE_LEVELS : positive := 7;
+		G_EXTRA_RND_SEED  : string   := "3.14159265";
+		G_TEST_ITERATIONS : integer  := 2 ** 16
 	);
 end entity polymac_dp_tb;
 
@@ -73,21 +74,25 @@ begin
 			if run("Add  r <= r + a.b") then
 				for i in 0 to G_TEST_ITERATIONS loop
 					wait until falling_edge(clk);
-					r_en   <= '1';
+					r_en   <= '0';
 					r_load <= '1';
 					rin_v  := RndR.RandUnsigned(KYBER_Q - 1, rin'length);
 					rin    <= rin_v;
 					wait until falling_edge(clk);
 					r_load <= '0';
-					r_en   <= '0';
+					r_en   <= '1';
 					nega   <= '0';
 					a_v    := RndR.RandUnsigned(KYBER_Q - 1, a'length);
 					a      <= a_v;
 					b_v    := RndR.RandUnsigned(KYBER_Q - 1, b'length);
 					b      <= b_v;
 					wait until falling_edge(clk);
-					r_en   <= '1';
+					r_en   <= '0';
 					wait until falling_edge(clk);
+					
+					for p in 0 to G_PIPELINE_LEVELS loop
+						wait until falling_edge(clk);
+					end loop;
 
 					check_equal(unsigned(rout), resize((rin_v + (a_v * b_v)) mod KYBER_Q, rout'length));
 
@@ -95,21 +100,24 @@ begin
 			elsif run("Subtract r <= r - a.b") then
 				for i in 0 to G_TEST_ITERATIONS loop
 					wait until falling_edge(clk);
-					r_en   <= '1';
+					r_en   <= '0';
 					r_load <= '1';
 					rin_v  := RndR.RandUnsigned(KYBER_Q - 1, rin'length);
 					rin    <= rin_v;
-					nega   <= '1';
 					wait until falling_edge(clk);
 					r_load <= '0';
-					r_en   <= '0';
+					nega   <= '1';
+					r_en   <= '1';
 					a_v    := RndR.RandUnsigned(KYBER_Q - 1, a'length);
 					a      <= a_v;
 					b_v    := RndR.RandUnsigned(KYBER_Q - 1, b'length);
 					b      <= b_v;
 					wait until falling_edge(clk);
-					r_en   <= '1';
-					wait until falling_edge(clk);
+					r_en   <= '0';
+					
+					for p in 0 to G_PIPELINE_LEVELS loop
+						wait until falling_edge(clk);
+					end loop;
 
 					check_equal(unsigned(rout), resize((("00" & rin) + KYBER_Q - ((a * b) mod KYBER_Q)) mod KYBER_Q, rout'length), " for a=" & to_string(to_integer(a)) & " b=" & to_String(to_integer(b)) & " r0=" & to_string(to_integer(rin))
 					);
@@ -119,7 +127,9 @@ begin
 					i_ext_div_select <= '1';
 					ext_div_v        := RndR.RandUnsigned(2**log2ceil(KYBER_Q) * (KYBER_Q - 1), i_ext_div'length);
 					i_ext_div        <= ext_div_v;
-					wait until falling_edge(clk);
+					for p in 0 to G_PIPELINE_LEVELS - 2 loop
+						wait until falling_edge(clk);
+					end loop;
 					check_equal(unsigned(o_ext_div), ext_div_v / KYBER_Q);
 				end loop;
 			end if;
@@ -131,11 +141,14 @@ begin
 	end process;
 
 	dut : entity work.polymac_datapath
+		generic map(
+			G_PIPELINE_LEVELS => G_PIPELINE_LEVELS
+		)
 		port map(
 			clk              => clk,
-			nega             => nega,
-			en_r             => r_en,
-			ld_r             => r_load,
+			i_nega           => nega,
+			i_en_r           => r_en,
+			i_ld_r           => r_load,
 			in_a             => a,
 			in_b             => b,
 			in_r             => rin,

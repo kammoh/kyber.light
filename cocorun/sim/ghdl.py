@@ -1,74 +1,89 @@
 from typing import List
 from . import Sim
+from ..conf import *
 import pathlib
 import subprocess
 import os
 
-class Ghdl(Sim):
-    def __init__(self, vhdl_version: str, top: str):
 
-        super(Ghdl, self).__init__(top=top)
+def language_ghdl_version(language:str):
+    vhdl_version = '08'
+    if language:
+        lang_version = language.split('.')
+        if not lang_version or len(lang_version) == 0 or lang_version[0].lower() != "vhdl":
+            raise Exception(f"Bad language {language}")
+        if len(lang_version) > 1:
+            if len(lang_version[1]) == 2:
+                vhdl_version = lang_version[1]
+            elif len(lang_version[1]) == 4 and (lang_version[1][:1] in ['19', '20'] ):
+                vhdl_version = lang_version[1][2:4]
+    return vhdl_version  
+
+class Ghdl(Sim):
+    def __init__(self, manifest: Manifest, build_path="."):
+
+        super(Ghdl, self).__init__(manifest)
+
+        self.build_path = build_path
 
         self.sim_name = 'ghdl'
         self.cmd = 'ghdl'
         self.top_lang = 'vhdl'
         self.work = 'work'
         self.opts = ['-fcaret-diagnostics', '-fdiagnostics-show-option', '-O3']
-        self.vhdl_version = vhdl_version
-
-        work_path = f'work/{self.vhdl_version}'
-
-        pathlib.Path(work_path).mkdir(parents=True, exist_ok=True)
-        self.workdir = work_path
 
         self.wave_dump = None
 
         self.libs = set()
 
         self.warn_opts = ['-Wbinding', '-Wreserved', '-Wlibrary',
-                          '-Wvital-generic', '-Wdelayed-checks', '-Wbody -Wspecs', '-Wunused']
-
-        self.common_args = f'--work=work --workdir={self.workdir} --std={self.vhdl_version}'
-
-        self.phases = {
-            # 'import': '{cmd} -i {common_args} {opts} {sources}',
-            # 'make': '{cmd} --gen-makefile {common_args} {opts} {warn_opts} {top} {gen} ',
-            'run': '{cmd} -r {top} --vpi={vpi} {gen} {vcd_arg} --ieee-asserts=disable'
-        }
-        
-    @classmethod
-    def from_manifest(cls, manifest, module_name):
-        mod=manifest.get_module(module_name)
-        vhdl_version = mod.vhdl_version
-        if not vhdl_version:
-            vhdl_version = "08"
-        sim = cls(vhdl_version=vhdl_version, top=mod.top)
-        
-        for file, library in manifest.module_dependencies(module_name).items():
-            sim.add_source(file=file, library=library)
-            
-        return sim
-
-        
+                          '-Wvital-generic', '-Wdelayed-checks', '-Wbody', '-Wspecs', '-Wunused']
     
     def libs_arg_str(self):
         return ' '.join(['-P' + p for p in self.libs ])
 
-    def add_source(self, file, build_path=".", library=None):
-        if library:
-            lib_path=f'{build_path}/{library}/{self.vhdl_version}'
-            pathlib.Path(lib_path).mkdir(parents=True, exist_ok=True)
-            subprocess.run(f'ghdl -a --work={library} --workdir={lib_path} --std={self.vhdl_version} {file}'.split()).check_returncode()
-            self.libs.add(lib_path)
+    def analyze(self, hdl: HdlSource):
+        vhdl_version = language_ghdl_version(hdl.language)
+        ## FIXME totally wrong!
+        ## need to keep track of lib path of dependencies as a hierarchy
+        if hdl.lib and hdl.lib.lower() != 'work':
+            lib_path = pathlib.Path(self.build_path).joinpath(hdl.lib, vhdl_version)
+            lib_path.mkdir(parents=True, exist_ok=True)
+            print(f'ghdl -a --work={hdl.lib} --workdir={lib_path} --std={vhdl_version} {hdl.path}')
+            subprocess.run(f'ghdl -a --work={hdl.lib} --workdir={lib_path} --std={vhdl_version} {hdl.path}'.split()).check_returncode()
+            self.libs.add(str(lib_path))
         else:
+            workdir = pathlib.Path(self.build_path).joinpath('work', vhdl_version)
             l = self.libs_arg_str()
-            subprocess.run(f'ghdl -a --work=work --workdir={self.workdir} --std={self.vhdl_version} {l} {file}'.split()).check_returncode()
+            print(f'ghdl -a --work={hdl.lib} --workdir={workdir} --std={vhdl_version} {l} {hdl.path}'.split())
+            subprocess.run(f'ghdl -a --workdir={workdir} --std={vhdl_version} {l} {hdl.path}'.split()).check_returncode()
 
-        #self.common_args = self.common_args + ' ' + f'-P{lib_path}'
+    def run_test(self, bundle_name, test_case: str = None):
 
-    def run_test(self, test_modules: List[str], test_case: str = None):
-        subprocess.run(f'ghdl -e --work=work --workdir={self.workdir} --std={self.vhdl_version} {self.libs_arg_str()} {self.top}'.split()).check_returncode()
-        super(Ghdl, self).run_test(test_modules, test_case)
+        hdl_sources, mod = self.manifest.hdl_sources(bundle_name)
+
+        top_module_name = mod.top
+
+        print("top_module.tb_files=", mod.tb_files)
+
+        test_modules = list(filter(lambda tb_file: tb_file.endswith(".py"), mod.tb_files))
+
+        if len(test_modules) == 0:
+            self.log.error(f"no python testbench found in Manifest for bundle {bundle_name}")
+            exit(1)
+
+        vhdl_version = language_ghdl_version(mod.language)
+        work_path = f'work/{vhdl_version}'
+
+        pathlib.Path(work_path).mkdir(parents=True, exist_ok=True)
+
+        for hdl in hdl_sources:
+            print(f"analyzing {hdl.path}")
+            self.analyze(hdl)
+        
+        subprocess.run(f'ghdl -e --work=work --workdir={work_path} --std={vhdl_version} {self.libs_arg_str()} {top_module_name}'.split()).check_returncode()
+        
+        super(Ghdl, self).run_test('{cmd} -r ' + top_module_name + ' --vpi={vpi} {gen} {vcd_arg} --ieee-asserts=disable', top_module_name, test_modules, test_case)
 
 
     @property

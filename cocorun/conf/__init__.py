@@ -4,13 +4,13 @@ import pathlib
 import glob
 import json
 from collections import OrderedDict
+import argparse
 
-logger = logging.getLogger(__name__)
 
 class HdlSource():
-    def __init__(self, path, lang='vhdl2008', lib= 'work'):
+    def __init__(self, path, language, lib= 'work'):
         self.path = path
-        self.lang = lang
+        self.language = language
         self.lib = lib
 
 class XdcSource():
@@ -41,8 +41,8 @@ class Module:
             return ret_list
         
         self.name = name
-        self.lang = 'vhdl'
-        self.vhdl_version = d.get('vhdl_version',  None)
+        self.vhdl_version = d.get('vhdl_version',  None) # FIXME -> language REMOVE
+        self.language = d.get('language',  'vhdl.2008')
         self.library = d.get('library',  None)
         self.path = d.get('path', ".")
         self.tb_files = get_as_list('tb_files')
@@ -59,6 +59,8 @@ class Module:
 
 class Manifest:
     def __init__(self, manifest_dict):
+        self.parser = argparse.ArgumentParser(description='CocoRun')
+        self.log = logging.getLogger(__name__)
         modules = manifest_dict['modules']
         self.modules = {}
         for id, m in modules.items():
@@ -78,7 +80,13 @@ class Manifest:
         deps = OrderedDict()
         
         def add_dependencies_rec(module_name):
-            mod = self.get_module(module_name)
+            mod = module_name
+            if isinstance(mod, str):
+                try:
+                    mod = self.get_module(module_name)
+                except KeyError:
+                    self.log.error(f'dependency {module_name} does not exist in Manifest' )
+                    exit(1)
             
             for dep in mod.depends or []:
                 add_dependencies_rec(dep)
@@ -92,15 +100,10 @@ class Manifest:
 
     def hdl_sources(self, top_module_name):
         ret = []
-        top = self.get_module(top_module_name)
+        module = self.get_module(top_module_name)
 
-        # TODO FIXME
-        if not top.vhdl_version or top.vhdl_version == "08":
-            lang = 'vhdl2008'
-        else:
-            lang = 'vhdl'
         for path, lib in self.module_dependencies(top_module_name).items():
-            ret.append(HdlSource(path=path, lib=lib, lang=lang) )
+            ret.append(HdlSource(path=path, lib=lib, language=module.language) )
 
-        return ret
+        return ret, module
 

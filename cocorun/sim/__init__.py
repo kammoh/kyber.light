@@ -8,9 +8,12 @@ import sysconfig
 import cocotb
 import platform
 import pathlib
+import logging
+from ..conf import *
 
 class Sim(object):
-    def __init__(self,top):
+    def __init__(self, manifest: Manifest):
+        self.manifest = manifest
         self.sim_name = self.__class__.__name__
         self.cmd = None
         self.warn_opts = None
@@ -20,11 +23,10 @@ class Sim(object):
         lib_dir = os.path.join(share_dir, 'lib')
         platform_libs_dir = os.path.join(lib_dir, 'build','libs', platform.machine())
         self.cocotb_path = prefix_dir
-        self.top = top
         self.top_lang=''
         self.seed=None
         self.log_level=None
-        self.phases = collections.OrderedDict()
+        # self.phases = collections.OrderedDict()
         self.python_lib_path = sysconfig.get_config_var('LIBDIR')
         self.python_include_path = sysconfig.get_config_var('INCLUDEPY')
         self.python_bin = sys.executable
@@ -38,6 +40,13 @@ class Sim(object):
         self.workdir='.'
         self.common_args=''
 
+        self.log = logging.getLogger(self.__class__.__name__)
+        console = logging.StreamHandler()
+        formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
+        console.setFormatter(formatter)
+        self.log.addHandler(console)
+
+        # TODO FIXME Move eslewhere
         make_cmd = f'make SIM={self.sim_name} SIM_ROOT={share_dir} PYTHON_INCLUDEDIR={self.python_include_path} PYTHON_DYN_LIB={self.python_dyn_lib} PYTHON_BIN={self.python_bin} ARCH={platform.machine()} -C {lib_dir} vpi_lib'
         # print('running', make_cmd)
         proc = subprocess.Popen(make_cmd.split())
@@ -46,31 +55,28 @@ class Sim(object):
             raise RuntimeError()
         
 
-    def get_top(self):
-        if self.top:
-            if type(self.top) is tuple:
-                return self.top
-            else:
-                return (self.top, '')
-        return ('', '')
+    # def get_top(self):
+    #     if self.top:
+    #         if type(self.top) is tuple:
+    #             return self.top
+    #         else:
+    #             return (self.top, '')
+    #     return ('', '')
     
     @property
     def vcd_arg(self):
         return ''
 
 
+    # FIXME BROKEN
     def run_cmd(self, cmd: str, env: Dict[str, str]=os.environ):
-        (top, top_arch) = self.get_top()
-        if self.top and type(self.top) is tuple:
-            (top, top_arch) = self.top
-        
         generics_arg = ' '.join([ f'-g{k}={v}' for k, v in self.generics.items() ])
         
         opts = ' '.join(self.opts)
                 
         cmd = cmd.format(cmd=self.cmd, gen = generics_arg, vcd_arg=self.vcd_arg, 
-                         warn_opts=' '.join(self.warn_opts),work=self.work, top=top, opts=opts, 
-                         vpi=self.vpi, top_arch=top_arch, workdir=self.workdir, common_args=self.common_args)
+                         warn_opts=' '.join(self.warn_opts),work=self.work, opts=opts, 
+                         vpi=self.vpi, workdir=self.workdir, common_args=self.common_args)
         cmd = cmd.split()
 
         if self.log_level == 'DEBUG':
@@ -102,27 +108,32 @@ class Sim(object):
             
         return proc
     
-    def run_test(self, test_modules: List[str], test_case: str = None):
-        assert isinstance(test_modules, list), "test_modules needs to be a list of strings" 
+    def run_test(self, cmd, topmodule_name, test_modules: List[str], test_case: str = None):
+        # assert isinstance(test_modules, list), f"test_modules needs to be a list of strings\n test_modules={test_modules}" 
         
         if isinstance(test_modules, str):
             test_modules = test_modules.split(",")
         
+        tmods=[]
         for py in test_modules:
-            if not pathlib.Path(py + ".py").exists():
+            if not py.endswith(".py"):
+                py += ".py"
+            path = pathlib.Path(py)
+            if not path.exists():
                 raise FileNotFoundError(f"test module {py}: file {py}.py not found")
+            tmods.append(str(path.with_suffix("")).replace(os.sep, '.'))
         
         env=dict(os.environ)
         env['PATH'] += ":/usr/local/bin"
         env['PYTHONPATH'] = ':'.join([self.vpi_dir, self.cocotb_path, os.getcwd()])
         env['LD_LIBRARY_PATH']= ':'.join([self.vpi_dir, self.python_lib_path])
-        env['MODULE'] = ','.join(test_modules)
+        env['MODULE'] = ','.join(tmods)
         if test_case:
             env['TESTCASE'] = test_case
         if self.seed:
             env['RANDOM_SEED'] = self.seed
         
-        env['TOPLEVEL'] = self.top # TODO what about top_arch? Do we need this AT ALL?!
+        env['TOPLEVEL'] = topmodule_name # TODO what about top_arch? Do we need this AT ALL?!
         
         env['TOPLEVEL_LANG'] = self.top_lang
         env['COCOTB_LOG_LEVEL'] = self.log_level if self.log_level else 'INFO'
@@ -132,10 +143,9 @@ class Sim(object):
         env['COCOTB_SIM'] = '1'
         
         
-        for name, cmd in self.phases.items():
-            proc = self.run_cmd(cmd, env)
-            if proc.returncode != 0:
-                raise ValueError(f"{name} failed. \n command={' '.join(proc.args)} \n returncode={proc.returncode}")
+        proc = self.run_cmd(cmd, env)
+        if proc.returncode != 0:
+            raise ValueError(f"run_test failed. \n command={' '.join(proc.args)} \n returncode={proc.returncode}")
  
 
 from .ghdl import Ghdl

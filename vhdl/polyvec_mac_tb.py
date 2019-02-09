@@ -45,12 +45,28 @@ def run_test(dut, valid_gen=None, ready_gen=None, subtract=True):
     yield clkedge
 
     a = PolynomialVector.random(tb.rnd)
+    # a = PolynomialVector.zero()
+    # a.polys[0].coeffs[0] = 1
+    # a.polys[1].coeffs[0] = 1
+    # a.polys[2].coeffs[0] = 1
+    # a.polys[0].coeffs[1] = 1
+    # a.polys[1].coeffs[1] = 1
+    # a.polys[2].coeffs[1] = 1
     # print("a--------")
     # a.dump()
     b = PolynomialVector.random(tb.rnd)
+    # b = PolynomialVector.zero()
+    # b.polys[0].coeffs[0] = 1
+    # b.polys[1].coeffs[0] = 1
+    # b.polys[2].coeffs[0] = 1
+    # b.polys[0].coeffs[1] = 1
+    # b.polys[1].coeffs[1] = 1
+    # b.polys[2].coeffs[1] = 1
     # print("\nb--------")
     # b.dump()
+    # r = Polynomial.zero()
     r = Polynomial.random(tb.rnd)
+    
     # print("r--------")
     # r.dump()
 
@@ -82,7 +98,9 @@ def run_test(dut, valid_gen=None, ready_gen=None, subtract=True):
 # Tests
 factory = TestFactory(run_test)
 
-factory.add_option("valid_gen", [None, intermittent_single_cycles])
+factory.add_option("valid_gen", [None, intermittent_single_cycles, random_50_percent])
+# factory.add_option("valid_gen", [None])
 factory.add_option("subtract", [True, False])
+# factory.add_option("subtract", [False])
 
 factory.generate_tests()
