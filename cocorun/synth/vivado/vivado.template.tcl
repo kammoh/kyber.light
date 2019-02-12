@@ -85,9 +85,9 @@ reportCriticalPaths $REPORTS_DIR/post_synth_critpath_report.csv
 report_methodology  -file $REPORTS_DIR/post_synth_methodology.rpt
 # report_power -file $REPORTS_DIR/post_synth_power.rpt
 
-
 place_design
-phys_opt_design -retime -hold_fix  -rewire
+
+phys_opt_design {{phys_opt_options}}
 #write_checkpoint -force $CHECKPOINTS_DIR/post_place
 report_timing_summary -file $REPORTS_DIR/post_place_timing_summary.rpt
 
@@ -109,6 +109,7 @@ report_utilization -hierarchical  -file   $REPORTS_DIR/post_route_util_hierarchi
 # write_bitstream -force {{output_dir}}/{{top_module_name}}.bit
 
 puts "\n\n** Vivado run completed **\n"
+puts "** Number of Errors: [get_msg_config -severity {ERROR} -count]"
 puts "** Number of Critical Warnings: [get_msg_config -severity {CRITICAL WARNING} -count]"
 puts "** Number of Warnings: [get_msg_config -severity {WARNING} -count]\n\n"
 

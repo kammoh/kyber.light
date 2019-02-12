@@ -47,7 +47,7 @@ class Sim(object):
         self.log.addHandler(console)
 
         # TODO FIXME Move eslewhere
-        make_cmd = f'make SIM={self.sim_name} SIM_ROOT={share_dir} PYTHON_INCLUDEDIR={self.python_include_path} PYTHON_DYN_LIB={self.python_dyn_lib} PYTHON_BIN={self.python_bin} ARCH={platform.machine()} -C {lib_dir} vpi_lib'
+        make_cmd = f'make SIM={self.sim_name} COCOTB_SHARE_DIR={share_dir} PYTHON_INCLUDEDIR={self.python_include_path} PYTHON_DYN_LIB={self.python_dyn_lib} PYTHON_BIN={self.python_bin} ARCH={platform.machine()} -C {lib_dir} vpi_lib'
         # print('running', make_cmd)
         proc = subprocess.Popen(make_cmd.split())
         print("building VPI:")

@@ -13,6 +13,7 @@ from cocotb.scoreboard import Scoreboard
 from cocotb.generators.bit import (
     wave, intermittent_single_cycles, random_50_percent)
 from cocotb.generators.byte import random_data, get_bytes
+from cocotb.handle import *
 import math
 import pyber
 from pyber import *
@@ -244,6 +245,12 @@ class ValidReadyMonitor(BusMonitor):
 class CmdDoneTester(object):
     def __init__(self, dut, input_name, output_name, num_out_words, valid_gen=None, debug=False, seed=None, clk_period=10):
         self.dut = dut
+
+        for thing_ in dut:
+            if isinstance(thing_, NonHierarchyObject) and thing_._is_port:
+                dut.log.info(f"port {thing_._name} dir: {thing_._port_direction_string}")
+        
+
         self.nwords = num_out_words
         self.stream_in = ValidReadyDriver(dut, input_name, dut.clk)
         self.stream_out = ValidReadyMonitor(

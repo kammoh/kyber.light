@@ -166,6 +166,12 @@ def test_keccak(dut):
     cocotb.fork(Clock(dut.clk, 10, units='ns').start())
     yield reset(dut.clk, dut.rst)
     yield RisingEdge(dut.clk)
+
+    for thing_ in dut:
+        # if isinstance(thing_, HierarchyObject) and thing_._is_port:
+        if thing_._is_port:
+            dut.log.info(f" port {thing_._name}")
+    
     
     tester = StreamTester(dut)
     

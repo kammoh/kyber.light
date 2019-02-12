@@ -176,21 +176,32 @@ class Vivado(SynthTool):
             'retiming': kwargs.pop('synth_retiming', True),
             'directive': kwargs.pop('synth_directive', None),
             'flatten_hierarchy': kwargs.pop('flatten_hierarchy', 'rebuilt'),
-            'generic': kwargs.pop('generics', None)
+            'generics': kwargs.pop('generics', None)
         }
         opt_options = {
              'directive': kwargs.pop('opt_directive', None),
              'quiet': kwargs.pop('opt_quiet', False),
         }
 
+        phys_opt_options = {
+            'retime': True,
+            'hold_fix': True,
+            'rewire' : True
+        }
+
         synth_prefix = 'synth_'
         opt_prefix = 'opt_'
-        for arg, value in kwargs:
+        place_prefix = 'place_'
+        route_prefix = 'route_'
+        phys_opt_prefix = 'phys_opt_'
 
+        for arg, value in kwargs:
             if arg.startswith(synth_prefix):
                 synth_options[arg[len(synth_prefix)]:] = value
             elif arg.startswith(opt_prefix):
                 opt_options[arg[len(opt_prefix)]:] = value
+            elif arg.startswith(phys_opt_prefix):
+                phys_opt_options[arg[len(phys_opt_prefix)]:] = value
 
 
         run_dir_name = f'synth.{self.__class__.__name__}.{top_module_name}.{datetime.datetime.now()}'.replace(

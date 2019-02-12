@@ -49,13 +49,11 @@ class Ghdl(Sim):
         if hdl.lib and hdl.lib.lower() != 'work':
             lib_path = pathlib.Path(self.build_path).joinpath(hdl.lib, vhdl_version)
             lib_path.mkdir(parents=True, exist_ok=True)
-            print(f'ghdl -a --work={hdl.lib} --workdir={lib_path} --std={vhdl_version} {hdl.path}')
             subprocess.run(f'ghdl -a --work={hdl.lib} --workdir={lib_path} --std={vhdl_version} {hdl.path}'.split()).check_returncode()
             self.libs.add(str(lib_path))
         else:
             workdir = pathlib.Path(self.build_path).joinpath('work', vhdl_version)
             l = self.libs_arg_str()
-            print(f'ghdl -a --work={hdl.lib} --workdir={workdir} --std={vhdl_version} {l} {hdl.path}'.split())
             subprocess.run(f'ghdl -a --workdir={workdir} --std={vhdl_version} {l} {hdl.path}'.split()).check_returncode()
 
     def run_test(self, bundle_name, test_case: str = None):

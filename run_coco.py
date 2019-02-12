@@ -37,6 +37,7 @@ if args.synth:
 
 else:
     sim = Ghdl(manifest)
+    # sim.log_level = 'DEBUG'
     if args.sim_dump:
         sim.wave_dump = args.bundle_name + "_dump.ghw"
     sim.run_test(args.bundle_name)
