@@ -13,11 +13,11 @@ from cocotb.scoreboard import Scoreboard
 from cocotb.generators.bit import (
     wave, intermittent_single_cycles, random_50_percent)
 from cocotb.generators.byte import random_data, get_bytes
-from cocotb.handle import *
 import math
 import pyber
+from handle import ModifiableObject
 from pyber import *
-from collections import Iterable
+from collections.abc import Iterable
 
 
 def get_words(nwords, generator):
@@ -43,7 +43,6 @@ class ValidReadyDriver(ValidatedBusDriver):
     def __init__(self, *args, **kwargs):
         config = kwargs.pop('config', {})
         ValidatedBusDriver.__init__(self, *args, **kwargs)
-
         self.config = ValidReadyDriver._default_config.copy()
 
         for configoption, value in config.items():
@@ -61,6 +60,7 @@ class ValidReadyDriver(ValidatedBusDriver):
 
         self.bus.valid <= 0
         self.bus.data <= word
+
 
     @cocotb.coroutine
     def _wait_ready(self):
@@ -131,12 +131,7 @@ class ValidReadyDriver(ValidatedBusDriver):
         clkedge = RisingEdge(self.clock)
         firstword = True
 
-        bus_width = len(self.bus.data)
-
-        dump_line_width = 140
-
-        dumped_chars = 0
-        for i, word in enumerate(words_iterable):
+        for word in words_iterable:
             if not firstword or (firstword and sync):
                 yield clkedge
                 firstword = False
@@ -156,43 +151,28 @@ class ValidReadyDriver(ValidatedBusDriver):
 
             self.bus.valid <= 1
             self.bus.data <= word
-            # print(f"i={i}")
             yield self._wait_ready()
 
-            #     nibles = (bus_width + 3) // 4
-            #     dumped_chars += nibles + 1
-            #     if dumped_chars > dump_line_width:
-            #         print("")
-            #         dumped_chars = nibles + 1
-            #     print(f"{word:0{nibles}X}", end=' ')
-
-        # print("")
         yield clkedge
         self.bus.valid <= 0
 
     @cocotb.coroutine
     def _driver_send(self, pkt, sync=True):
-        def flatten_to_list(items):
-            def flatten(items):
-                for x in items:
-                    if isinstance(x, Iterable) and not isinstance(x, (str, bytes)):
-                        yield from flatten(x)
-                    else:
-                        yield x
-            return list(flatten(items))
-
         dut = self.entity
         if isinstance(pkt, bytes):
             assert len(self.bus.data) % 8 == 0
-            dut.log.info("Sending packet of length %d bytes" % len(pkt))
-            dut.log.info(hexdump(pkt))
+            dut._log.info("Sending packet of length %d bytes" % len(pkt))
+            dut._log.info(hexdump(pkt))
             yield self._send_bytes(pkt, sync=sync)
-            dut.log.info(
+            dut._log.info(
                 "Successfully sent packet of length %d bytes" % len(pkt))
         elif isinstance(pkt, str):
-            dut.log.error('TODO not implemented <<< hex string')
+            dut._log.error('TODO not implemented <<< hex string')
+        elif isinstance(pkt, Iterable):
+            yield self._send_iterable(pkt, sync=sync)
         else:
-            yield self._send_iterable(flatten_to_list(pkt), sync=sync)
+            self.log.error("Unknown data to send")
+            raise TestError
 
 
 class ValidReadyMonitor(BusMonitor):
@@ -236,7 +216,7 @@ class ValidReadyMonitor(BusMonitor):
 
             if fire():
                 words.append(self.bus.data.value)
-                # print(f"received words {len(words)}/{self.num_out_words} ")
+                self.log.debug(f"received words {len(words)}/{self.num_out_words} ")
                 if len(words) >= self.num_out_words:
                     self._recv(words)
                     words = []
@@ -245,10 +225,11 @@ class ValidReadyMonitor(BusMonitor):
 class CmdDoneTester(object):
     def __init__(self, dut, input_name, output_name, num_out_words, valid_gen=None, debug=False, seed=None, clk_period=10):
         self.dut = dut
+        self.log = dut._log
 
         for thing_ in dut:
-            if isinstance(thing_, NonHierarchyObject) and thing_._is_port:
-                dut.log.info(f"port {thing_._name} dir: {thing_._port_direction_string}")
+            if isinstance(thing_, ModifiableObject) and thing_._is_port:
+                self.log.info(f"port {thing_._name} dir: {thing_._port_direction_string}")
         
 
         self.nwords = num_out_words
@@ -286,8 +267,8 @@ class CmdDoneTester(object):
         # if not transaction or len(transaction) < self.nwords:
         # raise TestError("empty transaction passed to model")
 
-        print("model:")
-        print(f"len(transaction)={len(transaction)}")
+        self.log.info("model:")
+        self.log.info(f"len(transaction)={len(transaction)}")
 
     @cocotb.coroutine
     def gen_output_ready(self):
@@ -310,16 +291,16 @@ class CmdDoneTester(object):
         yield self.wait_for_done(value=0)
 
         for s in signals:
-            self.dut._log.info(f"command: {s._name}")
+            self.log.info(f"command: {s._name}")
             s <= 1
 
         if input:
-            print(f"len(input)={len(input)}")
+            self.log.debug(f"len(input)={len(input)}")
             yield self.stream_in.send(input)
 
-        self.dut._log.info("waiting for done...")
+        self.log.info("waiting for done...")
         yield self.wait_for_done()
-        self.dut._log.info(">> received done")
+        self.log.info(">> received done")
         # deassert all
         for s in signals:
             s <= 0
@@ -327,11 +308,11 @@ class CmdDoneTester(object):
 
     @cocotb.coroutine
     def reset(self):
-        self.dut._log.debug("Resetting DUT")
+        self.log.debug("Resetting DUT")
         self.dut.rst <= 1
         yield RisingEdge(self.dut.clk)
         yield RisingEdge(self.dut.clk)
         yield FallingEdge(self.dut.clk)
         self.dut.rst <= 0
-        self.dut._log.debug("Out of reset")
+        self.log.debug("Out of reset")
 

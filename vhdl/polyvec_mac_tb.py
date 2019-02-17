@@ -4,7 +4,7 @@
 ##
 # @author:       Kamyar Mohajerani
 ##
-# @requirements: Python 3.5+, CocoTB 1.1+
+# @requirements: Python 3.6+, CocoTB 1.1+
 # @copyright:    (c) 2019
 ##
 ############################################################################################################
@@ -21,11 +21,12 @@ from cocotb.generators.bit import (
     wave, intermittent_single_cycles, random_50_percent)
 import math
 from pyber import *
-from collections import Iterable
+from collections.abc import Iterable
 from cmd_tester import CmdDoneTester
 
 @cocotb.coroutine
 def run_test(dut, valid_gen=None, ready_gen=None, subtract=True):
+    print(dut)
     clkedge = RisingEdge(dut.clk)
     tb = CmdDoneTester(dut, input_name="din",
                        output_name="dout", num_out_words=KYBER_N)
@@ -36,6 +37,7 @@ def run_test(dut, valid_gen=None, ready_gen=None, subtract=True):
         dut.i_subtract <= 1
     else:
         dut.i_subtract <= 0
+    
     dut.i_recv_a <= 0
     dut.i_recv_b <= 0
     dut.i_recv_r <= 0
@@ -43,6 +45,7 @@ def run_test(dut, valid_gen=None, ready_gen=None, subtract=True):
     dut.i_send_r <= 0
 
     yield clkedge
+
 
     a = PolynomialVector.random(tb.rnd)
     # a = PolynomialVector.zero()
@@ -91,8 +94,6 @@ def run_test(dut, valid_gen=None, ready_gen=None, subtract=True):
         yield clkedge
 
     raise tb.scoreboard.result
-
-
 
 
 # Tests

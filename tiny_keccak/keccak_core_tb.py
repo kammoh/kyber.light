@@ -167,10 +167,8 @@ def test_keccak(dut):
     yield reset(dut.clk, dut.rst)
     yield RisingEdge(dut.clk)
 
-    for thing_ in dut:
-        # if isinstance(thing_, HierarchyObject) and thing_._is_port:
-        if thing_._is_port:
-            dut.log.info(f" port {thing_._name}")
+    for c in dut:
+            dut.log.info(f" got {c._name}")
     
     
     tester = StreamTester(dut)

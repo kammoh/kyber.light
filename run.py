@@ -72,8 +72,9 @@ class Manifest:
         
         if add_tb and module.tb_top:
             for tb in module.tb_files:
-                logger.info("adding testbench file %s", tb)
-                lib.add_source_files(tb)
+                if not tb.endswith('.py'):
+                    logger.debug("adding testbench file %s", tb)
+                    lib.add_source_files(tb)
             
             try:
                 testbench = lib.entity(module.tb_top)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from pprint import pprint
 import pathlib
-from cocorun.sim import Ghdl
+from cocorun.sim.ghdl import Ghdl
 from cocorun.synth.vivado import Vivado
 from cocorun.conf import Manifest
 
@@ -9,7 +9,10 @@ from cocorun.conf import Manifest
 manifest = Manifest.load_from_file()
 
 manifest.parser.add_argument('--synth', dest='synth', action='store_const', const=True, default=False,
-                             help='action to perform')
+                             help='Run Vivado Synthesize-Optimize-Place-PhysicalOptimize-Route flow')
+manifest.parser.add_argument('--debug', dest='debug', action='store_const', const=True, default=False,
+                             help='turn debug on')
+
 manifest.parser.add_argument('--mod', dest='bundle_name', action='store', help='target bundle name in Manifest', required=True)
 manifest.parser.add_argument('--sim-dump', dest='sim_dump', action='store_const', const=True, default=False, help='dump wave in simulation')
 
@@ -36,8 +39,8 @@ if args.synth:
         vivado.lastrun_print_utilization()
 
 else:
-    sim = Ghdl(manifest)
-    # sim.log_level = 'DEBUG'
+
+    sim = Ghdl(manifest, log_level='DEBUG' if args.debug else 'INFO')
     if args.sim_dump:
         sim.wave_dump = args.bundle_name + "_dump.ghw"
     sim.run_test(args.bundle_name)

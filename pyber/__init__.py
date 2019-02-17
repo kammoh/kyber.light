@@ -102,7 +102,7 @@ class PolynomialVector():
 
     def __iter__(self):
         for p in self.polys:
-            yield list(p)
+            yield from list(p) # flatten
 
     def dump(self):
         for i, p in enumerate(self.polys):

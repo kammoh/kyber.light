@@ -109,7 +109,7 @@
 		{
 			"path": "tiny_keccak",
             "top": "keccak_core",
-            "tb_files": ["keccak_core_tb.py"],
+            "tb_files": ["keccak_core_tb.py", "keccak_core_tb.vhdl"],
 			"tb_top": "keccak_core_tb",
 			"depends": 
 			[

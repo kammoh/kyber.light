@@ -1,5 +1,6 @@
 import subprocess
-import os,os.path
+import os
+import os.path
 import re
 import sys
 from typing import Dict, List, Callable
@@ -11,49 +12,51 @@ import pathlib
 import logging
 from ..conf import *
 
+import colorlog
+
+
 class Sim(object):
-    def __init__(self, manifest: Manifest):
+    def __init__(self, manifest: Manifest, log_level='INFO'):
         self.manifest = manifest
         self.sim_name = self.__class__.__name__
-        self.cmd = None
-        self.warn_opts = None
-        self.work = None
+
+        handler = colorlog.StreamHandler()
+        handler.setFormatter(colorlog.ColoredFormatter(
+            "%(name)s: %(log_color)s[%(levelname)s]%(reset)s %(message)s"))
+        self.log = colorlog.getLogger(self.sim_name)
+        self.log.addHandler(handler)
+        self.log_level = log_level
+        self.log.setLevel(self.log_level)
+
         prefix_dir = os.environ.get('COCOTB', os.path.dirname(cocotb.__file__))
+        self.log.debug(f'Using cocotb at {prefix_dir}')
         share_dir = os.path.join(prefix_dir, 'share')
         lib_dir = os.path.join(share_dir, 'lib')
-        platform_libs_dir = os.path.join(lib_dir, 'build','libs', platform.machine())
+        platform_libs_dir = os.path.join(
+            lib_dir, 'build', 'libs', platform.machine())
         self.cocotb_path = prefix_dir
-        self.top_lang=''
-        self.seed=None
-        self.log_level=None
-        # self.phases = collections.OrderedDict()
+        self.top_lang = ''
+        self.seed = None
         self.python_lib_path = sysconfig.get_config_var('LIBDIR')
         self.python_include_path = sysconfig.get_config_var('INCLUDEPY')
         self.python_bin = sys.executable
         dyn_lib_nam = sysconfig.get_config_vars('LIBRARY')[0][:-2]
-        dyn_libs = [ f for ext in ['dylib','dll', 'so'] for f in pathlib.Path(self.python_lib_path).glob(dyn_lib_nam + '.' + ext)]
-        self.python_dyn_lib = dyn_libs[0]
+        dyn_libs = [f for ext in ['dylib', 'dll', 'so'] for f in pathlib.Path(
+            self.python_lib_path).glob(dyn_lib_nam + '.' + ext)]
+        self.python_dyn_lib = str(dyn_libs[0])
         self.vpi_dir = platform_libs_dir
         self.vpi = os.path.join(platform_libs_dir, 'cocotb.vpi')
-        self.opts=[]
-        self.generics=collections.OrderedDict()
-        self.workdir='.'
-        self.common_args=''
 
-        self.log = logging.getLogger(self.__class__.__name__)
-        console = logging.StreamHandler()
-        formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
-        console.setFormatter(formatter)
-        self.log.addHandler(console)
+        need_to_build_vpi = True # FIXME
 
-        # TODO FIXME Move eslewhere
-        make_cmd = f'make SIM={self.sim_name} COCOTB_SHARE_DIR={share_dir} PYTHON_INCLUDEDIR={self.python_include_path} PYTHON_DYN_LIB={self.python_dyn_lib} PYTHON_BIN={self.python_bin} ARCH={platform.machine()} -C {lib_dir} vpi_lib'
-        # print('running', make_cmd)
-        proc = subprocess.Popen(make_cmd.split())
-        print("building VPI:")
-        if proc.wait() != 0:
-            raise RuntimeError()
-        
+        if need_to_build_vpi:
+            # TODO FIXME Move eslewhere
+            make_cmd = f'make SIM={self.sim_name} COCOTB_SHARE_DIR={share_dir} PYTHON_INCLUDEDIR={self.python_include_path} PYTHON_LIBDIR={self.python_lib_path} PYTHON_DYN_LIB={self.python_dyn_lib} PYTHON_BIN={self.python_bin} ARCH={platform.machine()} -C {lib_dir} vpi_lib'
+            self.log.info("Building VPI...")
+            self.log.debug(f'running {make_cmd}')
+            proc = subprocess.Popen(make_cmd.split())
+            if proc.wait() != 0:
+                raise RuntimeError()
 
     # def get_top(self):
     #     if self.top:
@@ -62,35 +65,52 @@ class Sim(object):
     #         else:
     #             return (self.top, '')
     #     return ('', '')
-    
+    @classmethod
+    def format(cls, string, **kwargs):
+        class SafeDict(dict):
+            def __missing__(self, key):
+                return '{' + key + '}'
+
+            def __getitem__(self, key):
+                value = super().__getitem__(key)
+                if value:
+                    if isinstance(value, list):
+                        value = ' '.join(value)
+                    return value
+                else:
+                    return ' '
+
+        return string.format_map(SafeDict(**kwargs))
+
     @property
     def vcd_arg(self):
         return ''
 
-
     # FIXME BROKEN
-    def run_cmd(self, cmd: str, env: Dict[str, str]=os.environ):
-        generics_arg = ' '.join([ f'-g{k}={v}' for k, v in self.generics.items() ])
-        
-        opts = ' '.join(self.opts)
-                
-        cmd = cmd.format(cmd=self.cmd, gen = generics_arg, vcd_arg=self.vcd_arg, 
-                         warn_opts=' '.join(self.warn_opts),work=self.work, opts=opts, 
-                         vpi=self.vpi, workdir=self.workdir, common_args=self.common_args)
-        cmd = cmd.split()
 
-        if self.log_level == 'DEBUG':
-            print(f'running {" ".join(cmd)}' )
+    def run_cmd(self, command: str, config: Dict[str, str], env: Dict[str, str] = os.environ):
+        command = self.format(command, **config)
 
-        proc = subprocess.Popen(cmd, env=env) #, stdout=subprocess.PIPE
-#         proc = subprocess.run(cmd, env=env)
-#         print("result:", proc.stdout.decode(), proc.stderr.decode(), proc.returncode)
-        saw_error = False        
+        regex = re.compile("(\{.*\})")
 
+        match = regex.match(command)
+        if match:
+            for unsub_arg in match.groups():
+                self.log.error(f'No value provided for argument {unsub_arg}')
+            exit(1)
+
+        cmd = command.split()
+
+        self.log.debug('running ' + ' '.join(cmd)) # to get rid of spurious whitespace
+
+        proc = subprocess.Popen(cmd, env=env)
+        # , stdout=subprocess.PIPE
+        # proc = subprocess.run(cmd, env=env)
+        # print("result:", proc.stdout.decode(), proc.stderr.decode(), proc.returncode)
+        saw_error = False
         # def escape_ansi(line):
         #     ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]')
         #     return ansi_escape.sub('', line)
-        
         # while True:
         #     line = proc.stdout.readline()
         #     if line:
@@ -100,57 +120,61 @@ class Sim(object):
         #             saw_error = True
         #     else:
         #         break
-        
+
         proc.wait()
-        
-        if saw_error:
-            raise ValueError("Got Error in output! Returncode={}".format(proc.returncode))
-            
+
+        if saw_error or proc.returncode:
+            raise ValueError(
+                "Got Error in output! Returncode={}".format(proc.returncode))
+
         return proc
-    
-    def run_test(self, cmd, topmodule_name, test_modules: List[str], test_case: str = None):
-        # assert isinstance(test_modules, list), f"test_modules needs to be a list of strings\n test_modules={test_modules}" 
-        
-        if isinstance(test_modules, str):
-            test_modules = test_modules.split(",")
-        
-        tmods=[]
-        for py in test_modules:
+
+    def run_test(self, cmd, run_config):
+        # run_config = dict(run_config)
+
+        run_config['vpi'] = self.vpi
+
+        tmods = []
+        for py in run_config['test_modules']:
             if not py.endswith(".py"):
                 py += ".py"
             path = pathlib.Path(py)
             if not path.exists():
-                raise FileNotFoundError(f"test module {py}: file {py}.py not found")
+                raise FileNotFoundError(
+                    f"test module {py}: file {py}.py not found")
             tmods.append(str(path.with_suffix("")).replace(os.sep, '.'))
-        
-        env=dict(os.environ)
+
+        env = dict(os.environ)
         env['PATH'] += ":/usr/local/bin"
-        env['PYTHONPATH'] = ':'.join([self.vpi_dir, self.cocotb_path, os.getcwd()])
-        env['LD_LIBRARY_PATH']= ':'.join([self.vpi_dir, self.python_lib_path])
+        env['PYTHONPATH'] = ':'.join(
+            [self.vpi_dir, self.cocotb_path, os.getcwd()])
+        env['LD_LIBRARY_PATH'] = ':'.join([self.vpi_dir, self.python_lib_path])
         env['MODULE'] = ','.join(tmods)
+        test_case = run_config.get('test_case', None)
         if test_case:
             env['TESTCASE'] = test_case
         if self.seed:
             env['RANDOM_SEED'] = self.seed
-        
-        env['TOPLEVEL'] = topmodule_name # TODO what about top_arch? Do we need this AT ALL?!
-        
+
+        # TODO what about top_arch? Do we need this AT ALL?!
+        env['TOPLEVEL'] = run_config['top_module_name']
+
         env['TOPLEVEL_LANG'] = self.top_lang
         env['COCOTB_LOG_LEVEL'] = self.log_level if self.log_level else 'INFO'
-        env['COCOTB_REDUCED_LOG_FMT'] = 'true'
-        print(f"sys.stdout.isatty()={sys.stdout.isatty()}")
-        env['COCOTB_ANSI_OUTPUT'] = '1' #str(int(os.isatty(1)))
-        env['COCOTB_SIM'] = '1'
-        
-        
-        proc = self.run_cmd(cmd, env)
-        if proc.returncode != 0:
-            raise ValueError(f"run_test failed. \n command={' '.join(proc.args)} \n returncode={proc.returncode}")
- 
 
-from .ghdl import Ghdl
-           
+        if not self.log_level or self.log_level in ['INFO', 'WARNING', 'ERROR']:
+            env['COCOTB_REDUCED_LOG_FMT'] = 'true'
+        self.log.debug(
+            f"sys.stdout.isatty()={sys.stdout.isatty()} GUI={env.get('GUI', '<Not-set>')}")
+        env['COCOTB_ANSI_OUTPUT'] = '1'  # str(int(os.isatty(1)))
+        env['COCOTB_SIM'] = '1'
+
+        proc = self.run_cmd(cmd, run_config, env)
+        if proc.returncode != 0:
+            raise ValueError(
+                f"run_test failed. \n command={' '.join(proc.args)} \n returncode={proc.returncode}")
+
+
 __all__ = [
-    'Ghdl'
-    ]
-        
+    'Ghdl', 'Sim'
+]
