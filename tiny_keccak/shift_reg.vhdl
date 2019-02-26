@@ -16,17 +16,17 @@ entity shift_reg is
 		in_do_vertical     : in  std_logic;
 		in_do_rho_out      : in  std_logic;
 		-- data
-		hword_in           : in  t_half_word;
+		hword_in           : in  T_halfword;
 		in_rho_mod         : in  unsigned(log2ceil(C_HALFWORD_WIDTH) - 1 downto 0);
-		hword_out          : out t_half_word;
+		hword_out          : out T_halfword;
 		slice_vertical_in  : in std_logic_vector(G_NUM_VERTICAL_IO - 1 downto 0);
 		slice_vertical_out : out std_logic_vector(G_NUM_VERTICAL_IO - 1 downto 0)
 	);
 end entity shift_reg;
 
 architecture RTL of shift_reg is
-	constant NUM_REGS : positive := C_LANE_WIDTH / t_half_word'length; -- assuming LANE_WIDTH is a multiple of half_word_type'length
-	type shift_reg_array_type is array (0 to NUM_REGS - 1) of t_half_word;
+	constant NUM_REGS : positive := C_LANE_WIDTH / T_halfword'length; -- assuming LANE_WIDTH is a multiple of half_word_type'length
+	type shift_reg_array_type is array (0 to NUM_REGS - 1) of T_halfword;
 
 	signal shift_reg_array : shift_reg_array_type;
 	signal rho_in          : std_logic_vector(6 downto 0);
@@ -59,7 +59,7 @@ begin
 		slice_vertical_out(i) <= shift_reg_array(G_NUM_VERTICAL_IO - 1 - i)(0);
 	end generate generate_slice_vertical_out;
 
-	rho_in  <= shift_reg_array(shift_reg_array'length - 2)(t_half_word'length - 2 downto 0) & shift_reg_array(shift_reg_array'length - 1);
+	rho_in  <= shift_reg_array(shift_reg_array'length - 2)(T_halfword'length - 2 downto 0) & shift_reg_array(shift_reg_array'length - 1);
 	rho_out <= rho_in(to_integer(in_rho_mod) + 3 downto to_integer(in_rho_mod));
 
 	hword_out <= rho_out when in_do_rho_out else shift_reg_array(12); -- always 12

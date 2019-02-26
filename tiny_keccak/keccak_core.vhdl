@@ -9,13 +9,16 @@
 --           which is the case for all SHA-3 variants
 --
 -- @protocol:
---    "commands": i_init, i_absorb, i_squeeze
---    1. assert any of the "commands"
---    2. keep asserted until o_done is observed
---      2.1 during squeeze a) if i_init is also asserted then the core will do state-initialization after squeeze and then assert done
---                         b) otherwise in runs permutations round (prepare for next squeeze) and then assert done
---    3. after seeing done the user must deassert all command signals
---    4. start over from step 1
+--    Commands: {i_init, i_absorb, i_squeeze, (i_squeeze, i_init), (i_squeeze, i_absorb)}
+--    1. Assert a "command" signal or signal combination
+--    2. Keep asserted until 'o_done' is observed
+--      2.1. During squeeze: 
+--			2.1.a) If 'i_init' is also asserted, the core will do state-initialization after squeeze and then assert done
+--          2.1.b) Else if 'i_absorb 'is also asserted, the core will assert 'o_done' after squeeze is completed. 
+--                             Subsequent "squeeze" will return the same squeezed sequence, therefore only subsequent init + absorb is valid.
+--          2.1.c) Otherwise in runs permutations round (prepare for next squeeze) and will then assert 'o_done'
+--    3. In response to observing 'o_done', the caller must deassert all command signals.
+--    4. Go to "1."
 --
 --    rationale: The parent module already keeps track of the sequence of high-level operations ("commands") which should be performed
 --
@@ -52,6 +55,7 @@ entity keccak_core is
 end entity keccak_core;
 
 architecture RTL of keccak_core is
+	---------------------------------------------------------------- Wires -----------------------------------------------------------------------
 	signal round          : unsigned(log2ceil(C_NUM_ROUNDS + 1 - 1) - 1 downto 0);
 	signal iota_bit       : std_logic;
 	signal bypass_iochipi : std_logic;
@@ -65,8 +69,8 @@ architecture RTL of keccak_core is
 	signal k              : unsigned(log2ceil(C_LANE_WIDTH) - 1 downto 0);
 	signal rho0_mod       : unsigned(log2ceil(C_HALFWORD_WIDTH) - 1 downto 0);
 	signal rho1_mod       : unsigned(log2ceil(C_HALFWORD_WIDTH) - 1 downto 0);
-	signal from_mem_dout  : t_word;
-	signal to_mem_din     : t_word;
+	signal from_mem_dout  : T_word;
+	signal to_mem_din     : T_word;
 	signal mem_addr       : unsigned(log2ceil(C_NUM_MEM_WORDS) - 1 downto 0);
 	signal mem_we         : std_logic;
 	signal mem_re         : std_logic;
@@ -77,11 +81,10 @@ architecture RTL of keccak_core is
 	---------------------------------------------------------------- Functions/Procedures --------------------------------------------------------
 
 	---------------------------------------------------------------- Registers/FF ----------------------------------------------------------------
-	---------------------------------------------------------------- Wires -----------------------------------------------------------------------
 
 begin
 
-	datapath : entity work.datapath
+	datapath : entity work.keccak_datapath
 		port map(
 			clk                  => clk,
 			--		-- memory
@@ -125,7 +128,7 @@ begin
 			out_data => from_mem_dout
 		);
 
-	controller : entity work.controller
+	controller : entity work.keccak_controller
 		port map(
 			clk                 => clk,
 			rst                 => rst,

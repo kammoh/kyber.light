@@ -18,7 +18,7 @@ entity polymac_dp_tb is
 		G_CLK_PERIOD      : time     := 1 ns;
 		G_PIPELINE_LEVELS : positive := 7;
 		G_EXTRA_RND_SEED  : string   := "3.14159265";
-		G_TEST_ITERATIONS : integer  := 2 ** 16
+		G_TEST_ITERATIONS : integer  := 2 ** 14
 	);
 end entity polymac_dp_tb;
 
@@ -28,13 +28,13 @@ architecture TB of polymac_dp_tb is
 	signal nega             : std_logic;
 	signal r_en             : std_logic;
 	signal r_load           : std_logic;
-	signal a                : t_coef_us;
-	signal b                : t_coef_us;
-	signal rin              : t_coef_us;
-	signal rout             : t_coef_us;
+	signal a                : T_coef_us;
+	signal b                : T_coef_us;
+	signal rin              : T_coef_us;
+	signal rout             : T_coef_us;
 	signal i_ext_div_select : std_logic;
 	signal i_ext_div        : unsigned(2 * log2ceil(KYBER_Q) - 1 downto 0);
-	signal o_ext_div        : t_coef_us;
+	signal o_ext_div        : T_coef_us;
 begin
 	clk <= not clk after G_CLK_PERIOD / 2;
 
@@ -49,10 +49,10 @@ begin
 
 	tb_proc : process
 		variable RndR      : RandomPType;
-		variable rin_v     : t_coef_us;
-		variable a_v       : t_coef_us;
-		variable b_v       : t_coef_us;
-		variable ext_div_v : unsigned(2 * log2ceil(KYBER_Q) - 1 downto 0);
+		variable rin_v     : T_coef_us;
+		variable a_v       : T_coef_us;
+		variable b_v       : T_coef_us;
+      variable ext_div_v : unsigned(2 * log2ceil(KYBER_Q) - 1 downto 0);
 	begin
 		test_runner_setup(runner, runner_cfg);
 
@@ -147,12 +147,12 @@ begin
 		port map(
 			clk              => clk,
 			i_nega           => nega,
-			i_en_r           => r_en,
-			i_ld_r           => r_load,
+			i_en_v           => r_en,
+			i_ld_v           => r_load,
 			in_a             => a,
 			in_b             => b,
-			in_r             => rin,
-			out_r            => rout,
+			in_v             => rin,
+			out_v            => rout,
 			i_ext_div_select => i_ext_div_select,
 			i_ext_div        => i_ext_div,
 			o_ext_div        => o_ext_div

@@ -10,26 +10,26 @@ use work.kyber_pkg.all;
 
 entity divider is
 	generic(
-		G_IN_WIDTH : positive := 25;     -- <= 26 bits, while u = <u1,u0> u0,u1 < 2^13 , u1 < KYBER_Q
+		G_IN_WIDTH : positive := 25;     -- <= 26 bits, while i_u = <u1,u0> u0,u1 < 2^13 , u1 < KYBER_Q
 		G_PIPELINE_LEVELS                : integer := 3 -- TODO
 	);
 	port(
 		clk   : in  std_logic;
 		i_u   : in  unsigned(G_IN_WIDTH - 1 downto 0);
-		o_rem : out t_coef_us;
-		o_div : out t_coef_us
+		o_rem : out T_coef_us;
+      o_div : out T_coef_us
 	);
 end entity divider;
 
 architecture RTL of divider is
-	signal u0, u1                                        : t_coef_us;
+	signal u0, u1                                        : T_coef_us;
 	signal u1_times_v                                    : unsigned(17 downto 0); -- u1 * v,  23 bits >= (G_IN_WIDTH -13) + 10
 	signal q                                             : unsigned(25 downto 0); -- q = u1 * v + u , G_IN_WIDTH
-	signal q0, q1, q1_times_d                            : t_coef_us;
-	signal r0, r0_minus_d                                : t_coef_us;
+	signal q0, q1, q1_times_d                            : T_coef_us;
+	signal r0, r0_minus_d                                : T_coef_us;
 	signal adjust                                        : boolean;
 	-- piplne registers
-	signal r0_reg, q0_reg, q1_reg, u0_reg, remainder_reg : t_coef_us;
+	signal r0_reg, q0_reg, q1_reg, u0_reg, remainder_reg : T_coef_us;
 	signal q_reg                                         : unsigned(25 downto 0);
 begin
 	-- i_u = <u1,u0>

@@ -26,12 +26,12 @@ package keccak_pkg is
 	constant C_NUM_SLICEBLOCKS : positive := C_LANE_WIDTH / C_HALFWORD_WIDTH;
 
 	---------------------------------------------------------------- Types -----------------------------------------------------------------------
-	subtype t_slice is std_logic_vector(C_SLICE_WIDTH - 1 downto 0);
-	subtype t_row is std_logic_vector(C_ROW_WIDTH - 1 downto 0);
-	subtype t_column is std_logic_vector(C_COLUMN_WIDTH - 1 downto 0);
-	subtype t_lane is std_logic_vector(C_LANE_WIDTH - 1 downto 0);
-	subtype t_word is std_logic_vector(C_WORD_WIDTH - 1 downto 0);
-	subtype t_half_word is std_logic_vector(C_HALFWORD_WIDTH - 1 downto 0);
+	subtype T_slice is std_logic_vector(C_SLICE_WIDTH - 1 downto 0);
+	subtype T_row is std_logic_vector(C_ROW_WIDTH - 1 downto 0);
+	subtype T_column is std_logic_vector(C_COLUMN_WIDTH - 1 downto 0);
+	subtype T_lane is std_logic_vector(C_LANE_WIDTH - 1 downto 0);
+	subtype T_word is std_logic_vector(C_WORD_WIDTH - 1 downto 0);
+	subtype T_halfword is std_logic_vector(C_HALFWORD_WIDTH - 1 downto 0);
 
 end package keccak_pkg;
 

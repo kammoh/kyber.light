@@ -71,7 +71,16 @@ read_verilog {{source.path}} -library {{source.lib}}
 read_xdc {{xdc.path}}
 {% endfor %}
 
-synth_design {{synth_options}}
+
+#synth_design -top {{top_module_name}} -rtl -rtl_skip_ip -keep_equivalent_registers -control_set_opt_threshold 0 -assert -no_timing_driven -resource_sharing off -flatten_hierarchy none 
+
+#write_verilog -force {{output_dir}}/{{top_module_name}}_synth_rtl.v
+synth_design {{synth_options}} -assert
+# synth_design -top {{top_module_name}} -keep_equivalent_registers -control_set_opt_threshold 0 -assert -no_timing_driven -resource_sharing off -flatten_hierarchy none 
+
+# report_utilization -file $REPORTS_DIR/pre_opt_util.rpt
+
+
 
 # directive: Default, RuntimeOptimized, ExploreArea, Explore, etc
 # OR # -merge_equivalent_drivers -control_set_merge -resynth_area -remap  -propconst 

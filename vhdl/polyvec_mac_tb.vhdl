@@ -21,23 +21,24 @@ end entity polyvec_mac_tb;
 
 architecture TB of polyvec_mac_tb is
 
-	signal clk                : std_logic := '0';
-	signal rst                : std_logic;
-	signal in_reset           : boolean   := true;
-	signal i_rec_a            : std_logic;
-	signal i_rec_b            : std_logic;
-	signal i_rec_r            : std_logic;
-	signal i_snd_r            : std_logic;
-	signal i_do_mac           : std_logic;
-	signal i_subtract         : std_logic;
-	signal o_done             : std_logic;
-	signal i_din_data         : t_coef_us;
-	signal i_din_valid        : std_logic;
-	signal o_din_ready        : std_logic;
-	signal o_dout_data        : t_coef_us;
-	signal o_dout_valid       : std_logic;
-	signal i_dout_ready       : std_logic;
-	signal i_ext_div_a        : unsigned(2 * log2ceil(KYBER_Q) - 1 downto 0);
+	signal clk          : std_logic := '0';
+	signal rst          : std_logic;
+	signal in_reset     : boolean   := true;
+	signal i_rec_a      : std_logic;
+	signal i_rec_b      : std_logic;
+	signal i_rec_r      : std_logic;
+	signal i_snd_r      : std_logic;
+	signal i_do_mac     : std_logic;
+	signal i_subtract   : std_logic;
+	signal o_done       : std_logic;
+	signal i_din_data   : T_coef_us;
+	signal i_din_valid  : std_logic;
+	signal o_din_ready  : std_logic;
+	signal o_dout_data  : T_coef_us;
+	signal o_dout_valid : std_logic;
+	signal i_dout_ready : std_logic;
+	signal i_rama_blk   : unsigned(log2ceilnz(1 + KYBER_K) - 1 downto 0);
+   	signal i_ext_div_a        : unsigned(2 * log2ceil(KYBER_Q) - 1 downto 0);
 	signal o_ext_div_a_div_q  : t_coef_us;
 	signal o_ext_div_selected : std_logic;
 begin
@@ -58,21 +59,22 @@ begin
 
 	pv_mult0 : entity work.polyvec_mac
 		port map(
-			clk                => clk,
-			rst                => rst,
-			i_recv_a           => i_rec_a,
-			i_recv_b           => i_rec_b,
-			i_recv_r           => i_rec_r,
-			i_send_r           => i_snd_r,
-			i_do_mac           => i_do_mac,
-			i_subtract         => i_subtract,
-			o_done             => o_done,
-			i_din_data         => i_din_data,
-			i_din_valid        => i_din_valid,
-			o_din_ready        => o_din_ready,
-			o_dout_data        => o_dout_data,
-			o_dout_valid       => o_dout_valid,
-			i_dout_ready       => i_dout_ready,
+			clk          => clk,
+			rst          => rst,
+			i_rama_blk   => i_rama_blk,
+			i_recv_bb    => i_rec_a,
+			i_recv_aa    => i_rec_b,
+			i_recv_v     => i_rec_r,
+			i_send_v     => i_snd_r,
+			i_do_mac     => i_do_mac,
+			i_subtract   => i_subtract,
+			o_done       => o_done,
+			i_din_data   => i_din_data,
+			i_din_valid  => i_din_valid,
+			o_din_ready  => o_din_ready,
+			o_dout_data  => o_dout_data,
+			o_dout_valid => o_dout_valid,
+			i_dout_ready => i_dout_ready,
 			i_ext_div_a        => i_ext_div_a,
 			o_ext_div_a_div_q  => o_ext_div_a_div_q,
 			o_ext_div_selected => o_ext_div_selected
@@ -80,7 +82,7 @@ begin
 
 	tb : process
 		variable RndR     : RandomPType;
-		variable data_var : t_coef_us;
+		variable data_var : T_coef_us;
 		variable count    : integer;
 	begin
 		test_runner_setup(runner, runner_cfg);
@@ -107,11 +109,12 @@ begin
 			i_dout_ready <= '0';
 			i_din_valid  <= '0';
 
-			i_din_data  <= resize(X"1BAD", 13);
-			i_ext_div_a <= resize(X"2BADBAD", 26);
+			i_din_data <= resize(X"1BAD", 13);
 
 			wait until not in_reset;
 			wait until rising_edge(clk);
+
+			i_rama_blk <= (others => '0'); -- TODO
 
 			if run("receive r then send") then
 				i_rec_r <= '1';
@@ -121,7 +124,7 @@ begin
 					data_var   := RndR.RandUnsigned(KYBER_Q - 1, i_din_data'length);
 					i_din_data <= data_var;
 
-					l2: loop
+					l2 : loop
 						i_din_valid <= '1' when RndR.RandInt(1) = 1 else '0';
 						wait until rising_edge(clk);
 						if i_din_valid and o_din_ready then
@@ -139,8 +142,8 @@ begin
 
 				i_snd_r <= '1';
 				wait until rising_edge(clk);
-				
-				count   := 0;
+
+				count := 0;
 				while o_done /= '1' loop
 					loop
 						i_dout_ready <= '1' when RndR.RandInt(1) = 1 else '0';

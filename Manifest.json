@@ -105,6 +105,76 @@
             ],
             "language": "vhdl.2008"
         },
+		"asymmetric_fifo" : {
+			"path": "vhdl",
+			"top": "asymmetric_fifo",
+			"files": [
+				"asymmetric_fifo.vhdl"
+			],
+			"tb_files": [
+				"asymmetric_fifo_tb.py"
+			],
+			"depends": [
+				"pkg"
+            ],
+            "language": "vhdl.2008"
+        },
+
+        "cbd" :{
+            "path": "vhdl",
+            "top": "cbd",
+            "files": ["cbd.vhdl"],
+            "tb_files": ["cbd_tb.py"],
+            "depends": ["asymmetric_fifo", "keccak_pkg"],
+            "language": "vhdl.2008"
+        },
+
+        "msg_add": {
+            "path": "vhdl",
+            "top": "msg_add",
+            "files": ["msg_add.vhdl"],
+            "depends": ["asymmetric_fifo", "keccak_pkg"],
+            "language": "vhdl.2008"
+        },
+
+        "compressor": {
+            "path": "vhdl",
+            "top": "compressor",
+            "files": ["compressor.vhdl"],
+            "depends": ["asymmetric_fifo", "keccak_pkg"],
+            "language": "vhdl.2008"
+        },
+        "serializer": {
+            "path": "vhdl",
+            "top": "serializer",
+            "files": ["serializer.vhdl"],
+            "depends": ["asymmetric_fifo", "keccak_pkg"],
+            "language": "vhdl.2008"
+        },
+
+        "sha3_noisegen": {
+            "path": "vhdl",
+            "top": "sha3_noisegen",
+            "files": "sha3_noisegen.vhdl",
+            "tb_files": ["sha3_noisegen_tb.py"],
+            "depends": ["asymmetric_fifo", "tiny_keccak", "cbd", "poc_ram"],
+            "language": "vhdl.2008"
+        },
+
+        "cpa_enc" : {
+            "path": "vhdl",
+            "top": "cpa_enc",
+            "files": ["cpa_enc.vhdl"],
+            "depends": ["sha3_noisegen", "polyvec_mac", "cbd", "compressor", "msg_add", "serializer"],
+            "language": "vhdl.2008"
+        },
+
+        "keccak_pkg":
+        {
+            "path": "tiny_keccak",
+            "files": [
+                "keccak_pkg.vhdl"]
+        },
         "tiny_keccak": 
 		{
 			"path": "tiny_keccak",
@@ -113,7 +183,7 @@
 			"tb_top": "keccak_core_tb",
 			"depends": 
 			[
-				"poc_ram"
+				"poc_ram", "keccak_pkg"
 			],
 
 			"files": 

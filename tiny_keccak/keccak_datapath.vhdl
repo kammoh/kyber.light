@@ -4,7 +4,7 @@ use ieee.numeric_std.all;
 
 use work.keccak_pkg.all;
 
-entity datapath is
+entity keccak_datapath is
 	port(
 		clk                  : in  std_logic;
 		-- from controller
@@ -24,20 +24,20 @@ entity datapath is
 		-- from Iota ROM
 		in_iota_bit          : in  std_logic;
 		-- memory
-		in_data_from_mem     : in  t_word;
-		out_data_to_mem      : out t_word;
+		in_data_from_mem     : in  T_word;
+		out_data_to_mem      : out T_word;
 		-- message/digest I/O
 		din                  : in  std_logic_vector(C_HALFWORD_WIDTH - 1 downto 0);
 		dout                 : out std_logic_vector(C_HALFWORD_WIDTH - 1 downto 0)
 	);
-end entity datapath;
+end entity keccak_datapath;
 
-architecture RTL of datapath is
+architecture RTL of keccak_datapath is
 	---------------------------------------------------------------- Constants -------------------------------------------------------------------
 
 	---------------------------------------------------------------- Functions/Procedures --------------------------------------------------------
-	function interleave(sig0, sig1 : t_half_word) return t_word is
-		variable interleaved : t_word;
+	function interleave(sig0, sig1 : T_halfword) return T_word is
+		variable interleaved : T_word;
 	begin
 		for k in 0 to C_HALFWORD_WIDTH - 1 loop
 			interleaved(2 * k)     := sig0(k);
@@ -47,9 +47,9 @@ architecture RTL of datapath is
 	end function;
 	---------------------------------------------------------------- Registers/FF ----------------------------------------------------------------
 	---------------------------------------------------------------- Wires -----------------------------------------------------------------------
-	signal hword_out_0, hword_out_1                                    : t_half_word;
-	signal deinterleaved_0, deinterleaved_1                            : t_half_word;
-	signal slice_unit_in, slice_unit_out                               : t_slice;
+	signal hword_out_0, hword_out_1                                    : T_halfword;
+	signal deinterleaved_0, deinterleaved_1                            : T_halfword;
+	signal slice_unit_in, slice_unit_out                               : T_slice;
 	signal shift_reg_slice_vertical_in0, shift_reg_slice_vertical_out0 : std_logic_vector(11 downto 0);
 	signal shift_reg_slice_vertical_in1, shift_reg_slice_vertical_out1 : std_logic_vector(12 downto 0); 
 

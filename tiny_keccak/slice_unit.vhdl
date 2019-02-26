@@ -7,8 +7,8 @@ use work.keccak_pkg.all;
 entity slice_unit is
 	port(
 		clk             : in  std_logic;
-		slice_in        : in  t_slice;
-		slice_out       : out t_slice;
+		slice_in        : in  T_slice;
+		slice_out       : out T_slice;
 		bypass_iochipi  : in  std_logic;
 		do_theta        : in  std_logic;
 		round_const_bit : in  std_logic
@@ -17,8 +17,8 @@ end entity slice_unit;
 
 architecture RTL of slice_unit is
 	---------------------------------------------------- Functions ----------------------------------------------------
-	function pi(slice : t_slice) return t_slice is
-		variable ret : t_slice;
+	function pi(slice : T_slice) return T_slice is
+		variable ret : T_slice;
 	begin
 		for row in 0 to 4 loop
 			for col in 0 to 4 loop
@@ -28,8 +28,8 @@ architecture RTL of slice_unit is
 		return ret;
 	end function pi;
 
-	function chi(slice : t_slice) return t_slice is
-		variable ret : t_slice;
+	function chi(slice : T_slice) return T_slice is
+		variable ret : T_slice;
 	begin
 		for row in 0 to 4 loop
 			for col in 0 to 4 loop
@@ -39,16 +39,16 @@ architecture RTL of slice_unit is
 		return ret;
 	end function chi;
 
-	function iota_o_chi(slice : t_slice; round_constant_bit : std_logic) return t_slice is
-		variable ret : t_slice;
+	function iota_o_chi(slice : T_slice; round_constant_bit : std_logic) return T_slice is
+		variable ret : T_slice;
 	begin
 		ret := chi(slice);
 		ret(0) := ret(0) xor round_constant_bit;
 		return ret;
 	end function iota_o_chi;
 
-	function parity(slice : t_slice) return t_row is
-		variable ret_parity : t_row := (others => '0');
+	function parity(slice : T_slice) return T_row is
+		variable ret_parity : T_row := (others => '0');
 	begin
 		for col in 0 to 4 loop
 			for row in 0 to 4 loop
@@ -58,8 +58,8 @@ architecture RTL of slice_unit is
 		return ret_parity;
 	end function parity;
 
-	function replicate_row_to_slice(in_row : t_row) return t_slice is
-		variable ret : t_slice;
+	function replicate_row_to_slice(in_row : T_row) return T_slice is
+		variable ret : T_slice;
 	begin
 		for row in 0 to 4 loop
 			ret(5 * row + 4 downto 5 * row) := in_row;
@@ -69,12 +69,12 @@ architecture RTL of slice_unit is
 
 
 	---------------------------------------------------- Registers/FF ----------------------------------------------------
-	signal prev_parities_reg : t_row;
+	signal prev_parities_reg : T_row;
 	---------------------------------------------------- Wires        ----------------------------------------------------
 
-	signal iochipi      : t_slice;
-	signal cur_parities : t_row;
-	signal theta_row : t_row;
+	signal iochipi      : T_slice;
+	signal cur_parities : T_row;
+	signal theta_row : T_row;
 begin
 
 	iochipi <= slice_in when bypass_iochipi else iota_o_chi(pi(slice_in), round_const_bit);

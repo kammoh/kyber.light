@@ -14,6 +14,7 @@ ffibuilder.cdef(
     #define KYBER_SYMBYTES 32
     #define KYBER_Q ...
     #define KYBER_ETA ...
+    #define KYBER_INDCPA_BYTES ...
     
     typedef struct{
         uint16_t coeffs[KYBER_N];
@@ -22,6 +23,11 @@ ffibuilder.cdef(
     typedef struct{
         poly vec[KYBER_K];
     } polyvec;
+
+    // ADDED FOR TESTING:
+    void getnoise_bytes(unsigned char *r, const unsigned char *seed, const unsigned char nonce);
+
+    void cbd(poly *r, const unsigned char *buf); // sizeof(buf) = KYBER_ETA * KYBER_N / 4
 
     void poly_getnoise(poly *r, const unsigned char *seed, unsigned char nonce);
     void poly_frombytes(poly *r, const unsigned char *a);

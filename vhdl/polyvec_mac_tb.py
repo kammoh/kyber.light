@@ -4,48 +4,43 @@
 ##
 # @author:       Kamyar Mohajerani
 ##
-# @requirements: Python 3.6+, CocoTB 1.1+
+# @requirements: Python 3.6+, CocoTB 1.1.xnorme
 # @copyright:    (c) 2019
 ##
 ############################################################################################################
 import random
 import logging
+import math
 import cocotb
+from collections.abc import Iterable
 from cocotb.clock import Clock
 from cocotb.drivers import BusDriver, ValidatedBusDriver
 from cocotb.monitors import BusMonitor
 from cocotb.triggers import RisingEdge, FallingEdge, Edge, ReadOnly, NextTimeStep, Event
 from cocotb.regression import TestFactory
 from cocotb.scoreboard import Scoreboard
-from cocotb.generators.bit import (
-    wave, intermittent_single_cycles, random_50_percent)
-import math
-from pyber import *
-from collections.abc import Iterable
+from cocotb.generators.bit import wave, intermittent_single_cycles, random_50_percent
 from cmd_tester import CmdDoneTester
+import pyber
+from pyber import Polynomial, PolynomialVector, KYBER_N
 
 @cocotb.coroutine
 def run_test(dut, valid_gen=None, ready_gen=None, subtract=True):
-    print(dut)
-    clkedge = RisingEdge(dut.clk)
-    tb = CmdDoneTester(dut, input_name="din",
-                       output_name="dout", num_out_words=KYBER_N)
 
-    yield tb.start()
+    commands_dict = {'recv_aa': dut.i_recv_aa, 'recv_bb': dut.i_recv_bb,
+                     'recv_v': dut.i_recv_v, 'do_mac': dut.i_do_mac, 'send_v': dut.i_send_v}
+    tb = CmdDoneTester(dut, dut.clk, input_name="din",
+                       output_name="dout", num_out_words=KYBER_N, valid_gen=valid_gen, commands_dict=commands_dict)
+    
+    yield tb.reset()
+    clkedge = RisingEdge(dut.clk)
 
     if subtract:
         dut.i_subtract <= 1
     else:
         dut.i_subtract <= 0
-    
-    dut.i_recv_a <= 0
-    dut.i_recv_b <= 0
-    dut.i_recv_r <= 0
-    dut.i_do_mac <= 0
-    dut.i_send_r <= 0
 
     yield clkedge
-
 
     a = PolynomialVector.random(tb.rnd)
     # a = PolynomialVector.zero()
@@ -68,27 +63,27 @@ def run_test(dut, valid_gen=None, ready_gen=None, subtract=True):
     # print("\nb--------")
     # b.dump()
     # r = Polynomial.zero()
-    r = Polynomial.random(tb.rnd)
+    v = Polynomial.random(tb.rnd)
     
     # print("r--------")
     # r.dump()
 
     if subtract:
-        exp = r - (a * b)
+        exp = v - (a * b)
     else:
-        exp = r + (a * b)
+        exp = v + (a * b)
 
     print("Expected Output: --------")
     exp.dump()
 
-    tb.expected_output.clear()
-    tb.expected_output.append(list(exp))
+    tb.set_expected(list(exp))
 
-    yield tb.command(dut.i_recv_a, list(a))
-    yield tb.command(dut.i_recv_b, list(b))
-    yield tb.command(dut.i_recv_r, list(r))
-    yield tb.command(dut.i_do_mac)
-    yield tb.command(dut.i_send_r)
+    dut.i_rama_blk <= 0
+    yield tb.command('recv_aa', list(a))
+    yield tb.command('recv_bb', list(b))
+    yield tb.command('recv_v', list(v))
+    yield tb.command('do_mac')
+    yield tb.command('send_v')
 
     for _ in range(3):
         yield clkedge

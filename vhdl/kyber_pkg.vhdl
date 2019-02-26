@@ -3,23 +3,52 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 package kyber_pkg is
-	-------------------------------------------------------------------------------------------------------------------
-	----------------------------------------------- Types (1) ---------------------------------------------------------
-	----------------------------------------------- Functions ---------------------------------------------------------
-	function imax(arg1 : integer; arg2 : integer) return integer;
-	function imax(arg1 : integer; arg2 : integer; arg3 : integer) return integer;
+	-----------------------------------------------------------=( Types (1) )=-----------------------------------------------------------------------
+	-----------------------------------------------------------=( Functions )=-----------------------------------------------------------------------
+	-- extends maximum for 3 integers
+	function maximum(arg1 : integer; arg2 : integer; arg3 : integer) return integer;
+	--
+	-- counts number of 1s in 'a'
+	function popcount(a : std_logic_vector) return unsigned;
+	--
+	-- Half adder
+	function half_adder(a, b : std_logic) return unsigned;
+	--
+	-- ceiling(log2(arg))
 	function log2ceil(arg : positive) return natural;
+	--
+	-- return log2; always rounded up; the return value is >= 1
 	function log2ceilnz(arg : positive) return positive;
-	-------------------------------------------------------------------------------------------------------------------
-	----------------------------------------------- Constants ---------------------------------------------------------	
+	--
+	-- returns ceiling(numerator/denominator)
+	function ceil_div(numerator : natural; denominator : positive) return natural;
+	--
+	-- Print parameters upon instantiation of a module; 
+	-- to use: define a dummy (or actual) constant and initialize using this function
+	function INSTANTIATE(name : string; msg : string) return string;
+	--
+	-- computer greatest common divisor of a , b
+	function gcd(a, b : positive) return positive;
+	--
+	-- computer least common multiplier of a , b
+	function lcm(a, b : positive) return positive;
+	--
+	------------------------------------------------------------=( Parameters )=---------------------------------------------------------------------	
+	constant KYBER_K         : positive := 3; -- 2: Kyber512, 3: Kyber768 (recommended), 4: KYBER1024
+	--
+	------------------------------------------------------------=( Constants )=----------------------------------------------------------------------	
 	constant KYBER_Q         : positive := 7681;
 	constant KYBER_N         : positive := 256;
-	constant KYBER_K         : positive := 3; -- 2: Kyber512, 3: Kyber768 (recommended), 4: KYBER1024
-	constant KYBER_ETA       : positive := 4; -- 5: Kyber512, 4: Kyber768 (recommended), 3: KYBER1024
+	constant KYBER_ETA       : positive := 7 - KYBER_K; -- 5: Kyber512, 4: Kyber768 (recommended), 3: KYBER1024
 	constant KYBER_COEF_BITS : positive := log2ceilnz(KYBER_Q); -- 13
-	----------------------------------------------- Types (2) ---------------------------------------------------------
-	subtype t_coef_slv is std_logic_vector(KYBER_COEF_BITS - 1 downto 0);
-	subtype t_coef_us is unsigned(KYBER_COEF_BITS - 1 downto 0);
+	constant KYBER_Q_US      : unsigned := to_unsigned(KYBER_Q, KYBER_COEF_BITS);
+	constant KYBER_SYMBYTES  : positive := 32;
+	------------------------------------------------------------=( Types (2) )=-----------------------------------------------------------------------
+	subtype T_coef_slv is std_logic_vector(KYBER_COEF_BITS - 1 downto 0);
+	subtype T_coef_us is unsigned(KYBER_COEF_BITS - 1 downto 0);
+	subtype T_byte_slv is std_logic_vector(7 downto 0);
+	subtype T_byte_us is unsigned(7 downto 0);
+	--
 	-------------------------------------------------------------------------------------------------------------------
 	----------------------------------------- std_logic_1164_additions ------------------------------------------------
 	---------------------------------------- only required for VHDL < 2008 --------------------------------------------
@@ -34,17 +63,31 @@ end package kyber_pkg;
 
 package body kyber_pkg is
 
-	function imax(arg1 : integer; arg2 : integer) return integer is
+	function half_adder(a, b : std_logic) return unsigned is
+		variable ret : unsigned(1 downto 0);
 	begin
-		if arg1 > arg2 then
-			return arg1;
-		end if;
-		return arg2;
+		ret(0) := a xor b;
+		ret(1) := a and b;
+		return ret;
 	end function;
 
-	function imax(arg1 : integer; arg2 : integer; arg3 : integer) return integer is
+	function popcount(a : std_logic_vector) return unsigned is
+		variable n      : positive                         := a'length;
+		variable h      : natural                          := n / 2;
+		variable a_copy : std_logic_vector(n - 1 downto 0) := a; -- required for GHDL at least?
 	begin
-		return imax(arg1, imax(arg2, arg3));
+		if n = 2 then
+			return half_adder(a_copy(1), a_copy(0));
+		elsif n = 3 then
+			return half_adder(a(2), a(1)) + a(0);
+		else
+			return ("0" & popcount(a_copy(n - 1 downto h))) + popcount(a_copy(h - 1 downto 0));
+		end if;
+	end function;
+
+	function maximum(arg1 : integer; arg2 : integer; arg3 : integer) return integer is
+	begin
+		return maximum(arg1, maximum(arg2, arg3));
 	end function;
 
 	-- return log2; always rounded up
@@ -64,10 +107,40 @@ package body kyber_pkg is
 		return log;
 	end function;
 
-	-- return log2; always rounded up; the return value is >= 1
+	function ceil_div(numerator : natural; denominator : positive)
+	return natural is
+
+	begin
+		return (numerator + denominator - 1) / denominator;
+	end function ceil_div;
+
 	function log2ceilnz(arg : positive) return positive is
 	begin
-		return imax(1, log2ceil(arg));
+		return maximum(1, log2ceil(arg));
+	end function;
+
+	function INSTANTIATE(name : string; msg : string) return string is
+	begin
+		report "instantiating " & name & " => "  & msg;
+		return "instantiating " & name & " => " & msg;
+	end function;
+
+	function gcd(a, b : positive) return positive is
+		variable x : positive := a;
+		variable y : natural  := b;
+		variable r : natural;
+	begin
+		while y /= 0 loop
+			r := x mod y;
+			x := y;
+			y := r;
+		end loop;
+		return x;
+	end function;
+
+	function lcm(a, b : positive) return positive is
+	begin
+		return (a * b) / gcd(a, b);
 	end function;
 
 	-------------------------------------------------------------------------------------------------------------------

@@ -19,7 +19,7 @@ entity cbd4_datapath is
 		-- in word stream
 		in_hword_data  : in  std_logic_vector(3 downto 0); -- Keccak interface i.e. t_halfword
 		-- out coefficient stream
-		out_coeff_data : out t_coef_slv
+		out_coeff_data : out T_coef_slv
 	);
 end entity cbd4_datapath;
 

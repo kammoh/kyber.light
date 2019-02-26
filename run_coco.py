@@ -4,6 +4,7 @@ import pathlib
 from cocorun.sim.ghdl import Ghdl
 from cocorun.synth.vivado import Vivado
 from cocorun.conf import Manifest
+from random import randint, shuffle
 
 
 manifest = Manifest.load_from_file()
@@ -43,4 +44,16 @@ else:
     sim = Ghdl(manifest, log_level='DEBUG' if args.debug else 'INFO')
     if args.sim_dump:
         sim.wave_dump = args.bundle_name + "_dump.ghw"
-    sim.run_test(args.bundle_name)
+    
+    if args.bundle_name == "asymmetric_fifo":
+        for in_width in [8]: # [randint(1,13) for _ in range (10) ]:
+            print("in_width =", in_width)
+            l = [4] #[x for x in range(1, 33) ]
+            shuffle(l)
+            print(l)
+            for out_width in l:
+                sim.generics = {'G_IN_WIDTH': in_width,
+                                'G_OUT_WIDTH': out_width}
+                sim.run_test(args.bundle_name)
+    else:
+        sim.run_test(args.bundle_name)

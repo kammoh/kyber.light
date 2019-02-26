@@ -14,6 +14,56 @@ from ..conf import *
 
 import colorlog
 
+import asyncio
+
+class CommandRunner():
+    def __init__(self, cmd, env, error_regex):
+        self.error_regex = error_regex
+        self.cmd = cmd
+        self.env = env
+        self.errors = 0
+    
+    # async def _read_stream(self, stream):
+    #     while True:
+    #         line = await stream.readline()
+    #         if line:
+    #             if self.error_regex.search(line):
+    #                 self.errors += 1
+    #             sys.stdout.write(line)
+    #         else:
+    #             break
+
+    # async def _stream_subprocess(self):
+    #     process = await asyncio.create_subprocess_exec(*self.cmd,
+    #                                                     stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, env=self.env)
+
+    #     await asyncio.wait([
+    #         self._read_stream(process.stdout),
+    #         self._read_stream(process.stderr)
+    #     ])
+    #     return await process.wait()
+    
+    def execute(self):
+        self.errors = 0
+        # loop = asyncio.get_event_loop()
+        # rc = loop.run_until_complete(self._stream_subprocess())
+        # loop.close()
+        # def escape_ansi(line):
+        #     ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]')
+        #     return ansi_escape.sub('', line)
+        proc = subprocess.Popen(
+            self.cmd, env=self.env, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True)
+
+        for line in proc.stdout:
+            if not line:
+                break
+            sys.stdout.write(line)
+            if self.error_regex.search(line):
+                self.errors += 1
+        proc.stdout.close()
+        rc = proc.wait()
+
+        return rc
 
 class Sim(object):
     def __init__(self, manifest: Manifest, log_level='INFO'):
@@ -90,44 +140,24 @@ class Sim(object):
 
     def run_cmd(self, command: str, config: Dict[str, str], env: Dict[str, str] = os.environ):
         command = self.format(command, **config)
-
         regex = re.compile("(\{.*\})")
-
         match = regex.match(command)
         if match:
             for unsub_arg in match.groups():
                 self.log.error(f'No value provided for argument {unsub_arg}')
             exit(1)
-
         cmd = command.split()
-
+        err_regex = re.compile(r"ERROR\s+(\s*(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]?)*Failed")
+        runner = CommandRunner(cmd, env, err_regex)
         self.log.debug('running ' + ' '.join(cmd)) # to get rid of spurious whitespace
-
-        proc = subprocess.Popen(cmd, env=env)
-        # , stdout=subprocess.PIPE
-        # proc = subprocess.run(cmd, env=env)
-        # print("result:", proc.stdout.decode(), proc.stderr.decode(), proc.returncode)
-        saw_error = False
-        # def escape_ansi(line):
-        #     ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]')
-        #     return ansi_escape.sub('', line)
-        # while True:
-        #     line = proc.stdout.readline()
-        #     if line:
-        #         line = line.decode()
-        #         sys.stdout.write(line)
-        #         if re.search(r"ERROR\s+(\s*(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]?)*Failed", line):
-        #             saw_error = True
-        #     else:
-        #         break
-
-        proc.wait()
-
-        if saw_error or proc.returncode:
+        rc = runner.execute()
+        if rc:
             raise ValueError(
-                "Got Error in output! Returncode={}".format(proc.returncode))
+                "Non-zero return code {}".format(rc))
+        if runner.errors:
+            raise ValueError(
+                "Got {} errors in output!".format(runner.errors))
 
-        return proc
 
     def run_test(self, cmd, run_config):
         # run_config = dict(run_config)
@@ -169,10 +199,8 @@ class Sim(object):
         env['COCOTB_ANSI_OUTPUT'] = '1'  # str(int(os.isatty(1)))
         env['COCOTB_SIM'] = '1'
 
-        proc = self.run_cmd(cmd, run_config, env)
-        if proc.returncode != 0:
-            raise ValueError(
-                f"run_test failed. \n command={' '.join(proc.args)} \n returncode={proc.returncode}")
+        self.run_cmd(cmd, run_config, env)
+
 
 
 __all__ = [

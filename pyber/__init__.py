@@ -12,12 +12,41 @@ KYBER_N = pyber_clib.KYBER_N
 KYBER_K = pyber_clib.KYBER_K
 KYBER_Q = pyber_clib.KYBER_Q
 KYBER_ETA = pyber_clib.KYBER_ETA
+KYBER_SYMBYTES = pyber_clib.KYBER_SYMBYTES
 
+
+def getnoise_bytes(coins, nonce):
+    coins = list(coins)
+    print(f"getnoise_bytes[PYTHON] coins={[ hex(c) for c in coins]} nonce={nonce}")
+    assert len(coins) == KYBER_SYMBYTES
+    ccoins_buf = ffi.new(f'const unsigned char [{KYBER_SYMBYTES}]', coins)
+    crbuf = ffi.new(f'unsigned char [{KYBER_ETA * KYBER_N // 4}]')
+    pyber_clib.getnoise_bytes(crbuf, ccoins_buf, nonce)
+    return list(crbuf)
 
 class Polynomial():
     def __init__(self, coeffs: IterableType[int]):
         assert isinstance(coeffs, Iterable) and all(isinstance(c, int) for c in coeffs) and len(coeffs) == KYBER_N, "wrong argument type"
         self.coeffs = list(coeffs) # need to make a copy!!!
+
+    @classmethod
+    def cbd(cls, buf):
+        buf = list(buf)
+        buf_len = KYBER_ETA * KYBER_N // 4
+        assert len(buf) == buf_len
+        cbuf = ffi.new(f'const unsigned char [{buf_len}]', buf)
+        cpoly = ffi.new('poly *')
+        pyber_clib.cbd(cpoly, cbuf)
+        return Polynomial.from_cpoly(cpoly)
+
+    @classmethod
+    def getnoise(cls, coins, nonce):
+        coins = list(coins)
+        assert len(coins) == KYBER_SYMBYTES
+        ccoins_buf = ffi.new(f'const unsigned char [{KYBER_SYMBYTES}]', coins)
+        cpoly = ffi.new('poly *')
+        pyber_clib.poly_getnoise(cpoly, ccoins_buf, nonce)
+        return Polynomial.from_cpoly(cpoly)
 
     @classmethod
     def random(cls, rnd=None):
@@ -144,11 +173,24 @@ def polyvec_nega_mac(p_r: Polynomial, pv_a: PolynomialVector, pv_b: PolynomialVe
     return Polynomial(cpoly_r.coeffs) # need to copy!!!
 
 
+
 __all__ = ['polyvec_nega_mac', 'KYBER_N',
-           'KYBER_K', 'KYBER_Q', 'KYBER_ETA', 'Polynomial', 'PolynomialVector']
+           'KYBER_K', 'KYBER_Q', 'KYBER_ETA', 'Polynomial', 'PolynomialVector', "getnoise_bytes"]
 
 
 if __name__ == '__main__':
+    # r2 = Polynomial.cbd(range(KYBER_ETA * KYBER_N // 4))
+    # r2.dump()
+
+    coins = [0 for _ in range(KYBER_SYMBYTES)]
+    nonce = 0
+    # r3 = Polynomial.getnoise(coins, 0)
+    # r3.dump()
+    l1 = getnoise_bytes(coins, nonce)
+    print(l1)
+
+    exit(0)
+
     a = PolynomialVector.random()
     # print("a--------")
     # a.dump()
@@ -168,7 +210,7 @@ if __name__ == '__main__':
     # assert exp == e2
 
     exp = polyvec_nega_mac(r, a, b, subtract=True)
-    e2 = (a * b) - r
+    e2 = r - (a * b)
 
     exp.dump()
     e2.dump()

@@ -109,55 +109,6 @@ class StreamTester:
         return r
 
 
-# @cocotb.test()
-# def test_keccak(dut):
-#     log = SimLog("cocotb.%s" % dut._name)
-#     log.info('this is ' + dut._name)
-#     cocotb.fork(Clock(dut.clk, 10, units='ns').start())
-#     yield reset(dut.clk, dut.rst)
-#     yield RisingEdge(dut.clk)
-    
-#     tester = StreamTester(dut)
-    
-#     dut.i_squeeze <= 0
-#     dut.i_absorb <= 0
-#     dut.i_init <= 1
-#     log.info("init: waiting for done")
-#     yield tester.wait_for_done()
-#     dut.i_init <= 0
-#     yield RisingEdge(dut.clk)
-
-#     for _ in range(0, 5):
-#         input_bytes = []
-#         rate = random.randint(1, 25) * 8
-#         log.info(f"rate={rate}")
-#         for _ in range(0, rate):
-#             input_bytes.append(random.randint(0, 255))
-#         dut.i_rate <= rate // 8
-        
-#         tester.add_inputs(input_bytes)
-        
-#         dut.i_absorb <= 1
-#         log.info("absorb: waiting for done")
-#         yield tester.wait_for_done()
-#         dut.i_absorb <= 0
-#         yield RisingEdge(dut.clk)
-        
-#         dut.i_squeeze <= 1
-#         dut.i_init <= 1
-#         log.info("squeeze: waiting for done")
-#         yield tester.wait_for_done()
-#         dut.i_squeeze <= 0
-#         dut.i_init <= 0
-#         yield RisingEdge(dut.clk)
-        
-#         expected = golden_result(input_bytes, rate)
-#         dout_str = tester.output()
-#         if dout_str != expected:
-#             raise TestFailure(f"dout_str={dout_str} expected={expected}")
-#         else:
-#             log.info(f"Test PASSED! output was: {dout_str}")
-    # dump_state(dut)
 
 @cocotb.test()
 def test_keccak(dut):

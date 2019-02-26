@@ -16,37 +16,37 @@ use work.kyber_pkg.all;
 
 entity polymac_datapath is
 	generic(
-		G_PIPELINE_LEVELS                    : integer := 7 -- number of pipelining levels
+		G_PIPELINE_LEVELS : integer := 7 -- number of pipelining levels
 	);
 	port(
 		clk              : in  std_logic;
 		--- Control
 		i_nega           : in  std_logic;
-		i_en_r           : in  std_logic; -- enable piped
-		i_ld_r           : in  std_logic; -- enable and load now
+		i_en_v           : in  std_logic; -- enable piped
+		i_ld_v           : in  std_logic; -- enable and load now
 		--- Data
-		in_a             : in  t_coef_us;
-		in_b             : in  t_coef_us;
-		in_r             : in  t_coef_us;
-		out_r            : out t_coef_us;
+		in_a             : in  T_coef_us;
+		in_b             : in  T_coef_us;
+		in_v             : in  T_coef_us;
+		out_v            : out T_coef_us;
 		-- Div
 		i_ext_div_select : in  std_logic;
 		i_ext_div        : in  unsigned(2 * KYBER_COEF_BITS - 1 downto 0);
-		o_ext_div        : out t_coef_us
+		o_ext_div        : out T_coef_us
 	);
 end entity polymac_datapath;
 
 architecture RTL of polymac_datapath is
 	-- Registers/FF
-	signal r_reg                            : t_coef_us;
-	signal in_a_reg, in_b_reg               : t_coef_us;
+	signal r_reg                            : T_coef_us;
+	signal in_a_reg, in_b_reg               : T_coef_us;
 	signal a_times_b_reg_0, a_times_b_reg_1 : unsigned(2 * KYBER_COEF_BITS - 1 downto 0);
 	signal nega_delayed                     : std_logic_vector(G_PIPELINE_LEVELS - 1 downto 0); -- including load a, b stage
 	signal en_r_delayed                     : std_logic_vector(G_PIPELINE_LEVELS - 1 downto 0);
 	signal ld_r_delayed                     : std_logic; -- just 1 cycle delay
 	-- Wires
 	signal divider_input                    : unsigned(2 * KYBER_COEF_BITS - 1 downto 0);
-	signal a_times_b_reduced                : t_coef_us;
+	signal a_times_b_reduced                : T_coef_us;
 	signal add_sub                          : unsigned(r_reg'length + 1 downto 0);
 	signal add_sub_minus_q                  : unsigned(r_reg'length downto 0);
 
@@ -54,8 +54,8 @@ begin
 
 	reduce0 : entity work.divider
 		generic map(
-			G_IN_WIDTH => 2 * KYBER_COEF_BITS,
-			G_PIPELINE_LEVELS  => minimum(G_PIPELINE_LEVELS - 1, 3) -- we do at least one level in this module, don't decrease divider pipe levels unless G_PIPELINE_LEVELS < 4
+			G_IN_WIDTH        => 2 * KYBER_COEF_BITS,
+			G_PIPELINE_LEVELS => minimum(G_PIPELINE_LEVELS - 1, 3) -- we do at least one level in this module, don't decrease divider pipe levels unless G_PIPELINE_LEVELS < 4
 		)
 		port map(
 			clk   => clk,
@@ -102,15 +102,15 @@ begin
 
 			--
 			nega_delayed <= i_nega & nega_delayed(nega_delayed'length - 1 downto 1);
-			en_r_delayed <= i_en_r & en_r_delayed(en_r_delayed'length - 1 downto 1);
-			ld_r_delayed <= i_ld_r;
+			en_r_delayed <= i_en_v & en_r_delayed(en_r_delayed'length - 1 downto 1);
+			ld_r_delayed <= i_ld_v;
 			--
 			if ld_r_delayed then
-				r_reg <= in_r;
+				r_reg <= in_v;
 			elsif en_r_delayed(0) then
 				if add_sub(add_sub'length - 1) then -- add_sub < 0
 					r_reg <= resize(add_sub + KYBER_Q, r_reg'length);
---				elsif add_sub >= KYBER_Q then
+				--				elsif add_sub >= KYBER_Q then
 				elsif not add_sub_minus_q(r_reg'length) then -- add_sub >= q
 					r_reg <= resize(add_sub_minus_q, r_reg'length);
 				else
@@ -120,5 +120,5 @@ begin
 		end if;
 	end process reg_proc;
 
-	out_r <= r_reg;
+	out_v <= r_reg;
 end architecture RTL;
