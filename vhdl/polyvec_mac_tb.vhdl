@@ -75,9 +75,9 @@ begin
 			o_dout_data  => o_dout_data,
 			o_dout_valid => o_dout_valid,
 			i_dout_ready => i_dout_ready,
-			i_ext_div_a        => i_ext_div_a,
-			o_ext_div_a_div_q  => o_ext_div_a_div_q,
-			o_ext_div_selected => o_ext_div_selected
+			i_extdiv_divin        => i_ext_div_a,
+			o_extdiv_divout  => o_ext_div_a_div_q,
+			o_extdit_active => o_ext_div_selected
 		);
 
 	tb : process

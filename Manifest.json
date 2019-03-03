@@ -144,10 +144,10 @@
             "depends": ["asymmetric_fifo", "keccak_pkg"],
             "language": "vhdl.2008"
         },
-        "serializer": {
+        "decompressor": {
             "path": "vhdl",
-            "top": "serializer",
-            "files": ["serializer.vhdl"],
+            "top": "decompressor",
+            "files": ["decompressor.vhdl"],
             "depends": ["asymmetric_fifo", "keccak_pkg"],
             "language": "vhdl.2008"
         },
@@ -165,7 +165,7 @@
             "path": "vhdl",
             "top": "cpa_enc",
             "files": ["cpa_enc.vhdl"],
-            "depends": ["sha3_noisegen", "polyvec_mac", "cbd", "compressor", "msg_add", "serializer"],
+            "depends": ["sha3_noisegen", "polyvec_mac", "cbd", "compressor", "msg_add", "decompressor"],
             "language": "vhdl.2008"
         },
 

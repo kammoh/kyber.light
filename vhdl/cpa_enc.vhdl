@@ -55,7 +55,7 @@ architecture RTL of cpa_enc is
 	signal polymac_do_mac        : std_logic;
 	signal polymac_done          : std_logic;
 	signal polymac_subtract      : std_logic;
-	signal polymac_rama_blk      : unsigned(log2ceilnz(1 + KYBER_K) - 1 downto 0);
+	signal polymac_rama_blk      : unsigned(log2ceilnz(KYBER_K + 1) - 1 downto 0);
 	signal polymac_din_data      : T_coef_us;
 	signal polymac_din_valid     : std_logic;
 	signal polymac_din_ready     : std_logic;
@@ -88,6 +88,9 @@ architecture RTL of cpa_enc is
 	signal ser_coefout_data      : T_Coef_slv;
 	signal ser_coefout_valid     : std_logic;
 	signal ser_coefout_ready     : std_logic;
+	signal polymac_extdiv_divin    : unsigned(2 * log2ceil(KYBER_Q) - 1 downto 0);
+	signal polymac_extdiv_divout : T_coef_us;
+	signal polymac_extdiv_active : std_logic;
 
 begin
 
@@ -132,22 +135,25 @@ begin
 			G_NUM_RAM_A_BLOCKS => KYBER_K + 1
 		)
 		port map(
-			clk          => clk,
-			rst          => rst,
-			i_recv_aa    => polymac_recv_aa,
-			i_recv_bb    => polymac_recv_bb,
-			i_recv_v     => polymac_recv_v,
-			i_send_v     => polymac_send_v,
-			i_do_mac     => polymac_do_mac,
-			o_done       => polymac_done,
-			i_subtract   => polymac_subtract,
-			i_rama_blk   => polymac_rama_blk,
-			i_din_data   => polymac_din_data,
-			i_din_valid  => polymac_din_valid,
-			o_din_ready  => polymac_din_ready,
-			o_dout_data  => polymac_dout_data,
-			o_dout_valid => polymac_dout_valid,
-			i_dout_ready => polymac_dout_ready
+			clk             => clk,
+			rst             => rst,
+			i_recv_aa       => polymac_recv_aa,
+			i_recv_bb       => polymac_recv_bb,
+			i_recv_v        => polymac_recv_v,
+			i_send_v        => polymac_send_v,
+			i_do_mac        => polymac_do_mac,
+			o_done          => polymac_done,
+			i_subtract      => polymac_subtract,
+			i_rama_blk      => polymac_rama_blk,
+			i_din_data      => polymac_din_data,
+			i_din_valid     => polymac_din_valid,
+			o_din_ready     => polymac_din_ready,
+			o_dout_data     => polymac_dout_data,
+			o_dout_valid    => polymac_dout_valid,
+			i_dout_ready    => polymac_dout_ready,
+			i_extdiv_divin  => polymac_extdiv_divin,
+			o_extdiv_divout => polymac_extdiv_divout,
+			o_extdit_active => polymac_extdiv_active
 		);
 
 	cbd_inst : entity work.cbd
@@ -311,14 +317,14 @@ begin
 				polymac_do_mac <= not polymac_done;
 
 			when S_send_b_v =>
-				polymac_send_v      <= not polymac_done;
+				polymac_send_v <= not polymac_done;
 				if poly_rama_blk_cntr_reg = KYBER_K then -- sending out 'v'
 					compressor_din_data  <= msgadd_polyout_data;
 					compressor_din_valid <= msgadd_polyout_valid;
-					polymac_dout_ready  <= msgadd_polyin_ready;
-					msgadd_msgin_valid  <= i_pkmsg_valid;
-					msgadd_polyin_valid <= polymac_dout_valid;
-					o_msg_ready         <= msgadd_msgin_ready;
+					polymac_dout_ready   <= msgadd_polyin_ready;
+					msgadd_msgin_valid   <= i_pkmsg_valid;
+					msgadd_polyin_valid  <= polymac_dout_valid;
+					o_msg_ready          <= msgadd_msgin_ready;
 				else
 				end if;
 

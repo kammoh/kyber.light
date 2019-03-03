@@ -29,7 +29,7 @@ entity polyvec_mac is
 		--
 		-- Command Arguments
 		i_subtract         : in  std_logic;
-		i_rama_blk         : in  unsigned(log2ceilnz(1 + KYBER_K) - 1 downto 0);
+		i_rama_blk         : in  unsigned(log2ceilnz(G_NUM_RAM_A_BLOCKS) - 1 downto 0);
 		--
 		-- Data input
 		i_din_data         : in  T_coef_us;
@@ -41,9 +41,9 @@ entity polyvec_mac is
 		o_dout_valid       : out std_logic;
 		i_dout_ready       : in  std_logic;
 		-- External divide provider
-		i_ext_div_a        : in  unsigned(2 * log2ceil(KYBER_Q) - 1 downto 0);
-		o_ext_div_a_div_q  : out T_coef_us;
-		o_ext_div_selected : out std_logic
+		i_extdiv_divin        : in  unsigned(2 * log2ceil(KYBER_Q) - 1 downto 0);
+		o_extdiv_divout  : out T_coef_us;
+		o_extdit_active : out std_logic
 	);
 end entity polyvec_mac;
 
@@ -91,7 +91,7 @@ architecture RTL of polyvec_mac is
 	--
 	signal rama_ce               : std_logic;
 	signal rama_we               : std_logic;
-	signal rama_blk_addr         : unsigned(log2ceil((KYBER_K + 1) * KYBER_N) - 1 downto 0);
+	signal rama_blk_addr         : unsigned(log2ceil(G_NUM_RAM_A_BLOCKS * KYBER_N) - 1 downto 0);
 	signal rama_addr             : unsigned(log2ceil(G_NUM_RAM_A_BLOCKS * (KYBER_K + 1) * KYBER_N) - 1 downto 0);
 	signal v_addr                : unsigned(log2ceil((KYBER_K + 1) * KYBER_N) - 1 downto 0);
 	signal rama_din              : std_logic_vector(KYBER_COEF_BITS - 1 downto 0);
@@ -116,9 +116,9 @@ begin
 				in_b             => bi,
 				in_v             => vin,
 				out_v            => vout,
-				i_ext_div_select => o_ext_div_selected,
-				i_ext_div        => i_ext_div_a,
-				o_ext_div        => o_ext_div_a_div_q
+				i_ext_div_select => o_extdit_active,
+				i_ext_div        => i_extdiv_divin,
+				o_ext_div        => o_extdiv_divout
 			);
 	else generate
 		ploymac_datapath : entity work.polymac_datapath
@@ -330,32 +330,32 @@ begin
 		rama_we            <= '0';
 		ramb_ce            <= '0';
 		ramb_we            <= '0';
-		o_ext_div_selected <= '0';
+		o_extdit_active <= '0';
 
 		case state is
 			when s_init =>
-				o_ext_div_selected <= '1';
+				o_extdit_active <= '1';
 			when s_receive_bb =>
 				ramb_ce            <= i_din_valid;
 				ramb_we            <= i_din_valid;
 				o_din_ready        <= '1';
-				o_ext_div_selected <= '1';
+				o_extdit_active <= '1';
 			when s_receive_aa =>
 				rama_ce            <= i_din_valid;
 				rama_we            <= i_din_valid;
 				o_din_ready        <= '1';
-				o_ext_div_selected <= '1';
+				o_extdit_active <= '1';
 			when s_receive_v =>
 				rama_ce            <= i_din_valid;
 				rama_we            <= i_din_valid;
 				rama_blk_addr      <= v_addr;
 				o_din_ready        <= '1';
-				o_ext_div_selected <= '1';
+				o_extdit_active <= '1';
 			when s_mac_load_v =>
 				rama_ce            <= '1';
 				rama_blk_addr      <= v_addr;
 				ld_v               <= '1';
-				o_ext_div_selected <= '1';
+				o_extdit_active <= '1';
 			when s_mac_piped =>
 				ramb_ce <= '1';
 				rama_ce <= '1';
@@ -370,11 +370,11 @@ begin
 			when s_send_v =>
 				rama_ce            <= i_dout_ready or not dout_valid_piped_reg;
 				rama_blk_addr      <= v_addr;
-				o_ext_div_selected <= '1';
+				o_extdit_active <= '1';
 			when s_send_v_flush =>
-				o_ext_div_selected <= '1';
+				o_extdit_active <= '1';
 			when s_done =>
-				o_ext_div_selected <= '1';
+				o_extdit_active <= '1';
 				o_done             <= '1';
 		end case;
 

@@ -7,6 +7,12 @@ from collections import OrderedDict
 import argparse
 
 
+class HdlLibrary:
+    def __init__(self, name, path, language=None):
+        self.name = name
+        self.path = path
+        self.language = language
+
 class HdlSource():
     def __init__(self, path, language, lib= 'work'):
         self.path = path
