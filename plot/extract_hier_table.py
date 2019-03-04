@@ -128,8 +128,9 @@ class Tree:
 # tree=Tree('root', [], None)
 
 data_dict = {}
+data2={}
 
-def add_to_dict(path, size, dd=data_dict):
+def add_to_dict(path, size, dd):
     if len(path) <= 0:
         return
     if 'name' not in dd:
@@ -154,19 +155,24 @@ def add_to_dict(path, size, dd=data_dict):
 for row in table.data:
     # print(f"{'/'.join(row[0])} {row[2:]}")
     # tree.add(row[0], row[2])
-    add_to_dict(row[0], row[2])
+    add_to_dict(row[0], row[2], data_dict) # LUT
+    add_to_dict(row[0], row[6], data2) # FF
     
     # print(f'q[{l}] = {q[l]}' )
 
 
-j2_env = Environment(loader=FileSystemLoader(
-    THIS_DIR), trim_blocks=True, lstrip_blocks=True, autoescape=select_autoescape(['html']))
-
-html_template = j2_env.get_template('plot.template.tcl')
-html = html_template.render(data=data_dict)
+j2_env = Environment(loader=FileSystemLoader(THIS_DIR), trim_blocks=True, lstrip_blocks=True)
 
 run_path = pathlib.Path(".")
 html_file_relpath = pathlib.Path("report.html")
+
+scripts = []
+for script_file in ["sunburst.js"]:
+    scripts.append(pathlib.Path(THIS_DIR).joinpath(script_file).open(mode='r').read())
+
+html_template = j2_env.get_template('plot.template.html')
+html = html_template.render(data1=data_dict, data2=data2, scripts=scripts)
+
 
 with run_path.joinpath(html_file_relpath).open(mode='w') as hf:
     hf.write(html)
