@@ -64,9 +64,9 @@ begin
 			o_div => o_ext_div
 		);
 
-	divider_input <= i_ext_div when i_ext_div_select else a_times_b_reg_1;
+	divider_input <= i_ext_div when i_ext_div_select = '1'  else a_times_b_reg_1;
 
-	add_sub         <= ("00" & r_reg) - a_times_b_reduced when nega_delayed(0) else ("00" & r_reg) + a_times_b_reduced;
+	add_sub         <= ("00" & r_reg) - a_times_b_reduced when nega_delayed(0) = '1'  else ("00" & r_reg) + a_times_b_reduced;
 	add_sub_minus_q <= resize(add_sub - KYBER_Q, add_sub_minus_q'length);
 
 	pipe_7_gen : if G_PIPELINE_LEVELS >= 7 generate
@@ -76,9 +76,10 @@ begin
 				a_times_b_reg_1 <= a_times_b_reg_0;
 			end if;
 		end process;
-	else generate
+	end generate;
+	pipe_lt7_gen : if G_PIPELINE_LEVELS < 7 generate
 		a_times_b_reg_1 <= a_times_b_reg_0;
-	end generate pipe_7_gen;
+	end generate pipe_lt7_gen;
 
 	pipe_6_gen : if G_PIPELINE_LEVELS >= 6 generate
 		pipe_6_gen_proc : process(clk)
@@ -88,10 +89,11 @@ begin
 				in_b_reg <= in_b;
 			end if;
 		end process;
-	else generate
+	end generate;
+	pipe_lt6_gen : if G_PIPELINE_LEVELS < 6 generate
 		in_a_reg <= in_a;
 		in_b_reg <= in_b;
-	end generate pipe_6_gen;
+	end generate pipe_lt6_gen;
 
 	reg_proc : process(clk) is
 	begin
@@ -105,13 +107,13 @@ begin
 			en_r_delayed <= i_en_v & en_r_delayed(en_r_delayed'length - 1 downto 1);
 			ld_r_delayed <= i_ld_v;
 			--
-			if ld_r_delayed then
+			if ld_r_delayed = '1'  then
 				r_reg <= in_v;
-			elsif en_r_delayed(0) then
-				if add_sub(add_sub'length - 1) then -- add_sub < 0
+			elsif en_r_delayed(0) = '1'  then
+				if add_sub(add_sub'length - 1) = '1'  then -- add_sub < 0
 					r_reg <= resize(add_sub + KYBER_Q, r_reg'length);
 				--				elsif add_sub >= KYBER_Q then
-				elsif not add_sub_minus_q(r_reg'length) then -- add_sub >= q
+				elsif add_sub_minus_q(r_reg'length) = '0' then -- add_sub >= q
 					r_reg <= resize(add_sub_minus_q, r_reg'length);
 				else
 					r_reg <= resize(add_sub, r_reg'length);

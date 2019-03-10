@@ -62,7 +62,11 @@ begin
 			q1_reg        <= q1;
 			q_reg         <= q;
 			u0_reg        <= u0;
-			remainder_reg <= r0_minus_d when adjust else r0_reg;
+			if adjust then
+			remainder_reg <= r0_minus_d;
+			else 
+				remainder_reg <= r0_reg;
+			end if;
 		end if;
 	end process pipe_reg_proc;
 

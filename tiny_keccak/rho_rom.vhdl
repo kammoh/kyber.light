@@ -16,11 +16,11 @@ architecture RTL of rho_rom is
 
 	signal rom : t_lut := (
 		-- (MY_RHO[2*i] << 6) | MY_RHO[2*i - 1]
-		12X"000", 
-		12X"0BF", 12X"964", 12X"51C", 12X"27A",
-		12X"F6C", 12X"576", 12X"667", 12X"4D7",
-		12X"AF1", 12X"BB8", 12X"0FE", 12X"C88",
-		12X"000"
+		X"000", 
+		X"0BF", X"964", X"51C", X"27A",
+		X"F6C", X"576", X"667", X"4D7",
+		X"AF1", X"BB8", X"0FE", X"C88",
+		X"000"
 	);
 
 begin

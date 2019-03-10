@@ -35,13 +35,13 @@ begin
 	name : process(clk) is
 	begin
 		if rising_edge(clk) then
-			if in_do_shift_en then
-				if in_do_vertical then
+			if in_do_shift_en = '1'  then
+				if in_do_vertical = '1'  then
 					for i in 0 to G_NUM_VERTICAL_IO - 1 loop
 						shift_reg_array(G_NUM_VERTICAL_IO - 1 - i) <= slice_vertical_in(i) & shift_reg_array(G_NUM_VERTICAL_IO - 1 - i)(C_HALFWORD_WIDTH - 1 downto 1); -- shift UP 
 					end loop;
 				else                    -- horizontal shift/rotate
-					if in_do_hrotate then
+					if in_do_hrotate = '1'  then
 						shift_reg_array(0) <= shift_reg_array(shift_reg_array_type'length - 1);
 					else
 						shift_reg_array(0) <= hword_in;
@@ -62,6 +62,6 @@ begin
 	rho_in  <= shift_reg_array(shift_reg_array'length - 2)(T_halfword'length - 2 downto 0) & shift_reg_array(shift_reg_array'length - 1);
 	rho_out <= rho_in(to_integer(in_rho_mod) + 3 downto to_integer(in_rho_mod));
 
-	hword_out <= rho_out when in_do_rho_out else shift_reg_array(12); -- always 12
+	hword_out <= rho_out when in_do_rho_out = '1'  else shift_reg_array(12); -- always 12
 
 end architecture RTL;

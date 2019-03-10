@@ -47,6 +47,8 @@ architecture LCM_IMPL of asymmetric_fifo is
 	signal state       : T_state;
 	----------------------------------------------------( Wires )----------------------------------------------------
 	signal out_choice  : T_out_choices;
+	signal din_ready  : std_logic;
+	signal dout_valid  : std_logic;
 begin
 
 	sync_proc : process(clk) is
@@ -58,7 +60,7 @@ begin
 			else
 				case state is
 					when S_pump_in =>
-						if i_din_valid and o_din_ready then
+						if i_din_valid = '1'  and din_ready = '1'  then
 							for i in 0 to DEPTH - 2 loop
 								fifo_regs(i) <= fifo_regs(i + 1);
 							end loop;
@@ -71,7 +73,7 @@ begin
 							end if;
 						end if;
 					when S_pump_out =>
-						if o_dout_valid and i_dout_ready then
+						if dout_valid = '1'  and i_dout_ready = '1'  then
 							counter_reg <= counter_reg + 1;
 							if counter_reg(log2ceilnz(NUM_OUTS) - 1 downto 0) = NUM_OUTS - 1 then
 								counter_reg <= (others => '0');
@@ -87,22 +89,24 @@ begin
 		out_choice(i / G_OUT_WIDTH)(i mod G_OUT_WIDTH) <= fifo_regs(i / G_IN_WIDTH)(i mod G_IN_WIDTH);
 	end generate;
 
-	comb_proc : process(all) is
+	comb_proc : process(state, counter_reg, out_choice, out_choice(0)) is
 	begin
-		o_din_ready  <= '0';
-		o_dout_valid <= '0';
+		din_ready  <= '0';
+		dout_valid <= '0';
 		o_dout_data  <= out_choice(0);
 
 		case state is
 			when S_pump_in =>
-				o_din_ready <= '1';
+				din_ready <= '1';
 			when S_pump_out =>
-				o_dout_valid <= '1';
+				dout_valid <= '1';
 				o_dout_data  <= out_choice(to_integer(counter_reg));
 		end case;
 
 	end process comb_proc;
-
+	
+	o_din_ready <= din_ready;
+	o_dout_valid <= dout_valid;
 end architecture LCM_IMPL;
 
 --architecture RTL of asymmetric_fifo is

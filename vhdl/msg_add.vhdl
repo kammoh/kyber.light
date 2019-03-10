@@ -48,9 +48,9 @@ begin
 	o_polyout_valid <= msg_bit_valid and i_polyin_valid;
 	o_polyin_ready  <= i_polyout_ready;
 
-	comb_proc : process(all) is
+	comb_proc : process(i_polyin_data, msg_bit_data(0)) is
 	begin
-		if msg_bit_data(0) then
+		if msg_bit_data(0) = '1'  then
 			if i_polyin_data > KYBER_Q / 2 then
 				o_polyout_data <= i_polyin_data - KYBER_Q / 2;
 			else

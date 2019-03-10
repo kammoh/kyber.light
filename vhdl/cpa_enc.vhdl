@@ -2,11 +2,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-library PoC;
-use PoC.ocram_sp;
 
+use work.ocram_sp;
 use work.kyber_pkg.all;
-use work.keccak_pkg.all;
 
 entity cpa_enc is
 	port(
@@ -199,16 +197,16 @@ begin
 					when S_init =>
 						nonce_reg              <= (others => '0');
 						poly_rama_blk_cntr_reg <= (others => '0');
-						if i_start then
+						if i_start = '1'  then
 							state <= S_recv_coins;
 						end if;
 
 					when S_recv_coins =>
-						if noisegen_done then
+						if noisegen_done = '1'  then
 							state <= S_recv_AT_PK;
 						end if;
 					when S_recv_AT_PK =>
-						if polymac_done then
+						if polymac_done = '1'  then
 							poly_rama_blk_cntr_reg <= poly_rama_blk_cntr_reg + 1;
 							if poly_rama_blk_cntr_reg = KYBER_K then
 								state                  <= S_polynoise_s;
@@ -217,15 +215,15 @@ begin
 						end if;
 
 					when S_polynoise_s =>
-						if noisegen_done then
+						if noisegen_done = '1'  then
 							nonce_reg <= nonce_reg + 1;
 						end if;
-						if polymac_done then
+						if polymac_done = '1'  then
 							state <= S_polynoise_bv;
 						end if;
 
 					when S_polynoise_bv =>
-						if polymac_done then
+						if polymac_done = '1'  then
 							nonce_reg              <= nonce_reg + 1;
 							poly_rama_blk_cntr_reg <= poly_rama_blk_cntr_reg + 1;
 							if poly_rama_blk_cntr_reg = KYBER_K then
@@ -235,7 +233,7 @@ begin
 						end if;
 
 					when S_polymac =>
-						if polymac_done then
+						if polymac_done = '1'  then
 							poly_rama_blk_cntr_reg <= poly_rama_blk_cntr_reg + 1;
 							if poly_rama_blk_cntr_reg = KYBER_K then
 								state                  <= S_send_b_v;
@@ -244,7 +242,7 @@ begin
 						end if;
 
 					when S_send_b_v =>
-						if polymac_done then
+						if polymac_done = '1'  then
 							poly_rama_blk_cntr_reg <= poly_rama_blk_cntr_reg + 1;
 							if poly_rama_blk_cntr_reg = KYBER_K then
 								state                  <= S_done;
@@ -260,7 +258,7 @@ begin
 		end if;
 	end process sync_proc;
 
-	comb_proc : process(all) is
+	comb_proc : process(state, cbd_coeffout_data, compressor_din_ready, i_coins_valid, i_pkmsg_valid, msgadd_msgin_ready, msgadd_polyin_ready, msgadd_polyout_data, msgadd_polyout_valid, noisegen_coinin_ready, noisegen_done, noisegen_dout_valid, poly_rama_blk_cntr_reg, polymac_din_ready, polymac_done, polymac_dout_data, polymac_dout_valid, ser_coefout_data, ser_coefout_valid, ser_din_ready) is
 	begin
 		polymac_recv_aa       <= '0';
 		polymac_recv_bb       <= '0';

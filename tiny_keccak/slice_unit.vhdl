@@ -77,20 +77,20 @@ architecture RTL of slice_unit is
 	signal theta_row : T_row;
 begin
 
-	iochipi <= slice_in when bypass_iochipi else iota_o_chi(pi(slice_in), round_const_bit);
+	iochipi <= slice_in when bypass_iochipi = '1'  else iota_o_chi(pi(slice_in), round_const_bit);
 
 	cur_parities <= parity(iochipi);
-	theta_row <= (cur_parities rol 1) xor (prev_parities_reg ror 1);
+	theta_row <= std_logic_vector(rotate_left(signed(cur_parities), 1) xor rotate_right(signed(prev_parities_reg), 1));
 
 	process(clk)
 	begin
 		if rising_edge(clk) then
-			if do_theta then
+			if do_theta = '1'  then
 				prev_parities_reg <= cur_parities;
 			end if;
 		end if;
 	end process;
 
-	slice_out <= iochipi xor replicate_row_to_slice(theta_row) when do_theta else iochipi;
+	slice_out <= iochipi xor replicate_row_to_slice(theta_row) when do_theta = '1'  else iochipi;
 
 end architecture RTL;

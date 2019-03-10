@@ -126,11 +126,11 @@ begin
 						round_cntr <= (others => '0');
 						hword_cntr <= (others => '0');
 
-						if i_squeeze then -- i_squeeze must have priority over i_absorb and i_init as a requirement of the protocol (i.e. 2.1.a and 2.1.b)
+						if i_squeeze = '1' then -- i_squeeze must have priority over i_absorb and i_init as a requirement of the protocol (i.e. 2.1.a and 2.1.b)
 							state <= s_squeeze_out;
-						elsif i_absorb then
+						elsif i_absorb = '1' then
 							state <= s_absorb_load;
-						elsif i_init then
+						elsif i_init = '1' then
 							state <= s_initialize_smem;
 						end if;
 
@@ -151,7 +151,7 @@ begin
 						o_do_odd_lane <= lane_cntr(0); -- delayed
 
 					when s_absorb_store =>
-						if i_din_valid then
+						if i_din_valid = '1' then
 							state <= s_absorb_load;
 							if hword_cntr = LAST_HWORD then
 								if lane_cntr = i_rate then -- started from 1 => 1..i_rate
@@ -167,7 +167,7 @@ begin
 
 					when s_squeeze_out =>
 						dout_valid_piped_reg <= '1';
-						if i_dout_ready or not dout_valid_piped_reg then -- "FIFO" to be consumed or "FIFO" is empty
+						if i_dout_ready = '1' or dout_valid_piped_reg = '0' then -- "FIFO" to be consumed or "FIFO" is empty
 							o_do_odd_lane <= lane_cntr(0); -- delayed
 							if hword_cntr = LAST_HWORD then
 								if lane_cntr = i_rate then
@@ -184,12 +184,12 @@ begin
 						end if;
 
 					when s_squeeze_out_fin =>
-						if i_dout_ready then
+						if i_dout_ready = '1' then
 							dout_valid_piped_reg <= '0';
 							round_cntr           <= (others => '0');
-							if i_init then
+							if i_init = '1' then
 								state <= s_initialize_smem;
-							elsif i_absorb then
+							elsif i_absorb = '1' then
 								state <= s_done;
 							else
 								state <= s_begin_round;
@@ -217,7 +217,7 @@ begin
 					when s_slice_process =>
 						if lane_cntr = C_HALFWORD_WIDTH - 1 then -- all shifted out, start from 0
 							lane_cntr <= FIRST_LANE;
-							if pre_last_flag then
+							if pre_last_flag = '1' then
 								pre_last_flag <= '0';
 								-- skip write and restart from first slice
 								hword_cntr    <= (others => '0');
@@ -286,7 +286,7 @@ begin
 						end if;
 
 					when s_done =>
-						if not (i_init or i_absorb or i_squeeze) then
+						if (i_init or i_absorb or i_squeeze)  = '0' then
 							state <= s_init;
 						end if;
 
@@ -296,7 +296,7 @@ begin
 		end if;
 	end process fsm;
 
-	control_proc : process(all) is
+	control_proc : process(state, dout_valid_piped_reg, hword_cntr_lt_rho0q, hword_cntr_lt_rho1q, i_din_valid, i_dout_ready, round_cntr) is
 	begin
 		o_din_ready         <= '0';
 		-- to datapath

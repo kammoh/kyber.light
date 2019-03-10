@@ -184,20 +184,20 @@ begin
 					when s_init =>
 						counter_reg         <= (others => '0');
 						cram_dout_valid_reg <= '0';
-						if i_recv_msg then
+						if i_recv_msg = '1'  then
 							state <= s_recv_msg;
-						elsif i_send_hash then
+						elsif i_send_hash = '1'  then
 							state <= s_keccak_init;
 						end if;
 					when s_recv_msg =>
-						if i_din_valid then
+						if i_din_valid = '1'  then
 							counter_reg <= counter_reg + 1;
 							if counter_reg = KYBER_SYMBYTES - 1 then
 								state <= s_done;
 							end if;
 						end if;
 					when s_keccak_init =>
-						if keccak_done then
+						if keccak_done = '1'  then
 							state <= s_keccak_init_done;
 						end if;
 					when s_keccak_init_done =>
@@ -205,10 +205,10 @@ begin
 
 					when s_keccak_absorb =>
 						cram_dout_valid_reg <= '1';
-						if byte2hw_din_ready or not cram_dout_valid_reg then -- "FIFO" to be consumed or "FIFO" is empty
+						if byte2hw_din_ready = '1'  or cram_dout_valid_reg = '0' then -- "FIFO" to be consumed or "FIFO" is empty
 							counter_reg <= counter_reg + 1;
 						end if;
-						if keccak_done then
+						if keccak_done = '1'  then
 							state               <= s_keccak_absorb_done;
 							cram_dout_valid_reg <= '0';
 						end if;
@@ -216,19 +216,19 @@ begin
 						state <= s_keccak_squeeze_1;
 
 					when s_keccak_squeeze_1 =>
-						if keccak_done then
+						if keccak_done = '1'  then
 							state <= s_keccak_squeeze_1_done;
 						end if;
 					when s_keccak_squeeze_1_done =>
 						state <= s_keccak_squeeze_2;
 
 					when s_keccak_squeeze_2 =>
-						if keccak_done then
+						if keccak_done = '1'  then
 							state <= s_done;
 						end if;
 
 					when s_done =>
-						if not (i_recv_msg or i_send_hash) then
+						if (i_recv_msg or i_send_hash) = '0' then
 							state <= s_init;
 						end if;
 
@@ -237,7 +237,7 @@ begin
 		end if;
 	end process sync_proc;
 
-	comb_proc : process(all) is
+	comb_proc : process(state, byte2hw_din_ready, counter_reg, cram_dout_valid_reg, cram_out_data, i_din_valid, i_nonce) is
 	begin
 		cram_ce        <= '0';
 		cram_we        <= '0';

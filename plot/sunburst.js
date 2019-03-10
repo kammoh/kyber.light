@@ -1,5 +1,5 @@
 
-function sunburst(node_id, data, levels, show_button=false) {
+function sunburst(node_id, data, levels, show_button = false, color_interpolator = d3.interpolateCool) {
     const container = d3.select(node_id)
     const width = container.style('width').slice(0, -2)
     const padding = 10
@@ -207,7 +207,7 @@ function sunburst(node_id, data, levels, show_button=false) {
             (root);
     }
 
-    color = d3.scaleOrdinal(d3.quantize(d3.interpolateRainbow, data.children.length + 1))
+    color = d3.scaleOrdinal(d3.quantize(color_interpolator, data.children.length + 1))
 
 
 

@@ -35,11 +35,14 @@
 
     <script src="https://cdn.rawgit.com/eligrey/FileSaver.js/e9d941381475b5df8b7d7691013401e171014e89/FileSaver.min.js"></script>
 
-    {% for script in scripts %}
+    <script src="https://d3js.org/d3-color.v1.min.js"></script>
+    <script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
+    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+    
     <script>
-        {{script}}
+        {% include 'sunburst.js' without context %}
     </script>
-    {% endfor %}
+
 </head>
 
 <body>

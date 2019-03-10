@@ -16,33 +16,33 @@ entity polyvec_mac is
 		G_NUM_RAM_A_BLOCKS         : positive := KYBER_K + 1 -- {1, KYBER_K + 1}  1: for CPA-Decrypt-Only, KYBER_K + 1: for either CPA-Encrypt-only or Encrypt/Decrypt
 	);
 	port(
-		clk                : in  std_logic;
-		rst                : in  std_logic;
+		clk             : in  std_logic;
+		rst             : in  std_logic;
 		--
 		-- Command/Done interface
-		i_recv_aa          : in  std_logic;
-		i_recv_bb          : in  std_logic;
-		i_recv_v           : in  std_logic;
-		i_send_v           : in  std_logic;
-		i_do_mac           : in  std_logic;
-		o_done             : out std_logic;
+		i_recv_aa       : in  std_logic;
+		i_recv_bb       : in  std_logic;
+		i_recv_v        : in  std_logic;
+		i_send_v        : in  std_logic;
+		i_do_mac        : in  std_logic;
+		o_done          : out std_logic;
 		--
 		-- Command Arguments
-		i_subtract         : in  std_logic;
-		i_rama_blk         : in  unsigned(log2ceilnz(G_NUM_RAM_A_BLOCKS) - 1 downto 0);
+		i_subtract      : in  std_logic;
+		i_rama_blk      : in  unsigned(log2ceilnz(G_NUM_RAM_A_BLOCKS) - 1 downto 0);
 		--
 		-- Data input
-		i_din_data         : in  T_coef_us;
-		i_din_valid        : in  std_logic;
-		o_din_ready        : out std_logic;
+		i_din_data      : in  T_coef_us;
+		i_din_valid     : in  std_logic;
+		o_din_ready     : out std_logic;
 		--
 		-- Data output
-		o_dout_data        : out T_coef_us;
-		o_dout_valid       : out std_logic;
-		i_dout_ready       : in  std_logic;
+		o_dout_data     : out T_coef_us;
+		o_dout_valid    : out std_logic;
+		i_dout_ready    : in  std_logic;
 		-- External divide provider
-		i_extdiv_divin        : in  unsigned(2 * log2ceil(KYBER_Q) - 1 downto 0);
-		o_extdiv_divout  : out T_coef_us;
+		i_extdiv_divin  : in  unsigned(2 * log2ceil(KYBER_Q) - 1 downto 0);
+		o_extdiv_divout : out T_coef_us;
 		o_extdit_active : out std_logic
 	);
 end entity polyvec_mac;
@@ -100,6 +100,7 @@ architecture RTL of polyvec_mac is
 	signal ramb_we               : std_logic;
 	signal ramb_addr             : unsigned(log2ceil(KYBER_K * KYBER_N) - 1 downto 0);
 	signal ramb_dout             : std_logic_vector(KYBER_COEF_BITS - 1 downto 0);
+	signal extdit_active         : std_logic;
 
 begin
 	gen_polymac_dp : if G_PROVIDE_EXTERNAL_DIVIDER generate
@@ -116,11 +117,12 @@ begin
 				in_b             => bi,
 				in_v             => vin,
 				out_v            => vout,
-				i_ext_div_select => o_extdit_active,
+				i_ext_div_select => extdit_active,
 				i_ext_div        => i_extdiv_divin,
 				o_ext_div        => o_extdiv_divout
 			);
-	else generate
+	end generate;
+	gen_polymac_dp_not : if not G_PROVIDE_EXTERNAL_DIVIDER generate
 		ploymac_datapath : entity work.polymac_datapath
 			generic map(
 				G_PIPELINE_LEVELS => G_PIPELINE_LEVELS
@@ -178,7 +180,8 @@ begin
 
 	generate_rama_addr : if G_NUM_RAM_A_BLOCKS = 1 generate
 		rama_addr <= rama_blk_addr;
-	else generate
+	end generate;
+	generate_rama_addr_not : if G_NUM_RAM_A_BLOCKS /= 1 generate
 		rama_addr <= i_rama_blk & rama_blk_addr;
 	end generate;
 
@@ -216,21 +219,21 @@ begin
 						v_idx_reg  <= (others => '0');
 						k_reg      <= (others => '0');
 						ai_idx_reg <= (others => '0');
-						if i_recv_bb then
+						if i_recv_bb = '1' then
 							state <= s_receive_bb;
-						elsif i_recv_aa then
+						elsif i_recv_aa = '1' then
 							state <= s_receive_aa;
-						elsif i_recv_v then
+						elsif i_recv_v = '1' then
 							state <= s_receive_v;
-						elsif i_do_mac then
+						elsif i_do_mac = '1' then
 							state <= s_mac_load_v;
-						elsif i_send_v then
+						elsif i_send_v = '1' then
 							state <= s_send_v;
 						end if;
 					when s_receive_bb =>
-						if i_din_valid then
+						if i_din_valid = '1' then
 							v_idx_reg <= v_idx_reg_next;
-							if v_idx_eq_255 then
+							if v_idx_eq_255 = '1' then
 								k_reg <= k_reg + 1;
 								if k_reg = (KYBER_K - 1) then
 									k_reg <= (others => '0');
@@ -239,9 +242,9 @@ begin
 							end if;
 						end if;
 					when s_receive_aa =>
-						if i_din_valid then
+						if i_din_valid = '1' then
 							ai_idx_reg <= ai_idx_reg_next;
-							if ai_idx_plus_one_carry then
+							if ai_idx_plus_one_carry = '1' then
 								k_reg <= k_reg + 1;
 								if k_reg = (KYBER_K - 1) then
 									k_reg <= (others => '0');
@@ -250,9 +253,9 @@ begin
 							end if;
 						end if;
 					when s_receive_v =>
-						if i_din_valid then
+						if i_din_valid = '1' then
 							v_idx_reg <= v_idx_reg_next;
-							if v_idx_eq_255 then
+							if v_idx_eq_255 = '1' then
 								state <= s_done;
 							end if;
 						end if;
@@ -260,7 +263,7 @@ begin
 						state <= s_mac_piped;
 					when s_mac_piped =>
 						ai_idx_reg <= ai_idx_reg_next;
-						if ai_idx_plus_one_carry then
+						if ai_idx_plus_one_carry = '1' then
 							k_reg <= k_reg + 1;
 							if k_reg = (KYBER_K - 1) then
 								k_reg <= (others => '0');
@@ -275,26 +278,26 @@ begin
 						end if;
 					when s_mac_store_v =>
 						v_idx_reg <= v_idx_reg_next;
-						if v_idx_eq_255 then
+						if v_idx_eq_255 = '1' then
 							state <= s_done;
 						else
 							state <= s_mac_load_v;
 						end if;
 					when s_send_v =>
 						dout_valid_piped_reg <= '1';
-						if i_dout_ready or not dout_valid_piped_reg then -- "FIFO" to be consumed or "FIFO" is empty
+						if i_dout_ready = '1' or dout_valid_piped_reg = '0' then -- "FIFO" to be consumed or "FIFO" is empty
 							v_idx_reg <= v_idx_reg_next;
-							if v_idx_eq_255 then
+							if v_idx_eq_255 = '1' then
 								state <= s_send_v_flush;
 							end if;
 						end if;
 					when s_send_v_flush =>
-						if i_dout_ready then
+						if i_dout_ready = '1' then
 							dout_valid_piped_reg <= '0';
 							state                <= s_done;
 						end if;
 					when s_done =>
-						if not (i_recv_bb or i_recv_aa or i_recv_v or i_do_mac or i_send_v) then
+						if (i_recv_bb or i_recv_aa or i_recv_v or i_do_mac or i_send_v) = '0' then
 							state <= s_init;
 						end if;
 
@@ -316,46 +319,46 @@ begin
 	-- MAC: a_idx, s_receive_a: b_idx_reg == 0  -> a_idx = r_idx_minus_b_idx = r_idx
 	ramb_addr          <= k_reg(log2ceil(KYBER_K) - 1 downto 0) & bi_idx;
 
-	comb_proc : process(all) is
+	comb_proc : process(state, ai_idx_reg, dout_valid_piped_reg, i_din_data, i_din_valid, i_dout_ready, k_reg, v_addr, vout) is
 	begin
 		----
-		rama_blk_addr      <= k_reg(log2ceil(KYBER_K) - 1 downto 0) & ai_idx_reg; -- default: b
-		rama_din           <= std_logic_vector(i_din_data);
+		rama_blk_addr <= k_reg(log2ceil(KYBER_K) - 1 downto 0) & ai_idx_reg; -- default: b
+		rama_din      <= std_logic_vector(i_din_data);
 		-- control signals defaults
-		o_done             <= '0';
-		o_din_ready        <= '0';
-		en_v               <= '0';
-		ld_v               <= '0';
-		rama_ce            <= '0';
-		rama_we            <= '0';
-		ramb_ce            <= '0';
-		ramb_we            <= '0';
-		o_extdit_active <= '0';
+		o_done        <= '0';
+		o_din_ready   <= '0';
+		en_v          <= '0';
+		ld_v          <= '0';
+		rama_ce       <= '0';
+		rama_we       <= '0';
+		ramb_ce       <= '0';
+		ramb_we       <= '0';
+		extdit_active <= '0';
 
 		case state is
 			when s_init =>
-				o_extdit_active <= '1';
+				extdit_active <= '1';
 			when s_receive_bb =>
-				ramb_ce            <= i_din_valid;
-				ramb_we            <= i_din_valid;
-				o_din_ready        <= '1';
-				o_extdit_active <= '1';
+				ramb_ce       <= i_din_valid;
+				ramb_we       <= i_din_valid;
+				o_din_ready   <= '1';
+				extdit_active <= '1';
 			when s_receive_aa =>
-				rama_ce            <= i_din_valid;
-				rama_we            <= i_din_valid;
-				o_din_ready        <= '1';
-				o_extdit_active <= '1';
+				rama_ce       <= i_din_valid;
+				rama_we       <= i_din_valid;
+				o_din_ready   <= '1';
+				extdit_active <= '1';
 			when s_receive_v =>
-				rama_ce            <= i_din_valid;
-				rama_we            <= i_din_valid;
-				rama_blk_addr      <= v_addr;
-				o_din_ready        <= '1';
-				o_extdit_active <= '1';
+				rama_ce       <= i_din_valid;
+				rama_we       <= i_din_valid;
+				rama_blk_addr <= v_addr;
+				o_din_ready   <= '1';
+				extdit_active <= '1';
 			when s_mac_load_v =>
-				rama_ce            <= '1';
-				rama_blk_addr      <= v_addr;
-				ld_v               <= '1';
-				o_extdit_active <= '1';
+				rama_ce       <= '1';
+				rama_blk_addr <= v_addr;
+				ld_v          <= '1';
+				extdit_active <= '1';
 			when s_mac_piped =>
 				ramb_ce <= '1';
 				rama_ce <= '1';
@@ -368,19 +371,20 @@ begin
 			when s_mac_flush =>
 				null;
 			when s_send_v =>
-				rama_ce            <= i_dout_ready or not dout_valid_piped_reg;
-				rama_blk_addr      <= v_addr;
-				o_extdit_active <= '1';
+				rama_ce       <= i_dout_ready or not dout_valid_piped_reg;
+				rama_blk_addr <= v_addr;
+				extdit_active <= '1';
 			when s_send_v_flush =>
-				o_extdit_active <= '1';
+				extdit_active <= '1';
 			when s_done =>
-				o_extdit_active <= '1';
-				o_done             <= '1';
+				extdit_active <= '1';
+				o_done        <= '1';
 		end case;
 
 	end process comb_proc;
 
-	o_dout_valid <= dout_valid_piped_reg;
-	o_dout_data  <= unsigned(rama_dout);
+	o_dout_valid    <= dout_valid_piped_reg;
+	o_dout_data     <= unsigned(rama_dout);
+	o_extdit_active <= extdit_active;
 	-- 
 end architecture RTL;

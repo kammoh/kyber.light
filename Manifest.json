@@ -21,7 +21,7 @@
 			],
 			"tb_configs": [
             ],
-            "language": "vhdl.2008"
+            "language": "vhdl.1993"
 		},
 		"poc_ram": 
 		{
@@ -73,7 +73,7 @@
 					"G_OUT_WIDTH": 13
 				}
             ],
-            "language": "vhdl.2008"
+            "language": "vhdl.1993"
 		},
 		"divider": {
 			"path": "vhdl",
@@ -88,7 +88,7 @@
 			"depends": [
 				"pkg"
             ],
-            "language": "vhdl.2008"
+            "language": "vhdl.1993"
 		},
 		"polymac_datapath" : {
 			"path": "vhdl",
@@ -103,7 +103,7 @@
 			"depends": [
 				"divider"
             ],
-            "language": "vhdl.2008"
+            "language": "vhdl.1993"
         },
 		"asymmetric_fifo" : {
 			"path": "vhdl",
@@ -117,7 +117,7 @@
 			"depends": [
 				"pkg"
             ],
-            "language": "vhdl.2008"
+            "language": "vhdl.1993"
         },
 
         "cbd" :{
@@ -126,7 +126,7 @@
             "files": ["cbd.vhdl"],
             "tb_files": ["cbd_tb.py"],
             "depends": ["asymmetric_fifo", "keccak_pkg"],
-            "language": "vhdl.2008"
+            "language": "vhdl.1993"
         },
 
         "msg_add": {
@@ -134,7 +134,7 @@
             "top": "msg_add",
             "files": ["msg_add.vhdl"],
             "depends": ["asymmetric_fifo", "keccak_pkg"],
-            "language": "vhdl.2008"
+            "language": "vhdl.1993"
         },
 
         "compressor": {
@@ -142,14 +142,14 @@
             "top": "compressor",
             "files": ["compressor.vhdl"],
             "depends": ["asymmetric_fifo", "keccak_pkg"],
-            "language": "vhdl.2008"
+            "language": "vhdl.1993"
         },
         "decompressor": {
             "path": "vhdl",
             "top": "decompressor",
             "files": ["decompressor.vhdl"],
             "depends": ["asymmetric_fifo", "keccak_pkg"],
-            "language": "vhdl.2008"
+            "language": "vhdl.1993"
         },
 
         "sha3_noisegen": {
@@ -158,7 +158,7 @@
             "files": "sha3_noisegen.vhdl",
             "tb_files": ["sha3_noisegen_tb.py"],
             "depends": ["asymmetric_fifo", "tiny_keccak", "cbd", "poc_ram"],
-            "language": "vhdl.2008"
+            "language": "vhdl.1993"
         },
 
         "cpa_enc" : {
@@ -166,7 +166,7 @@
             "top": "cpa_enc",
             "files": ["cpa_enc.vhdl"],
             "depends": ["sha3_noisegen", "polyvec_mac", "cbd", "compressor", "msg_add", "decompressor"],
-            "language": "vhdl.2008"
+            "language": "vhdl.1993"
         },
 
         "keccak_pkg":
@@ -197,7 +197,7 @@
 				"keccak_datapath.vhdl",
 				"keccak_core.vhdl"
 			],
-			"language": "vhdl.2008"
+			"language": "vhdl.1993"
 		}
 	}
 }

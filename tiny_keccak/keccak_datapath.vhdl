@@ -103,7 +103,7 @@ begin
 			round_const_bit => in_iota_bit
 		);
 
-	process(all) is
+	process(slice_unit_out, deinterleaved_0, deinterleaved_1, din, hword_out_0, hword_out_1, in_data_from_mem, in_do_odd_lane, in_do_setzero_mem, in_do_xorin, shift_reg_slice_vertical_out0, shift_reg_slice_vertical_out1, shift_reg_slice_vertical_out1(0)) is
 	begin
 		for k in 0 to C_HALFWORD_WIDTH - 1 loop
 			-- NOTE: odd lanes are stored in even bits
@@ -123,10 +123,10 @@ begin
 		end loop;
 
 		-- out_data_to_mem
-		if in_do_setzero_mem then
+		if in_do_setzero_mem = '1' then
 			out_data_to_mem <= (others => '0');
-		elsif in_do_xorin then
-			if in_do_odd_lane then
+		elsif in_do_xorin = '1'  then
+			if in_do_odd_lane = '1'  then
 				out_data_to_mem <= interleave(deinterleaved_0, deinterleaved_1 xor din);
 			else
 				out_data_to_mem <= interleave(deinterleaved_0 xor din, deinterleaved_1);
@@ -136,6 +136,6 @@ begin
 		end if;
 	end process;
 
-	dout <= deinterleaved_1 when in_do_odd_lane else deinterleaved_0;
+	dout <= deinterleaved_1 when in_do_odd_lane = '1'  else deinterleaved_0;
 
 end architecture RTL;
