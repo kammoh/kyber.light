@@ -1,10 +1,71 @@
+--===================================================================================================================--
+-----------------------------------------------------------------------------------------------------------------------
+--                                  
+--                                  
+--                                    8"""""o   8"""""   8""""o    8"""""o 
+--                                    8     "   8        8    8    8     " 
+--                                    8e        8eeeee   8eeee8o   8o     
+--                                    88        88       88    8   88   ee 
+--                                    88    e   88       88    8   88    8 
+--                                    68eeee9   888eee   88    8   888eee8 
+--                                  
+--                                  
+--                                  Cryptographic Engineering Research Group
+--                                          George Mason University
+--                                       https://cryptography.gmu.edu/
+--                                  
+--                                  
+-----------------------------------------------------------------------------------------------------------------------
+--
+--  unit name: full name (shortname / entity name)
+--              
+--! @file      sha3_noisegen.vhdl
+--
+--! @brief     SHA3 hash wrapper, generate noise polynomials
+--
+--! @author    <Kamyar Mohajerani (kamyar@ieee.org)>
+--
+--! @company   Cryptographic Engineering Research Group, George Mason University
+--
+--! @project   KyberLight: Lightweight hardware implementation of CRYSTALS-KYBER PQC
+--
+--! @context   Post-Quantum Cryptography
+--
+--! @license   
+--
+--! @copyright Copyright 2019 Kamyar Mohajerani. All rights reserved.
+--  
+--! @date      <02/01/2019>
+--
+--! @version   <v0.1>
+--
+--! @details   blah blah
+--!
+--
+--
+--! <b>Dependencies:</b>\n
+--! <Entity Name,...>
+--!
+--! <b>References:</b>\n
+--! <reference one> \n
+--! <reference two>
+--!
+--! <b>Modified by:</b>\n
+--! Author: Kamyar Mohajerani
+-----------------------------------------------------------------------------------------------------------------------
+--! \n\n<b>Last changes:</b>\n
+--! <date> KM: <log>\n
+--! <extended description>
+-----------------------------------------------------------------------------------------------------------------------
+--! @todo <next thing to do> \n
+--
+-----------------------------------------------------------------------------------------------------------------------
+--===================================================================================================================--
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-library poc;
-use poc.ocram_sp;
-
+use work.ocram_sp;
 use work.keccak_pkg.all;
 use work.kyber_pkg.all;
 
@@ -91,7 +152,7 @@ architecture RTL of sha3_noisegen is
 	signal keccak_dout_ready   : std_logic;
 
 begin
-	coins_ram : entity poc.ocram_sp
+	coins_ram : entity work.ocram_sp
 		generic map(
 			D_BITS => T_byte_slv'length,
 			DEPTH  => G_MAX_IN_BYTES

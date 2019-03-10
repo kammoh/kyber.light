@@ -61,48 +61,75 @@
 --
 -----------------------------------------------------------------------------------------------------------------------
 --===================================================================================================================--
---------------------------------------------------------------------------------
---                             ConstMult_7681_15
---                       (IntConstMult_15_7681_F0_uid2)
--- VHDL generated for Kintex7 @ 0MHz
--- This operator is part of the Infinite Virtual Library FloPoCoLib
--- All rights reserved 
--- Authors: Florent de Dinechin, Antoine Martinet (2007-2013)
---------------------------------------------------------------------------------
--- combinatorial
-
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use ieee.numeric_std_unsigned.all;
-entity ConstMult_7681_15 is
-    port (X : in  std_logic_vector(14 downto 0);
-          R : out  std_logic_vector(27 downto 0)   );
+
+use work.kyber_pkg.all;
+
+entity ocram_sp is
+	generic(
+		D_BITS : positive;              -- number of data bits
+		DEPTH  : positive               -- number of words in the array
+	);
+	port(
+		clk      : in  std_logic;       -- clock
+		ce       : in  std_logic;       -- clock enable
+		we       : in  std_logic;       -- write enable
+		in_addr  : in  unsigned(log2ceil(DEPTH) - 1 downto 0); -- address
+		in_data  : in  std_logic_vector(D_BITS - 1 downto 0); -- write data
+		out_data : out std_logic_vector(D_BITS - 1 downto 0) -- read output
+	);
+
+	attribute DONT_TOUCH_NETWORK of clk, we, ce, in_addr, in_data : signal is True;
+	attribute DONT_TOUCH of clk, we, ce, in_addr, in_data, out_data : signal is True;
 end entity;
 
-architecture arch of ConstMult_7681_15 is
-signal M1X :  std_logic_vector(15 downto 0);
-signal M511X_High_L :  std_logic_vector(15 downto 0);
-signal M511X_High_R :  std_logic_vector(15 downto 0);
-signal M511X :  std_logic_vector(24 downto 0);
-signal P7681X_High_L :  std_logic_vector(14 downto 0);
-signal P7681X_High_R :  std_logic_vector(14 downto 0);
-signal P7681X :  std_logic_vector(27 downto 0);
+architecture rtl of ocram_sp is
 begin
-   M1X <= (15 downto 0 => '0') - X;
 
-   -- M511X <-  M1X<<9  + X
-   M511X_High_L <= M1X(15 downto 0) ;
-   M511X_High_R <=  (24 downto 15 => '0') & X(14 downto 9); 
-   M511X(24 downto 9) <= M511X_High_R + M511X_High_L;   -- sum of higher bits
-   M511X(8 downto 0) <= X(8 downto 0);   -- lower bits untouched
+	gen_xilinx : if (MEM_TECH = "XILINX") generate
+		subtype word_t is std_logic_vector(D_BITS - 1 downto 0);
+		type ram_t is array (0 to DEPTH - 1) of word_t;
 
-   -- P7681X <-  X<<13  + M511X
-   P7681X_High_L <= X(14 downto 0) ;
-   P7681X_High_R <=  (27 downto 25 => M511X(24)) & M511X(24 downto 13); 
-   P7681X(27 downto 13) <= P7681X_High_R + P7681X_High_L;   -- sum of higher bits
-   P7681X(12 downto 0) <= M511X(12 downto 0);   -- lower bits untouched
+		signal ram : ram_t;
 
-   R <= P7681X(27 downto 0);
+	begin
+		-- Xilinx Single-Port Block RAM No-Change Mode
+		process(clk)
+		begin
+			if rising_edge(clk) then
+				if ce = '1' then
+					if we = '1' then
+						ram(to_integer(unsigned(in_addr))) <= in_data;
+					else
+						out_data <= ram(to_integer(unsigned(in_addr)));
+					end if;
+				end if;
+			end if;
+		end process;
+	end generate gen_xilinx;
+
+	gen_saed_mc : if (MEM_TECH = "SAED_MC") generate
+		subtype word_t is std_logic_vector(D_BITS - 1 downto 0);
+		type ram_t is array (0 to DEPTH - 1) of word_t;
+
+		signal ram : ram_t;
+
+	begin
+		-- SAED32 Memory Compiler Block RAM No-Change Mode
+		process(clk)
+		begin
+			if rising_edge(clk) then
+				if ce = '1' then
+					if we = '1' then
+						ram(to_integer(unsigned(in_addr))) <= in_data;
+					else
+						out_data <= ram(to_integer(unsigned(in_addr)));
+					end if;
+				end if;
+			end if;
+		end process;
+	end generate gen_saed_mc;
+
 end architecture;
-

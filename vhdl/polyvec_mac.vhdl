@@ -1,13 +1,74 @@
+--===================================================================================================================--
+-----------------------------------------------------------------------------------------------------------------------
+--                                  
+--                                  
+--                                    8"""""o   8"""""   8""""o    8"""""o 
+--                                    8     "   8        8    8    8     " 
+--                                    8e        8eeeee   8eeee8o   8o     
+--                                    88        88       88    8   88   ee 
+--                                    88    e   88       88    8   88    8 
+--                                    68eeee9   888eee   88    8   888eee8 
+--                                  
+--                                  
+--                                  Cryptographic Engineering Research Group
+--                                          George Mason University
+--                                       https://cryptography.gmu.edu/
+--                                  
+--                                  
+-----------------------------------------------------------------------------------------------------------------------
+--
+--  unit name: Polynomial vector Multiply and Accumulate (polyvec_mac)
+--              
+--! @file      polyvec_mac.vhdl
+--
+--! @brief     Given two Polynomial vectors a, b and a polynomial r: computes r +/- a*b
+--
+--! @author    <Kamyar Mohajerani (kamyar@ieee.org)>
+--
+--! @company   Cryptographic Engineering Research Group, George Mason University
+--
+--! @project   KyberLight: Lightweight hardware implementation of CRYSTALS-KYBER PQC
+--
+--! @context   Post-Quantum Cryptography
+--
+--! @license   
+--
+--! @copyright Copyright 2019 Kamyar Mohajerani. All rights reserved.
+--  
+--! @date      <02/01/2019>
+--
+--! @version   <v0.1>
+--
+--! @details   blah blah
+--!
+--
+--
+--! <b>Dependencies:</b>\n
+--! <Entity Name,...>
+--!
+--! <b>References:</b>\n
+--! <reference one> \n
+--! <reference two>
+--!
+--! <b>Modified by:</b>\n
+--! Author: Kamyar Mohajerani
+-----------------------------------------------------------------------------------------------------------------------
+--! \n\n<b>Last changes:</b>\n
+--! <date> KM: <log>\n
+--! <extended description>
+-----------------------------------------------------------------------------------------------------------------------
+--! @todo <next thing to do> \n
+--
+-----------------------------------------------------------------------------------------------------------------------
+--===================================================================================================================--
 
--- Polynomial vector Multiply and Accumulate
 
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use work.kyber_pkg.all;
 
-library poc;
-use poc.ocram_sp;
+use work.kyber_pkg.all;
+use work.ocram_sp;
 
 entity polyvec_mac is
 	generic(
@@ -164,7 +225,7 @@ begin
 	--   x G_NUM_RAM_A_BLOCKS    --
 	--===========================--
 
-	ram_A : entity poc.ocram_sp
+	ram_A : entity work.ocram_sp
 		generic map(
 			DEPTH  => G_NUM_RAM_A_BLOCKS * (KYBER_K + 1) * KYBER_N,
 			D_BITS => KYBER_COEF_BITS
@@ -185,7 +246,7 @@ begin
 		rama_addr <= i_rama_blk & rama_blk_addr;
 	end generate;
 
-	ram_B : entity poc.ocram_sp
+	ram_B : entity work.ocram_sp
 		generic map(
 			DEPTH  => KYBER_K * KYBER_N,
 			D_BITS => KYBER_COEF_BITS

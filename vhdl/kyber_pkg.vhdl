@@ -1,3 +1,68 @@
+--===================================================================================================================--
+-----------------------------------------------------------------------------------------------------------------------
+--                                  
+--                                  
+--                                    8"""""o   8"""""   8""""o    8"""""o 
+--                                    8     "   8        8    8    8     " 
+--                                    8e        8eeeee   8eeee8o   8o     
+--                                    88        88       88    8   88   ee 
+--                                    88    e   88       88    8   88    8 
+--                                    68eeee9   888eee   88    8   888eee8 
+--                                  
+--                                  
+--                                  Cryptographic Engineering Research Group
+--                                          George Mason University
+--                                       https://cryptography.gmu.edu/
+--                                  
+--                                  
+-----------------------------------------------------------------------------------------------------------------------
+--
+--  unit name: full name (shortname / entity name)
+--              
+--! @file      .vhdl
+--
+--! @language  VHDL 93,02,08
+--
+--! @brief     <file content, behavior, purpose, special usage notes>
+--
+--! @author    <Kamyar Mohajerani (kamyar@ieee.org)>
+--
+--! @company   Cryptographic Engineering Research Group, George Mason University
+--
+--! @project   KyberLight: Lightweight hardware implementation of CRYSTALS-KYBER PQC
+--
+--! @context   Post-Quantum Cryptography
+--
+--! @license   
+--
+--! @copyright Copyright 2019 Kamyar Mohajerani. All rights reserved.
+--  
+--! @date      <02/01/2019>
+--
+--! @version   <v0.1>
+--
+--! @details   blah blah
+--!
+--
+--
+--! <b>Dependencies:</b>\n
+--! <Entity Name,...>
+--!
+--! <b>References:</b>\n
+--! <reference one> \n
+--! <reference two>
+--!
+--! <b>Modified by:</b>\n
+--! Author: Kamyar Mohajerani
+-----------------------------------------------------------------------------------------------------------------------
+--! \n\n<b>Last changes:</b>\n
+--! <date> KM: <log>\n
+--! <extended description>
+-----------------------------------------------------------------------------------------------------------------------
+--! @todo <next thing to do> \n
+--
+-----------------------------------------------------------------------------------------------------------------------
+--===================================================================================================================--
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -34,21 +99,30 @@ package kyber_pkg is
 	function lcm(a, b : positive) return positive;
 	--
 	------------------------------------------------------------=( Parameters )=---------------------------------------------------------------------	
-	constant KYBER_K         : positive := 3; -- 2: Kyber512, 3: Kyber768 (recommended), 4: KYBER1024
+	constant KYBER_K             : positive := 3; -- 2: Kyber512, 3: Kyber768 (recommended), 4: KYBER1024
 	--
 	------------------------------------------------------------=( Constants )=----------------------------------------------------------------------	
-	constant KYBER_Q         : positive := 7681;
-	constant KYBER_N         : positive := 256;
-	constant KYBER_ETA       : positive := 7 - KYBER_K; -- 5: Kyber512, 4: Kyber768 (recommended), 3: KYBER1024
-	constant KYBER_COEF_BITS : positive := log2ceilnz(KYBER_Q); -- 13
-	constant KYBER_Q_US      : unsigned := to_unsigned(KYBER_Q, KYBER_COEF_BITS);
-	constant KYBER_SYMBYTES  : positive := 32;
+	constant KYBER_Q             : positive := 7681;
+	constant KYBER_N             : positive := 256;
+	constant KYBER_ETA           : positive := 7 - KYBER_K; -- 5: Kyber512, 4: Kyber768 (recommended), 3: KYBER1024
+	constant KYBER_COEF_BITS     : positive := log2ceilnz(KYBER_Q); -- 13
+	constant KYBER_Q_US          : unsigned := to_unsigned(KYBER_Q, KYBER_COEF_BITS);
+	constant KYBER_SYMBYTES      : positive := 32;
 	------------------------------------------------------------=( Types (2) )=-----------------------------------------------------------------------
 	subtype T_coef_slv is std_logic_vector(KYBER_COEF_BITS - 1 downto 0);
 	subtype T_coef_us is unsigned(KYBER_COEF_BITS - 1 downto 0);
 	subtype T_byte_slv is std_logic_vector(7 downto 0);
 	subtype T_byte_us is unsigned(7 downto 0);
 	--
+	--
+	------------------------------------------------------------=( Synthesis )=-------------------------------------------------
+	--
+	constant MEM_TECH : string := "SAED_MC";
+	
+	--
+	attribute DONT_TOUCH_NETWORK : boolean;
+	--
+	attribute DONT_TOUCH         : boolean;
 	-------------------------------------------------------------------------------------------------------------------
 	----------------------------------------- std_logic_1164_additions ------------------------------------------------
 	---------------------------------------- only required for VHDL < 2008 --------------------------------------------
