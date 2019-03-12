@@ -154,7 +154,7 @@ architecture RTL of sha3_noisegen is
 begin
 	coins_ram : entity work.ocram_sp
 		generic map(
-			D_BITS => T_byte_slv'length,
+			WORD_BITS => T_byte_slv'length,
 			DEPTH  => G_MAX_IN_BYTES
 		)
 		port map(

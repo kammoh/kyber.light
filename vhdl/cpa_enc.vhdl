@@ -21,6 +21,8 @@
 --              
 --! @file      .vhdl
 --
+--! @language  VHDL 1993/2002/2008
+--
 --! @brief     <file content, behavior, purpose, special usage notes>
 --
 --! @author    <Kamyar Mohajerani (kamyar@ieee.org)>
@@ -64,7 +66,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-
 
 use work.ocram_sp;
 use work.kyber_pkg.all;

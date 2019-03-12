@@ -52,6 +52,7 @@ class Module:
         self.library = d.get('library',  None)
         self.path = d.get('path', ".")
         self.tb_files = get_as_list('tb_files')
+        self.sim_files = get_as_list('files.sim')
         files = get_as_list('files')
         self.files = [f for f in files if not f in self.tb_files]
         
@@ -82,7 +83,7 @@ class Manifest:
         return self.modules[mod_name]
     
     
-    def module_dependencies(self, module_name):
+    def module_dependencies(self, module_name, sim = True):
         deps = OrderedDict()
         
         def add_dependencies_rec(module_name):
@@ -97,18 +98,23 @@ class Manifest:
             for dep in mod.depends or []:
                 add_dependencies_rec(dep)
             
+            if sim:
+                for file in mod.sim_files:
+                    deps[file] = mod.library
+                    
             for file in mod.files:
                 deps[file] = mod.library
+            
                 
         add_dependencies_rec(module_name)
         
         return deps
 
-    def hdl_sources(self, top_module_name):
+    def hdl_sources(self, top_module_name, sim = True):
         ret = []
         module = self.get_module(top_module_name)
 
-        for path, lib in self.module_dependencies(top_module_name).items():
+        for path, lib in self.module_dependencies(top_module_name, sim).items():
             ret.append(HdlSource(path=path, lib=lib, language=module.language) )
 
         return ret, module

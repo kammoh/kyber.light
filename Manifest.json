@@ -1,6 +1,6 @@
 {
 	"modules": {
-		"pkg": {
+		"kyber_pkg": {
 			"path": "vhdl",
 			"files": "kyber_pkg.vhdl"
 		},
@@ -17,29 +17,26 @@
 			],
 			"depends": [
 				"polymac_datapath",
-				"poc_ram"
+				"ram_sp"
 			],
 			"tb_configs": [
             ],
             "language": "vhdl.1993"
 		},
-		"poc_ram": 
+		"ram_sp": 
 		{
-			"path": "PoC/src",
+			"path": "vhdl",
 			"files": 
 			[
-				"common/my_config.vhdl",
-				"common/my_project.vhdl",
-				"common/utils.vhdl",
-				"common/config.vhdl",
-				"common/strings.vhdl",
-				"common/vectors.vhdl",
-				"mem/mem.pkg.vhdl",
-				"mem/ocram/ocram_sp.vhdl",
-				"mem/ocram/ocram.pkg.vhdl"
+				"ram_sp.vhdl"
 			],
-
-			"library": "PoC"
+			"files.sim":
+			[
+				"SRAM128x8sp.vhdl", "SRAM128x13sp.vhdl", "SRAM32x8sp.vhdl", "SRAM32x13sp.vhdl"
+			],
+			"depends": [
+				"kyber_pkg"
+            ]
 		},
 		"barret": {
 			"path": "vhdl",
@@ -53,7 +50,7 @@
 				"tb_barret_reduce.vhdl"
 			],
 			"depends": [
-				"pkg"
+				"kyber_pkg"
 			],
 			"tb_configs": [
 				{
@@ -86,7 +83,7 @@
 				"divider_tb.vhdl"
 			],
 			"depends": [
-				"pkg"
+				"kyber_pkg"
             ],
             "language": "vhdl.1993"
 		},
@@ -115,7 +112,7 @@
 				"asymmetric_fifo_tb.py"
 			],
 			"depends": [
-				"pkg"
+				"kyber_pkg"
             ],
             "language": "vhdl.1993"
         },
@@ -157,7 +154,7 @@
             "top": "sha3_noisegen",
             "files": "sha3_noisegen.vhdl",
             "tb_files": ["sha3_noisegen_tb.py"],
-            "depends": ["asymmetric_fifo", "tiny_keccak", "cbd", "poc_ram"],
+            "depends": ["asymmetric_fifo", "tiny_keccak", "cbd", "ram_sp"],
             "language": "vhdl.1993"
         },
 
@@ -183,7 +180,7 @@
 			"tb_top": "keccak_core_tb",
 			"depends": 
 			[
-				"poc_ram", "keccak_pkg"
+				"ram_sp", "keccak_pkg"
 			],
 
 			"files": 

@@ -92,22 +92,43 @@ package kyber_pkg is
 	-- to use: define a dummy (or actual) constant and initialize using this function
 	function INSTANTIATE(name : string; msg : string) return string;
 	--
-	-- computer greatest common divisor of a , b
+	--! computes the Greatest Common Divisor of a , b
 	function gcd(a, b : positive) return positive;
 	--
-	-- computer least common multiplier of a , b
+	--! computes the Least Common Multiplier of a , b
 	function lcm(a, b : positive) return positive;
 	--
+	--! Decoder with variable sized output (power of 2)
+	function decode(Sel : unsigned) return std_logic_vector;
+	--
+	--! Decoder with variable sized output (user specified)
+	function decode(Sel : unsigned; Size : positive) return std_logic_vector;
+	--
+	--! Decoder with variable sized output (power of 2)
+	function decode(Sel : std_logic_vector) return std_logic_vector;
+	--! Decoder with variable sized output (user specified) and enable
+	function decode(en : std_logic; Sel : unsigned) return std_logic_vector;
+	--! Decoder with variable sized output (user specified) and enable
+	function decode(en : std_logic; Sel : std_logic_vector) return std_logic_vector;
+	--
 	------------------------------------------------------------=( Parameters )=---------------------------------------------------------------------	
-	constant KYBER_K             : positive := 3; -- 2: Kyber512, 3: Kyber768 (recommended), 4: KYBER1024
+	constant KYBER_K         : positive     := 3; -- 2: Kyber512, 3: Kyber768 (recommended), 4: KYBER1024
+	--
+	type T_TECHNOLOGY is (XILINX, SAED32);
+	--
+	constant TECHNOLOGY      : T_TECHNOLOGY := SAED32; -- Synthesis technology
+	--
+	constant SAED32_SRAM_WC_L  : positive     := 128;
+	constant SAED32_SRAM_WC_M  : positive     := 64;
+	constant SAED32_SRAM_WC_S  : positive     := 32;
 	--
 	------------------------------------------------------------=( Constants )=----------------------------------------------------------------------	
-	constant KYBER_Q             : positive := 7681;
-	constant KYBER_N             : positive := 256;
-	constant KYBER_ETA           : positive := 7 - KYBER_K; -- 5: Kyber512, 4: Kyber768 (recommended), 3: KYBER1024
-	constant KYBER_COEF_BITS     : positive := log2ceilnz(KYBER_Q); -- 13
-	constant KYBER_Q_US          : unsigned := to_unsigned(KYBER_Q, KYBER_COEF_BITS);
-	constant KYBER_SYMBYTES      : positive := 32;
+	constant KYBER_Q         : positive     := 7681;
+	constant KYBER_N         : positive     := 256;
+	constant KYBER_ETA       : positive     := 7 - KYBER_K; -- 5: Kyber512, 4: Kyber768 (recommended), 3: KYBER1024
+	constant KYBER_COEF_BITS : positive     := log2ceilnz(KYBER_Q); -- 13
+	constant KYBER_Q_US      : unsigned     := to_unsigned(KYBER_Q, KYBER_COEF_BITS);
+	constant KYBER_SYMBYTES  : positive     := 32;
 	------------------------------------------------------------=( Types (2) )=-----------------------------------------------------------------------
 	subtype T_coef_slv is std_logic_vector(KYBER_COEF_BITS - 1 downto 0);
 	subtype T_coef_us is unsigned(KYBER_COEF_BITS - 1 downto 0);
@@ -117,8 +138,8 @@ package kyber_pkg is
 	--
 	------------------------------------------------------------=( Synthesis )=-------------------------------------------------
 	--
-	constant MEM_TECH : string := "SAED_MC";
-	
+	constant MEM_TECH        : string       := "SAED_MC";
+
 	--
 	attribute DONT_TOUCH_NETWORK : boolean;
 	--
@@ -215,6 +236,51 @@ package body kyber_pkg is
 	function lcm(a, b : positive) return positive is
 	begin
 		return (a * b) / gcd(a, b);
+	end function;
+
+	--
+	function decode(Sel : unsigned) return std_logic_vector is
+
+		variable result : std_logic_vector(0 to (2 ** Sel'length) - 1);
+	begin
+		-- generate the one-hot vector from binary encoded Sel
+		result                  := (others => '0');
+		result(to_integer(Sel)) := '1';
+		return result;
+	end function;
+	--
+	function decode(en : std_logic; Sel : unsigned) return std_logic_vector is
+
+		variable result : std_logic_vector(0 to (2 ** Sel'length) - 1);
+	begin
+		-- generate the one-hot vector from binary encoded Sel
+		result                  := (others => '0');
+		result(to_integer(Sel)) := en;
+		return result;
+	end function;
+	--
+	function decode(Sel : unsigned; Size : positive)
+	return std_logic_vector is
+
+		variable full_result : std_logic_vector(0 to (2 ** Sel'length) - 1);
+	begin
+		assert Size <= 2 ** Sel'length
+		report "Decoder output size: " & integer'image(Size)
+        & " is too big for the selection vector"
+		severity failure;
+
+		full_result := decode(Sel);
+		return full_result(0 to Size - 1);
+	end function;
+
+	function decode(Sel : std_logic_vector) return std_logic_vector is
+	begin
+		return decode(unsigned(Sel));
+	end function;
+	--
+	function decode(en : std_logic; Sel : std_logic_vector) return std_logic_vector is
+	begin
+		return decode(en, unsigned(Sel));
 	end function;
 
 	-------------------------------------------------------------------------------------------------------------------

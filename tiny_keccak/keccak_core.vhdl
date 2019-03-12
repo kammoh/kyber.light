@@ -90,10 +90,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use ieee.fixed_float_types.all;
-
-library poc;
-use poc.ocram.all;
 
 use work.keccak_pkg.all;
 
@@ -177,10 +173,10 @@ begin
 			dout                 => o_dout_data
 		);
 
-	state_mem : entity poc.ocram_sp
+	state_mem : entity work.ocram_sp
 		generic map(
 			DEPTH  => (25 + 1) * 64 / 8,
-			D_BITS => 8
+			WORD_BITS => 8
 		)
 		port map(
 			clk      => clk,

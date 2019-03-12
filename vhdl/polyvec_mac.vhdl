@@ -228,7 +228,7 @@ begin
 	ram_A : entity work.ocram_sp
 		generic map(
 			DEPTH  => G_NUM_RAM_A_BLOCKS * (KYBER_K + 1) * KYBER_N,
-			D_BITS => KYBER_COEF_BITS
+			WORD_BITS => KYBER_COEF_BITS
 		)
 		port map(
 			clk      => clk,
@@ -249,7 +249,7 @@ begin
 	ram_B : entity work.ocram_sp
 		generic map(
 			DEPTH  => KYBER_K * KYBER_N,
-			D_BITS => KYBER_COEF_BITS
+			WORD_BITS => KYBER_COEF_BITS
 		)
 		port map(
 			clk      => clk,

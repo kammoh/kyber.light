@@ -60,6 +60,7 @@ def func_test(dut, valid_gen=None, ready_gen=None):
     raise tb.scoreboard.result
 
 
+
 # Tests
 factory = TestFactory(func_test)
 
