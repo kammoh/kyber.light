@@ -39,7 +39,8 @@
 --
 --! @version   <v0.1>
 --
---! @details   
+--! @details   Inferred as Block RAM by Vivado when TECHNOLOGY=XILINX,
+--!                in SAED32 used SRAMxxx.vhdl for simulation and block libs in synthesis
 --!
 --
 --
@@ -96,11 +97,10 @@ architecture rtl of ocram_sp is
 			return SAED32_SRAM_WC_S;
 		end if;
 	end function;
-	type T_out_array is array (natural range <>) of std_logic_vector(WORD_BITS - 1 downto 0);
-	constant C_BLOCK_SIZE                  : positive := get_saed_block_size;
-	signal out_array                       : T_out_array(0 to ceil_div(DEPTH, C_BLOCK_SIZE) - 1);
-	signal WEB_array, OEB_array, CSB_array : std_logic_vector(ceil_div(DEPTH, C_BLOCK_SIZE) - 1 downto 0);
-	signal block_address                   : std_logic_vector(log2ceilnz(C_BLOCK_SIZE) - 1 downto 0);
+	constant C_BLOCK_SIZE                              : positive := get_saed_block_size;
+	constant C_NUM_BLOCKS                              : positive := ceil_div(DEPTH, C_BLOCK_SIZE);
+	signal WEB_array, OEB_array, CSB_array, selb_array : std_logic_vector(0 to C_NUM_BLOCKS - 1);
+	signal block_address                               : std_logic_vector(log2ceilnz(C_BLOCK_SIZE) - 1 downto 0);
 begin
 
 	gen_xilinx : if (TECHNOLOGY = XILINX) generate
@@ -126,20 +126,20 @@ begin
 	end generate gen_xilinx;
 
 	gen_saed32 : if (TECHNOLOGY = SAED32) generate
+		-- TODO generate optimum covering using different block size
+		-- TODO current implementation is only for special case used in KyberLight 1.x implementation
 		-- SAED32 Memory Compiler Block RAM
-		gen_saed32_banks : for i in 0 to ceil_div(DEPTH, C_BLOCK_SIZE) - 1 generate
+		gen_saed32_banks : for i in 0 to C_NUM_BLOCKS - 1 generate
 			assert WORD_BITS = 8 or WORD_BITS = 13 severity failure; -- NOTE: Add all available widths here!  
 			--
 
 			gen_8bit : if WORD_BITS = 8 generate
+
 				gen_blk128 : if C_BLOCK_SIZE = 128 generate
-					assert False report "128 get_saed_block_size= " & to_string(C_BLOCK_SIZE);
-					assert False report "128 log(get_saed_block_size)= " & to_string(log2ceilnz(C_BLOCK_SIZE));
-					assert False report "128 in_addr'length " & to_string(in_addr'length) severity error;
 					SRAM128x8sp_inst : entity work.SRAM128x8sp -- SAED32_SRAM_WC = 128
 						port map(
 							A   => block_address, -- input address
-							O   => out_array(i), -- output data
+							O   => out_data, -- output data
 							I   => in_data, -- input data
 							WEB => WEB_array(i), -- write enable, active-low
 							CSB => CSB_array(i), -- chip select, active-low
@@ -149,14 +149,10 @@ begin
 				end generate gen_blk128;
 
 				gen_blk32 : if C_BLOCK_SIZE = 32 generate
-					assert False report "32 get_saed_block_size= " & to_string(C_BLOCK_SIZE);
-					assert False report "32 log(get_saed_block_size)= " & to_string(log2ceilnz(C_BLOCK_SIZE));
-					assert False report "32 in_addr'length " & to_string(in_addr'length) severity error;
-					assert in_addr'length = log2ceilnz(32) severity failure;
 					SRAM32x8sp_inst : entity work.SRAM32x8sp -- WC = 32
 						port map(
 							A   => block_address, -- input address
-							O   => out_array(i), -- output data
+							O   => out_data, -- output data
 							I   => in_data, -- input data
 							WEB => WEB_array(i), -- write enable, active-low
 							CSB => CSB_array(i), -- chip select, active-low
@@ -164,14 +160,16 @@ begin
 							CE  => clk  -- clock
 						);
 				end generate gen_blk32;
+
 			end generate gen_8bit;
 
 			gen_13bit : if WORD_BITS = 13 generate
+
 				gen_blk128 : if C_BLOCK_SIZE = 128 generate
 					SRAM128x13sp_inst : entity work.SRAM128x13sp -- WC = 128
 						port map(
 							A   => block_address,
-							O   => out_array(i),
+							O   => out_data,
 							I   => in_data,
 							WEB => WEB_array(i),
 							CSB => CSB_array(i),
@@ -179,37 +177,50 @@ begin
 							CE  => clk
 						);
 				end generate gen_blk128;
+
 				gen_blk32 : if C_BLOCK_SIZE = 32 generate
 					SRAM128x13sp_inst : entity work.SRAM32x13sp -- WC = 32
 						port map(
 							A   => block_address,
-							O   => out_array(i),
+							O   => out_data,
 							I   => in_data,
 							WEB => WEB_array(i),
 							CSB => CSB_array(i),
 							OEB => OEB_array(i),
 							CE  => clk
 						);
-
 				end generate gen_blk32;
+
 			end generate gen_13bit;
+			--
 			-- Control signals
-			CSB_array(i) <= not ce or OEB_array(i);
-			WEB_array(i) <= not we or OEB_array(i);
+			CSB_array(i) <= not ce or selb_array(i);
+			WEB_array(i) <= not we or selb_array(i);
+
+			--
 		end generate gen_saed32_banks;
-		gen_ctrl : if DEPTH /= C_BLOCK_SIZE generate
-			OEB_array <= not decode(in_addr(in_addr'length - 1 downto log2ceilnz(C_BLOCK_SIZE)));
+		gen_ctrl : if DEPTH > C_BLOCK_SIZE generate
+			--			assert False report "in_addr'length=" &  to_string(in_addr'length) &" log2ceilnz(C_BLOCK_SIZE)="& to_string(log2ceilnz(C_BLOCK_SIZE)) & " selb_array'length="& to_string(selb_array'length) severity error;
+			selb_array <= not decode(in_addr(in_addr'length - 1 downto log2ceilnz(C_BLOCK_SIZE)), selb_array'length);
 		end generate gen_ctrl;
-		gen_ctrl_lt : if DEPTH = C_BLOCK_SIZE generate
-			OEB_array(0) <= '0';
+		gen_ctrl_lt : if DEPTH <= C_BLOCK_SIZE generate
+			selb_array(0) <= '0';
 		end generate gen_ctrl_lt;
-		
+
+		-- 
+		reg_oeb_proc : process(clk)
+		begin
+			if rising_edge(clk) then
+				if ce = '1' then
+					OEB_array <= selb_array;
+				end if;
+			end if;
+		end process;
 
 		--
 
 		block_address <= std_logic_vector(in_addr(log2ceilnz(C_BLOCK_SIZE) - 1 downto 0));
 		-- output Mux
-		out_data      <= out_array(to_integer(in_addr(in_addr'length - 1 downto log2ceilnz(C_BLOCK_SIZE))));
 	end generate gen_saed32;
 
 end architecture;

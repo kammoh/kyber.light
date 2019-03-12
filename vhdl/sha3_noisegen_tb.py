@@ -29,6 +29,11 @@ from cocotb.generators.byte import random_data, get_bytes
 from cocotb.handle import ModifiableObject
 from cmd_tester import CmdDoneTester
 from pyber import getnoise_bytes, KYBER_SYMBYTES, KYBER_N
+import itertools
+
+def compare_lists(l1, l2):
+    return [f"@{x[0]}: {hex(x[1])} != {hex(y)}" for x, y in itertools.zip_longest(enumerate(l1), l2) if x[1] != y]
+
 
 @cocotb.coroutine
 def func_test(dut, valid_gen=None, ready_gen=None):
@@ -58,7 +63,6 @@ def func_test(dut, valid_gen=None, ready_gen=None):
         yield clkedge
 
     raise tb.scoreboard.result
-
 
 
 # Tests
