@@ -1,28 +1,42 @@
 {
-	"modules": {
-		"kyber_pkg": {
+	"modules": 
+	{
+		"kyber_pkg": 
+		{
 			"path": "vhdl",
 			"files": "kyber_pkg.vhdl"
 		},
-		"polyvec_mac": {
+
+		"polyvec_mac": 
+		{
 			"path": "vhdl",
 			"top": "polyvec_mac",
 			"tb_top": "polyvec_mac_tb",
-			"files": [
+			"files": 
+			[
 				"polyvec_mac.vhdl"
 			],
-			"tb_files": [
-				"polyvec_mac_tb.vhdl",			
-				"polyvec_mac_tb.py"			
+
+			"tb_files": 
+			[
+				"polyvec_mac_tb.vhdl",
+				"polyvec_mac_tb.py"
 			],
-			"depends": [
+
+			"depends": 
+			[
 				"polymac_datapath",
 				"ram_sp"
 			],
-			"tb_configs": [
-            ],
-            "language": "vhdl.1993"
+
+			"tb_configs": 
+			[
+				
+			],
+
+			"language": "vhdl.1993"
 		},
+
 		"ram_sp": 
 		{
 			"path": "vhdl",
@@ -30,161 +44,285 @@
 			[
 				"ram_sp.vhdl"
 			],
-			"files.sim":
+
+			"files.sim": 
 			[
-				"SRAM128x8sp.vhdl", "SRAM128x13sp.vhdl", "SRAM32x8sp.vhdl", "SRAM32x13sp.vhdl"
+				"SRAM1RW1024x8.vhdl",
+				"SRAM1RW256x8.vhdl",
+				"SRAM1RW64x8.vhdl"
 			],
-			"depends": [
+
+			"depends": 
+			[
 				"kyber_pkg"
-            ]
+			]
 		},
-		"barret": {
+
+		"barret": 
+		{
 			"path": "vhdl",
 			"top": "barret_reduce",
 			"tb_top": "tb_barret_reduce",
-			"files": [
+			"files": 
+			[
 				"barret_reduce.vhdl",
 				"ConstMult*.vhdl"
 			],
-			"tb_files": [
+
+			"tb_files": 
+			[
 				"tb_barret_reduce.vhdl"
 			],
-			"depends": [
+
+			"depends": 
+			[
 				"kyber_pkg"
 			],
-			"tb_configs": [
+
+			"tb_configs": 
+			[
 				{
 					"G_IN_WIDTH": 16,
 					"G_OUT_WIDTH": 13
 				},
+
 				{
 					"G_IN_WIDTH": 26,
 					"G_OUT_WIDTH": 15
 				},
+
 				{
 					"G_IN_WIDTH": 26,
 					"G_OUT_WIDTH": 13
 				},
+
 				{
 					"G_IN_WIDTH": 27,
 					"G_OUT_WIDTH": 13
 				}
-            ],
-            "language": "vhdl.1993"
+			],
+
+			"language": "vhdl.1993"
 		},
-		"divider": {
+
+		"divider": 
+		{
 			"path": "vhdl",
 			"top": "divider",
 			"tb_top": "divider_tb",
-			"files": [
+			"files": 
+			[
 				"divider.vhdl"
 			],
-			"tb_files": [
+
+			"tb_files": 
+			[
 				"divider_tb.vhdl"
 			],
-			"depends": [
+
+			"depends": 
+			[
 				"kyber_pkg"
-            ],
-            "language": "vhdl.1993"
+			],
+
+			"language": "vhdl.1993"
 		},
-		"polymac_datapath" : {
+
+		"polymac_datapath": 
+		{
 			"path": "vhdl",
 			"top": "polymac_datapath",
 			"tb_top": "polymac_datapath_tb",
-			"files": [
+			"files": 
+			[
 				"polymac_datapath.vhdl"
 			],
-			"tb_files": [
+
+			"tb_files": 
+			[
 				"polymac_datapath_tb.vhdl"
 			],
-			"depends": [
+
+			"depends": 
+			[
 				"divider"
-            ],
-            "language": "vhdl.1993"
-        },
-		"asymmetric_fifo" : {
+			],
+
+			"language": "vhdl.1993"
+		},
+
+		"asymmetric_fifo": 
+		{
 			"path": "vhdl",
 			"top": "asymmetric_fifo",
-			"files": [
+			"files": 
+			[
 				"asymmetric_fifo.vhdl"
 			],
-			"tb_files": [
+
+			"tb_files": 
+			[
 				"asymmetric_fifo_tb.py"
 			],
-			"depends": [
+
+			"depends": 
+			[
 				"kyber_pkg"
+			],
+
+			"language": "vhdl.1993"
+		},
+
+		"cbd": 
+		{
+			"path": "vhdl",
+			"top": "cbd",
+			"files": 
+			[
+				"cbd.vhdl"
+			],
+
+			"tb_files": 
+			[
+				"cbd_tb.py"
+			],
+
+			"depends": 
+			[
+				"asymmetric_fifo",
+				"keccak_pkg"
+			],
+
+			"language": "vhdl.1993"
+		},
+
+		"msg_add": 
+		{
+			"path": "vhdl",
+			"top": "msg_add",
+			"files": 
+			[
+				"msg_add.vhdl"
+			],
+
+			"depends": 
+			[
+				"asymmetric_fifo",
+				"keccak_pkg"
+			],
+
+			"language": "vhdl.1993"
+		},
+
+		"compressor": 
+		{
+			"path": "vhdl",
+			"top": "compressor",
+			"files": 
+			[
+				"compressor.vhdl"
+			],
+
+			"depends": 
+			[
+				"asymmetric_fifo",
+				"keccak_pkg"
+			],
+
+			"language": "vhdl.1993"
+		},
+
+		"decompressor": 
+		{
+			"path": "vhdl",
+			"top": "decompressor",
+			"files": 
+			[
+				"decompressor.vhdl"
+			],
+
+			"depends": 
+			[
+				"asymmetric_fifo",
+				"keccak_pkg"
+			],
+
+			"language": "vhdl.1993"
+		},
+
+		"sha3_noisegen": 
+		{
+			"path": "vhdl",
+			"top": "sha3_noisegen",
+			"files": "sha3_noisegen.vhdl",
+			"tb_files": 
+			[
+				"sha3_noisegen_tb.py"
+			],
+
+			"depends": 
+			[
+				"asymmetric_fifo",
+				"tiny_keccak",
+				"cbd",
+				"ram_sp"
+			],
+
+			"language": "vhdl.1993"
+		},
+
+		"cpa_enc": 
+		{
+			"path": "vhdl",
+			"top": "cpa_enc",
+			"files": 
+			[
+				"cpa_enc.vhdl"
+			],
+            "tb_files": [
+                "cpa_enc_tb.py"
             ],
-            "language": "vhdl.1993"
-        },
+			"depends": 
+			[
+				"sha3_noisegen",
+				"polyvec_mac",
+				"cbd",
+				"compressor",
+				"msg_add",
+				"decompressor"
+			],
 
-        "cbd" :{
-            "path": "vhdl",
-            "top": "cbd",
-            "files": ["cbd.vhdl"],
-            "tb_files": ["cbd_tb.py"],
-            "depends": ["asymmetric_fifo", "keccak_pkg"],
-            "language": "vhdl.1993"
-        },
+			"language": "vhdl.1993"
+		},
 
-        "msg_add": {
-            "path": "vhdl",
-            "top": "msg_add",
-            "files": ["msg_add.vhdl"],
-            "depends": ["asymmetric_fifo", "keccak_pkg"],
-            "language": "vhdl.1993"
-        },
-
-        "compressor": {
-            "path": "vhdl",
-            "top": "compressor",
-            "files": ["compressor.vhdl"],
-            "depends": ["asymmetric_fifo", "keccak_pkg"],
-            "language": "vhdl.1993"
-        },
-        "decompressor": {
-            "path": "vhdl",
-            "top": "decompressor",
-            "files": ["decompressor.vhdl"],
-            "depends": ["asymmetric_fifo", "keccak_pkg"],
-            "language": "vhdl.1993"
-        },
-
-        "sha3_noisegen": {
-            "path": "vhdl",
-            "top": "sha3_noisegen",
-            "files": "sha3_noisegen.vhdl",
-            "tb_files": ["sha3_noisegen_tb.py"],
-            "depends": ["asymmetric_fifo", "tiny_keccak", "cbd", "ram_sp"],
-            "language": "vhdl.1993"
-        },
-
-        "cpa_enc" : {
-            "path": "vhdl",
-            "top": "cpa_enc",
-            "files": ["cpa_enc.vhdl"],
-            "depends": ["sha3_noisegen", "polyvec_mac", "cbd", "compressor", "msg_add", "decompressor"],
-            "language": "vhdl.1993"
-        },
-
-        "keccak_pkg":
-        {
-            "path": "tiny_keccak",
-            "files": [
-                "keccak_pkg.vhdl"]
-        },
-        "tiny_keccak": 
+		"keccak_pkg": 
 		{
 			"path": "tiny_keccak",
-            "top": "keccak_core",
-            "tb_files": ["keccak_core_tb.py", "keccak_core_tb.vhdl"],
+			"files": 
+			[
+				"keccak_pkg.vhdl"
+			]
+		},
+
+		"tiny_keccak": 
+		{
+			"path": "tiny_keccak",
+			"top": "keccak_core",
+			"tb_files": 
+			[
+				"keccak_core_tb.py",
+				"keccak_core_tb.vhdl"
+			],
+
 			"tb_top": "keccak_core_tb",
 			"depends": 
 			[
-				"ram_sp", "keccak_pkg"
+				"ram_sp",
+				"keccak_pkg"
 			],
 
 			"files": 
-			[   
+			[
 				"keccak_pkg.vhdl",
 				"rho_rom.vhdl",
 				"keccak_controller.vhdl",
@@ -194,6 +332,7 @@
 				"keccak_datapath.vhdl",
 				"keccak_core.vhdl"
 			],
+
 			"language": "vhdl.1993"
 		}
 	}

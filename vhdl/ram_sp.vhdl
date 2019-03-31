@@ -31,10 +31,10 @@
 --
 --! @context   Post-Quantum Cryptography
 --
---! @license   MIT
+--! @license   AGPL-3.0-or-later
 --
 --! @copyright Copyright 2019 Kamyar Mohajerani. All rights reserved.
---  
+--
 --! @date      <03/10/2019>
 --
 --! @version   <v0.1>
@@ -82,25 +82,64 @@ entity ocram_sp is
 		out_data : out std_logic_vector(WORD_BITS - 1 downto 0) -- read output
 	);
 
-	attribute DONT_TOUCH_NETWORK of clk, we, ce, in_addr, in_data : signal is True;
-	attribute DONT_TOUCH of clk, we, ce, in_addr, in_data, out_data : signal is True;
+	--	attribute DONT_TOUCH_NETWORK of clk, we, ce, in_addr, in_data : signal is True;
+	--	attribute DONT_TOUCH of clk, we, ce, in_addr, in_data, out_data : signal is True;
 end entity;
 
 architecture rtl of ocram_sp is
-	impure function get_saed_block_size return natural is
+	--
+	-- very simple for this project
+	function C_BLOCK_SIZE return natural is
 	begin
-		if DEPTH >= SAED32_SRAM_WC_L then
-			return SAED32_SRAM_WC_L;
-		elsif DEPTH >= SAED32_SRAM_WC_M then
-			return SAED32_SRAM_WC_M;
-		else
-			return SAED32_SRAM_WC_S;
-		end if;
+		return 2**log2ceilnz(maximum(minimum(DEPTH, 1024), 64)); -- No SRAM1RW32x8 !!! :/
 	end function;
-	constant C_BLOCK_SIZE                              : positive := get_saed_block_size;
-	constant C_NUM_BLOCKS                              : positive := ceil_div(DEPTH, C_BLOCK_SIZE);
-	signal WEB_array, OEB_array, CSB_array, selb_array : std_logic_vector(0 to C_NUM_BLOCKS - 1);
-	signal block_address                               : std_logic_vector(log2ceilnz(C_BLOCK_SIZE) - 1 downto 0);
+	--
+	constant C_BLOCK_WORD_BITS                         : positive := 8;
+	constant C_ROWS                                    : positive := ceil_div(DEPTH, C_BLOCK_SIZE);
+	constant C_COLS                                    : positive := ceil_div(WORD_BITS, C_BLOCK_WORD_BITS);
+	signal WEB_array, OEB_array, CSB_array, selb_array : std_logic_vector(0 to C_ROWS - 1);
+	signal addr_array                                  : std_logic_vector(log2ceilnz(C_BLOCK_SIZE) - 1 downto 0);
+	type T_dataio_array is array (0 to (C_ROWS * C_COLS) - 1) of std_logic_vector(C_BLOCK_WORD_BITS - 1 downto 0);
+	signal din_array                                   : T_dataio_array;
+	signal dout_array                                  : T_dataio_array;
+	---
+
+	component SRAM1RW1024x8
+		port(
+			A   : in  std_logic_vector(9 downto 0);
+			O   : out std_logic_vector(7 downto 0);
+			I   : in  std_logic_vector(7 downto 0);
+			WEB : in  std_logic;
+			CSB : in  std_logic;
+			OEB : in  std_logic;
+			CE  : in  std_logic
+		);
+	end component SRAM1RW1024x8;
+
+	component SRAM1RW256x8
+		port(
+			A   : in  std_logic_vector(7 downto 0);
+			O   : out std_logic_vector(7 downto 0);
+			I   : in  std_logic_vector(7 downto 0);
+			WEB : in  std_logic;
+			CSB : in  std_logic;
+			OEB : in  std_logic;
+			CE  : in  std_logic
+		);
+	end component SRAM1RW256x8;
+
+	component SRAM1RW64x8
+		port(
+			A   : in  std_logic_vector(5 downto 0);
+			O   : out std_logic_vector(7 downto 0);
+			I   : in  std_logic_vector(7 downto 0);
+			WEB : in  std_logic;
+			CSB : in  std_logic;
+			OEB : in  std_logic;
+			CE  : in  std_logic
+		);
+	end component SRAM1RW64x8;
+
 begin
 
 	gen_xilinx : if (TECHNOLOGY = XILINX) generate
@@ -129,31 +168,50 @@ begin
 		-- TODO generate optimum covering using different block size
 		-- TODO current implementation is only for special case used in KyberLight 1.x implementation
 		-- SAED32 Memory Compiler Block RAM
-		gen_saed32_banks : for i in 0 to C_NUM_BLOCKS - 1 generate
-			assert WORD_BITS = 8 or WORD_BITS = 13 severity failure; -- NOTE: Add all available widths here!  
+		
+		addr_array <= std_logic_vector(resize(in_addr(minimum(in_addr'length, log2ceilnz(C_BLOCK_SIZE)) - 1 downto 0), addr_array'length));
+		
+		gen_sram_banks : for i in 0 to C_ROWS - 1 generate
 			--
+			gen_8bit : for j in 0 to C_COLS - 1 generate
+				--
+				din_array(i * C_COLS + j) <= std_logic_vector(resize(unsigned(in_data(minimum(WORD_BITS, (j + 1) * C_BLOCK_WORD_BITS) - 1 downto j * C_BLOCK_WORD_BITS)), C_BLOCK_WORD_BITS));
 
-			gen_8bit : if WORD_BITS = 8 generate
+				out_data(minimum(WORD_BITS, (j + 1) * C_BLOCK_WORD_BITS) - 1 downto j * C_BLOCK_WORD_BITS) <= dout_array(i * C_COLS + j)(minimum(WORD_BITS, (j + 1) * C_BLOCK_WORD_BITS) - (j * C_BLOCK_WORD_BITS) - 1 downto 0);
 
-				gen_blk128 : if C_BLOCK_SIZE = 128 generate
-					SRAM128x8sp_inst : entity work.SRAM128x8sp -- SAED32_SRAM_WC = 128
+								--
+				gen_blk1024 : if C_BLOCK_SIZE = 1024 generate
+					SRAM1RW1024x8_inst : SRAM1RW1024x8
 						port map(
-							A   => block_address, -- input address
-							O   => out_data, -- output data
-							I   => in_data, -- input data
+							A   => addr_array, -- input address
+							O   => dout_array(i * C_COLS + j),
+							I   => din_array(i * C_COLS + j),
 							WEB => WEB_array(i), -- write enable, active-low
 							CSB => CSB_array(i), -- chip select, active-low
 							OEB => OEB_array(i), -- output enable, active-low
 							CE  => clk  -- clock
 						);
-				end generate gen_blk128;
+				end generate gen_blk1024;
 
-				gen_blk32 : if C_BLOCK_SIZE = 32 generate
-					SRAM32x8sp_inst : entity work.SRAM32x8sp -- WC = 32
+				gen_blk256 : if C_BLOCK_SIZE = 256 generate
+					SRAM1RW256x8_inst : SRAM1RW256x8
 						port map(
-							A   => block_address, -- input address
-							O   => out_data, -- output data
-							I   => in_data, -- input data
+							A   => addr_array, -- input address
+							O   => dout_array(i * C_COLS + j), -- output data
+							I   => din_array(i * C_COLS + j),
+							WEB => WEB_array(i), -- write enable, active-low
+							CSB => CSB_array(i), -- chip select, active-low
+							OEB => OEB_array(i), -- output enable, active-low
+							CE  => clk  -- clock
+						);
+				end generate gen_blk256;
+
+				gen_blk32 : if C_BLOCK_SIZE = 64 generate
+					SRAM1RW64x8_inst : SRAM1RW64x8
+						port map(
+							A   => addr_array, -- input address
+							O   => dout_array(i * C_COLS + j), -- output data
+							I   => din_array(i * C_COLS + j),
 							WEB => WEB_array(i), -- write enable, active-low
 							CSB => CSB_array(i), -- chip select, active-low
 							OEB => OEB_array(i), -- output enable, active-low
@@ -163,42 +221,13 @@ begin
 
 			end generate gen_8bit;
 
-			gen_13bit : if WORD_BITS = 13 generate
-
-				gen_blk128 : if C_BLOCK_SIZE = 128 generate
-					SRAM128x13sp_inst : entity work.SRAM128x13sp -- WC = 128
-						port map(
-							A   => block_address,
-							O   => out_data,
-							I   => in_data,
-							WEB => WEB_array(i),
-							CSB => CSB_array(i),
-							OEB => OEB_array(i),
-							CE  => clk
-						);
-				end generate gen_blk128;
-
-				gen_blk32 : if C_BLOCK_SIZE = 32 generate
-					SRAM128x13sp_inst : entity work.SRAM32x13sp -- WC = 32
-						port map(
-							A   => block_address,
-							O   => out_data,
-							I   => in_data,
-							WEB => WEB_array(i),
-							CSB => CSB_array(i),
-							OEB => OEB_array(i),
-							CE  => clk
-						);
-				end generate gen_blk32;
-
-			end generate gen_13bit;
 			--
 			-- Control signals
 			CSB_array(i) <= not ce or selb_array(i);
 			WEB_array(i) <= not we or selb_array(i);
 
 			--
-		end generate gen_saed32_banks;
+		end generate gen_sram_banks;
 		gen_ctrl : if DEPTH > C_BLOCK_SIZE generate
 			--			assert False report "in_addr'length=" &  to_string(in_addr'length) &" log2ceilnz(C_BLOCK_SIZE)="& to_string(log2ceilnz(C_BLOCK_SIZE)) & " selb_array'length="& to_string(selb_array'length) severity error;
 			selb_array <= not decode(in_addr(in_addr'length - 1 downto log2ceilnz(C_BLOCK_SIZE)), selb_array'length);
@@ -218,9 +247,6 @@ begin
 		end process;
 
 		--
-
-		block_address <= std_logic_vector(in_addr(log2ceilnz(C_BLOCK_SIZE) - 1 downto 0));
-		-- output Mux
 	end generate gen_saed32;
 
 end architecture;

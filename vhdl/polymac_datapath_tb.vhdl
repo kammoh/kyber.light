@@ -17,7 +17,7 @@
 --                                  
 -----------------------------------------------------------------------------------------------------------------------
 --
---  unit name: full name (shortname / entity name)
+--  unit name: Abandoned! Does not work any more!
 --              
 --! @file      .vhdl
 --
@@ -79,25 +79,25 @@ entity polymac_dp_tb is
 	generic(
 		runner_cfg        : string;
 		G_CLK_PERIOD      : time     := 1 ns;
-		G_PIPELINE_LEVELS : positive := 7;
 		G_EXTRA_RND_SEED  : string   := "3.14159265";
 		G_TEST_ITERATIONS : integer  := 2 ** 14
 	);
 end entity polymac_dp_tb;
 
 architecture TB of polymac_dp_tb is
-	signal clk              : std_logic := '0';
-	signal rst              : std_logic;
-	signal nega             : std_logic;
-	signal r_en             : std_logic;
-	signal r_load           : std_logic;
-	signal a                : T_coef_us;
-	signal b                : T_coef_us;
-	signal rin              : T_coef_us;
-	signal rout             : T_coef_us;
-	signal i_ext_div_select : std_logic;
-	signal i_ext_div        : unsigned(2 * log2ceil(KYBER_Q) - 1 downto 0);
-	signal o_ext_div        : T_coef_us;
+	signal clk            : std_logic := '0';
+	signal rst            : std_logic;
+	signal nega           : std_logic;
+	signal in_valid       : std_logic;
+	signal r_load         : std_logic;
+	signal a              : T_coef_us;
+	signal b              : T_coef_us;
+	signal rin            : T_coef_us;
+	signal rout           : T_coef_us;
+	signal o_vout_data    : T_coef_us;
+	signal o_remin_data   : unsigned(2 * KYBER_COEF_BITS - 1 downto 0);
+	signal o_remin_valid  : std_logic;
+	signal i_remout_valid : std_logic;
 begin
 	clk <= not clk after G_CLK_PERIOD / 2;
 
@@ -115,7 +115,6 @@ begin
 		variable rin_v     : T_coef_us;
 		variable a_v       : T_coef_us;
 		variable b_v       : T_coef_us;
-      variable ext_div_v : unsigned(2 * log2ceil(KYBER_Q) - 1 downto 0);
 	begin
 		test_runner_setup(runner, runner_cfg);
 
@@ -132,27 +131,24 @@ begin
 			wait until rst = '0';
 			wait for 2 * G_CLK_PERIOD;
 
-			i_ext_div_select <= '0';
-
 			if run("Add  r <= r + a.b") then
 				for i in 0 to G_TEST_ITERATIONS loop
 					wait until falling_edge(clk);
-					r_en   <= '0';
-					r_load <= '1';
-					rin_v  := RndR.RandUnsigned(KYBER_Q - 1, rin'length);
-					rin    <= rin_v;
+					in_valid <= '0';
+					r_load   <= '1';
+					rin_v    := RndR.RandUnsigned(KYBER_Q - 1, rin'length);
+					rin      <= rin_v;
 					wait until falling_edge(clk);
-					r_load <= '0';
-					r_en   <= '1';
-					nega   <= '0';
-					a_v    := RndR.RandUnsigned(KYBER_Q - 1, a'length);
-					a      <= a_v;
-					b_v    := RndR.RandUnsigned(KYBER_Q - 1, b'length);
-					b      <= b_v;
+					r_load   <= '0';
+					in_valid <= '1';
+					nega     <= '0';
+					a_v      := RndR.RandUnsigned(KYBER_Q - 1, a'length);
+					a        <= a_v;
+					b_v      := RndR.RandUnsigned(KYBER_Q - 1, b'length);
+					b        <= b_v;
+					in_valid <= '0';
 					wait until falling_edge(clk);
-					r_en   <= '0';
-					wait until falling_edge(clk);
-					
+
 					for p in 0 to G_PIPELINE_LEVELS loop
 						wait until falling_edge(clk);
 					end loop;
@@ -163,62 +159,51 @@ begin
 			elsif run("Subtract r <= r - a.b") then
 				for i in 0 to G_TEST_ITERATIONS loop
 					wait until falling_edge(clk);
-					r_en   <= '0';
-					r_load <= '1';
-					rin_v  := RndR.RandUnsigned(KYBER_Q - 1, rin'length);
-					rin    <= rin_v;
+					in_valid <= '0';
+					r_load   <= '1';
+					rin_v    := RndR.RandUnsigned(KYBER_Q - 1, rin'length);
+					rin      <= rin_v;
 					wait until falling_edge(clk);
-					r_load <= '0';
-					nega   <= '1';
-					r_en   <= '1';
-					a_v    := RndR.RandUnsigned(KYBER_Q - 1, a'length);
-					a      <= a_v;
-					b_v    := RndR.RandUnsigned(KYBER_Q - 1, b'length);
-					b      <= b_v;
+					r_load   <= '0';
+					nega     <= '1';
+					in_valid <= '1';
+					a_v      := RndR.RandUnsigned(KYBER_Q - 1, a'length);
+					a        <= a_v;
+					b_v      := RndR.RandUnsigned(KYBER_Q - 1, b'length);
+					b        <= b_v;
 					wait until falling_edge(clk);
-					r_en   <= '0';
+					in_valid <= '0';
 					
-					for p in 0 to G_PIPELINE_LEVELS loop
-						wait until falling_edge(clk);
-					end loop;
+--					wait until i_remout_valid = '1';
+
+					
 
 					check_equal(unsigned(rout), resize((("00" & rin) + KYBER_Q - ((a * b) mod KYBER_Q)) mod KYBER_Q, rout'length), " for a=" & to_string(to_integer(a)) & " b=" & to_String(to_integer(b)) & " r0=" & to_string(to_integer(rin))
 					);
 				end loop;
-			elsif run("External access to divider") then
-				for i in 0 to 2 * G_TEST_ITERATIONS loop
-					i_ext_div_select <= '1';
-					ext_div_v        := RndR.RandUnsigned(2**log2ceil(KYBER_Q) * (KYBER_Q - 1), i_ext_div'length);
-					i_ext_div        <= ext_div_v;
-					for p in 0 to G_PIPELINE_LEVELS - 2 loop
-						wait until falling_edge(clk);
-					end loop;
-					check_equal(unsigned(o_ext_div), ext_div_v / KYBER_Q);
-				end loop;
-			end if;
 
+			end if;
 		end loop while_test_suite_loop;
 
 		test_runner_cleanup(runner);
 		wait;
 	end process;
 
-	dut : entity work.polymac_datapath
-		generic map(
-			G_PIPELINE_LEVELS => G_PIPELINE_LEVELS
-		)
-		port map(
-			clk              => clk,
-			i_nega           => nega,
-			i_en_v           => r_en,
-			i_ld_v           => r_load,
-			in_a             => a,
-			in_b             => b,
-			in_v             => rin,
-			out_v            => rout,
-			i_ext_div_select => i_ext_div_select,
-			i_ext_div        => i_ext_div,
-			o_ext_div        => o_ext_div
-		);
 
+	dut : entity work.polymac_datapath
+		port map(
+			clk            => clk,
+			rst            => rst,
+			i_nega         => nega,
+			i_ld_v         => r_load,
+			i_abin_valid   => in_valid,
+			i_ain_data     => a,
+			i_bin_data     => b,
+			i_vin_data     => rin,
+			o_vout_data    => o_vout_data,
+			o_remin_data   => o_remin_data,
+			o_remin_valid  => o_remin_valid,
+			i_remout_data  => rout,
+			i_remout_valid => i_remout_valid
+		);
 end architecture TB;

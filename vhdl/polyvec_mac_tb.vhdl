@@ -140,7 +140,7 @@ begin
 			i_dout_ready => i_dout_ready,
 			i_extdiv_divin        => i_ext_div_a,
 			o_extdiv_divout  => o_ext_div_a_div_q,
-			o_extdit_active => o_ext_div_selected
+			o_divider_busy => o_ext_div_selected
 		);
 
 	tb : process

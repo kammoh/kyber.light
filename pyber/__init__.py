@@ -13,6 +13,11 @@ KYBER_K = pyber_clib.KYBER_K
 KYBER_Q = pyber_clib.KYBER_Q
 KYBER_ETA = pyber_clib.KYBER_ETA
 KYBER_SYMBYTES = pyber_clib.KYBER_SYMBYTES
+KYBER_POLYBYTES = pyber_clib.KYBER_POLYBYTES
+KYBER_POLYVECBYTES = pyber_clib.KYBER_POLYVECBYTES
+
+
+KYBER_POLYVECCOMPRESSEDBYTES = pyber_clib.KYBER_POLYVECCOMPRESSEDBYTES
 
 
 def getnoise_bytes(coins, nonce):
@@ -23,6 +28,11 @@ def getnoise_bytes(coins, nonce):
     crbuf = ffi.new(f'unsigned char [{KYBER_ETA * KYBER_N // 4}]')
     pyber_clib.getnoise_bytes(crbuf, ccoins_buf, nonce)
     return list(crbuf)
+
+
+def unpack_pk_at(pk):
+    assert len(pk) == KYBER_POLYBYTES, f"length of public key must be KYBER_POLYBYTES={KYBER_POLYBYTES} bytes"
+
 
 class Polynomial():
     def __init__(self, coeffs: IterableType[int]):
@@ -173,9 +183,9 @@ def polyvec_nega_mac(p_r: Polynomial, pv_a: PolynomialVector, pv_b: PolynomialVe
     return Polynomial(cpoly_r.coeffs) # need to copy!!!
 
 
-
-__all__ = ['polyvec_nega_mac', 'KYBER_N',
-           'KYBER_K', 'KYBER_Q', 'KYBER_ETA', 'Polynomial', 'PolynomialVector', "getnoise_bytes"]
+__all__ = ['pyber_clib', 'polyvec_nega_mac', 'KYBER_N',
+           'KYBER_K', 'KYBER_Q', 'KYBER_ETA', 'KYBER_POLYBYTES', 'KYBER_POLYVECBYTES', 
+            'Polynomial', 'PolynomialVector', "getnoise_bytes"]
 
 
 if __name__ == '__main__':

@@ -17,11 +17,11 @@
 --                                  
 -----------------------------------------------------------------------------------------------------------------------
 --
---  unit name: full name (shortname / entity name)
+--  unit name: Message Add
 --              
---! @file      .vhdl
+--! @file      msg_add.vhdl
 --
---! @brief     <file content, behavior, purpose, special usage notes>
+--! @brief     Add message to polynomial "v" generated from PolyvecMAC
 --
 --! @author    <Kamyar Mohajerani (kamyar@ieee.org)>
 --
@@ -39,7 +39,7 @@
 --
 --! @version   <v0.1>
 --
---! @details   blah blah
+--! @details   1 bit at each clock cycle
 --!
 --
 --

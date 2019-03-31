@@ -136,7 +136,6 @@ class ValidReadyDriver(ValidatedBusDriver):
                 self.bus.valid <= 0
                 for _ in range(self.off):
                     yield clkedge
-
                 # Grab the next set of on/off values
                 self._next_valids()
 
@@ -202,12 +201,12 @@ class ValidReadyDriver(ValidatedBusDriver):
         dut = self.entity
         if isinstance(pkt, bytes):
             if len(self.bus.data) % 8 != 0:
-                dut._log.info("_driver_send: self.bus.data) is not multiple of 8")
+                self.log.info("_driver_send: self.bus.data) is not multiple of 8")
                 raise TestError
-            dut._log.info("Sending packet of length %d bytes" % len(pkt))
-            dut._log.info(hexdump(pkt))
+            self.log.info("Sending packet of length %d bytes" % len(pkt))
+            self.log.info(hexdump(pkt))
             yield self._send_bytes(pkt, sync=sync)
-            # dut._log.info(
+            # self.log.info(
             #     "Successfully sent packet of length %d bytes" % len(pkt))
         elif isinstance(pkt, str):
             yield self._send_bin_string(pkt, sync=sync)
@@ -225,10 +224,10 @@ class ValidReadyMonitor(BusMonitor):
         "firstSymbolInHighOrderBits": True,
     }
 
-    def __init__(self, entity, name, clock, **kwargs):
+
+    def __init__(self, entity, name, clock, callback, **kwargs):
         config = kwargs.pop('config', {})
-        self.num_out_words = kwargs.pop('num_out_words', 1)
-        super().__init__(entity, name, clock, **kwargs)
+        super().__init__(entity, name, clock, callback=callback, **kwargs)
 
         self.config = self._default_config.copy()
 
@@ -236,6 +235,35 @@ class ValidReadyMonitor(BusMonitor):
             self.config[configoption] = value
             self.log.debug("Setting config option %s to %s" %
                            (configoption, str(value)))
+        
+        self.num_expected_words = None
+        self.ready_generator = None
+
+    def set_ready_generator(self, ready_generator=None):
+        """Set a new ready generator for this bus."""
+        self.ready_generator = ready_generator
+        self._next_readys()
+
+    def _next_readys(self):
+        self.on = False
+
+        if self.ready_generator is not None:
+            while not self.on:
+                try:
+                    self.on, self.off = next(self.ready_generator)
+                except StopIteration:
+                    self.on = True
+                    self.log.info("Ready generator exhausted, not inserting "
+                                  "non-ready cycles anymore")
+                    return
+
+            self.log.debug("Will be on for %d cycles, off for %s" %
+                           (self.on, self.off))
+        else:
+            # Valid every clock cycle
+            self.on, self.off = True, False
+            self.log.debug("Not using ready generator")
+
 
     @cocotb.coroutine
     def _monitor_recv(self):
@@ -244,9 +272,6 @@ class ValidReadyMonitor(BusMonitor):
         # Avoid spurious object creation by recycling
         clkedge = RisingEdge(self.clock)
         rdonly = ReadOnly()
-
-        def fire():
-            return self.bus.valid.value and self.bus.ready.value
 
         words = []
 
@@ -257,12 +282,27 @@ class ValidReadyMonitor(BusMonitor):
             if self.in_reset:
                 continue
 
-            if fire():
-                words.append(self.bus.data.value)
-                self.log.debug(f"received words {len(words)}/{self.num_out_words} ")
-                if len(words) >= self.num_out_words:
-                    self._recv(words)
-                    words = []
+            if not self.on:
+                self.bus.ready <= 0
+                for _ in range(self.off):
+                    yield clkedge
+                # Grab the next set of on/off values
+                self._next_readys()
+
+            # Consume a valid cycle
+            if self.on is not True and self.on:
+                self.on -= 1
+
+            self.bus.ready <= 1
+
+            while not self.bus.valid.value:
+                yield clkedge
+            
+            words.append(self.bus.data.value)
+                # self.log.debug(f"received word {len(words)}{self.num_out_words} ")
+            if self.num_expected_words and len(words) >= self.num_expected_words:
+                self._recv(words)
+                words = []
 
 
 class ValidReadyTester(object):
@@ -295,57 +335,18 @@ class ValidReadyTester(object):
         self.log.debug(f"in ports: {self.inports.keys()}")
         self.log.debug(f"out ports: {self.outports.keys()}")
 
-        input_name = kwargs.pop('input_name', "din")
-        output_name = kwargs.pop('output_name', "dout")
 
-        self.log.info("checking signals...")
+        self.drivers = {}
+        self.monitors = {}
 
-        for bus_name, is_input in [(input_name, True),  (output_name, False)]:
-            found = False
-            for in_fix, out_fix in [('i','o'), ('in', 'out')]:
-                for fmt in ['{bus_name}_{p}', '{fix}_{bus_name}_{p}', '{bus_name}_{p}_{fix}']:
-                    not_found = False
-                    for sigs, isin in [('data', is_input), ('valid', is_input), ('ready', not is_input)]:
-
-                        if (isin and fmt.format(bus_name=bus_name, p=sigs, fix=in_fix) not in self.inports) or   \
-                        (not isin and fmt.format(bus_name=bus_name, p=sigs, fix=out_fix) not in self.outports):
-                            not_found = True
-                            break
-                    if not not_found:
-                        found = True
-                        break
-                if found:
-                    break
-            if not found:
-                self.log.error(f"{bus_name} bus signals not found")
-                raise TestError
-
-        num_out_words = kwargs.get('num_out_words', 1)
-        self.stream_in = ValidReadyDriver(dut, input_name, self.clock, **kwargs)
-        self.stream_out = ValidReadyMonitor(
-            dut, output_name, self.clock, num_out_words=num_out_words, callback=self.model)
-
-        self.expected_output = []
-        self.scoreboard = Scoreboard(
-            dut, reorder_depth=0, fail_immediately=True)
-        self.scoreboard.add_interface(
-            self.stream_out, self.expected_output, strict_type=True)
+        self.scoreboard = Scoreboard(self.dut, reorder_depth=0, fail_immediately=True)
+        self.log.info("created scoreboard")
         
         self.rnd = random.Random()
         self.rnd.seed(kwargs.get('seed', None))
 
-        valid_gen = kwargs.get('valid_gen', None)
-        if valid_gen:
-            self.stream_in.set_valid_generator(valid_gen())
-
-        self.output_ready_thread = cocotb.fork(self.gen_output_ready())
-
-        debug = kwargs.get('debug', None)
-        level = logging.DEBUG if debug else logging.INFO
-        self.stream_in.log.setLevel(level)
         self.clk_period = kwargs.get('clk_period', 10)
-        self.clk_thread = cocotb.fork(
-            Clock(self.clock, self.clk_period, 'ns').start())
+        self.clk_thread = cocotb.fork(Clock(self.clock, self.clk_period, 'ns').start())
 
         cocotb.fork(self.reset())
 
@@ -355,12 +356,47 @@ class ValidReadyTester(object):
     def result(self):
         return self.scoreboard.result
 
-    # @cocotb.coroutine
-    def set_expected(self, expected_output):
-        self.expected_output.clear()
-        self.expected_output.append(expected_output)
-        if isinstance(expected_output, list):
-            self.stream_out.num_out_words = len(expected_output)
+    @cocotb.coroutine
+    def drive_input(self, in_bus_name, in_words, valid_gen = None):
+        if in_bus_name not in self.drivers:
+            self.check_bus(in_bus_name, is_input=True)
+            self.drivers[in_bus_name] = ValidReadyDriver(self.dut, in_bus_name, self.clock)
+        if valid_gen:
+            self.drivers[in_bus_name].set_valid_generator(valid_gen())
+
+        yield self.drivers[in_bus_name].send(in_words)
+
+    @cocotb.coroutine
+    def expect_output(self, out_bus_name, expected_output, ready_gen=None, compare_fn=None, callback=None):
+        if out_bus_name not in self.monitors:
+            self.check_bus(out_bus_name, is_input=False)
+            self.monitors[out_bus_name] = ValidReadyMonitor(self.dut, out_bus_name, self.clock, callback=callback if callback else self.model)
+        
+        monitor = self.monitors[out_bus_name]
+        monitor.set_ready_generator(ready_gen)
+        monitor.num_expected_words = len(expected_output)
+        self.scoreboard.add_interface(monitor, expected_output, compare_fn=compare_fn, strict_type=True)
+
+    # TODO only checks right now, FIXME later
+    def check_bus(self, bus_name, is_input):
+        found = False
+        for in_fix, out_fix in [('i', 'o'), ('in', 'out')]:
+            for fmt in ['{bus_name}_{p}', '{fix}_{bus_name}_{p}', '{bus_name}_{p}_{fix}']:
+                not_found = False
+                for sigs, isin in [('data', is_input), ('valid', is_input), ('ready', not is_input)]:
+
+                    if (isin and fmt.format(bus_name=bus_name, p=sigs, fix=in_fix) not in self.inports) or   \
+                            (not isin and fmt.format(bus_name=bus_name, p=sigs, fix=out_fix) not in self.outports):
+                        not_found = True
+                        break
+                if not not_found:
+                    found = True
+                    break
+            if found:
+                break
+        if not found:
+            self.log.error(f"{bus_name} bus signals not found")
+            raise TestError
 
     @cocotb.coroutine
     def wait_transaction(self):
@@ -380,13 +416,6 @@ class ValidReadyTester(object):
         self.keep_waiting = False
 
     @cocotb.coroutine
-    def gen_output_ready(self):
-        clkedge = RisingEdge(self.clock)
-        while True:
-            self.stream_out.bus.ready <= self.rnd.randrange(2)
-            yield clkedge
-
-    @cocotb.coroutine
     def reset(self):
         self.log.debug("Resetting DUT")
         self.dut.rst <= 1
@@ -395,10 +424,6 @@ class ValidReadyTester(object):
         self.dut.rst <= 0
         yield FallingEdge(self.clock)
         self.log.debug("Out of reset")
-
-    @cocotb.coroutine
-    def send_input(self, input):
-        yield self.stream_in.send(input)
 
 
 class CmdDoneTester(ValidReadyTester):
@@ -410,18 +435,14 @@ class CmdDoneTester(ValidReadyTester):
             self.log.error(f"{done_sig_name} is not an output port of DUT")
             raise TestError
         self.done_signal = getattr(dut, done_sig_name)
-        commands_dict = kwargs.pop('commands_dict', None)
-        if commands_dict:
-            self.register_commands(commands_dict)
 
-    def register_commands(self, commands_dict):
-        self.commands_dict = commands_dict
-        for cmd, signals in commands_dict.items():
-            if not isinstance(signals, list):
-                signals = [signals]
-            for sig in signals:
-                sig <= 0
-            self.log.info(f'registered command: {cmd} signal(s): {[str(s._name) for s in signals]}')
+    # def register_commands(self, commands_dict):
+    #     for cmd, signals in commands_dict.items():
+    #         if not isinstance(signals, list):
+    #             signals = [signals]
+    #         for sig in signals:
+    #             sig <= 0
+    #         self.log.info(f'registered command: {cmd} signal(s): {[str(s._name) for s in signals]}')
 
     @cocotb.coroutine
     def wait_for_done(self, value=1):
@@ -429,27 +450,27 @@ class CmdDoneTester(ValidReadyTester):
         while done != value:
             yield Edge(done)
 
-    @cocotb.coroutine
-    def command(self, cmd, input=None):
-        if not isinstance(cmd, list):
-            cmd = [cmd]
+    # @cocotb.coroutine
+    # def command(self, cmd, input=None):
+    #     if not isinstance(cmd, list):
+    #         cmd = [cmd]
 
-        cmd = [ self.commands_dict[c] if isinstance(c, str) else c for c in cmd ]
+    #     cmd = [ self.commands_dict[c] if isinstance(c, str) else c for c in cmd ]
 
-        yield self.wait_for_done(value=0)
+    #     yield self.wait_for_done(value=0)
 
-        for s in cmd:
-            self.log.info(f"command: {s._name}")
-            s <= 1
+    #     for s in cmd:
+    #         self.log.info(f"command: {s._name}")
+    #         s <= 1
 
-        if input:
-            self.log.debug(f"len(input)={len(input)}")
-            yield self.stream_in.send(input)
+    #     if input:
+    #         self.log.debug(f"len(input)={len(input)}")
+    #         yield self.stream_in.send(input)
 
-        self.log.info("waiting for done...")
-        yield self.wait_for_done()
-        self.log.info(">> received done")
-        # deassert all
-        for s in cmd:
-            s <= 0
-        yield RisingEdge(self.clock)
+    #     self.log.info("waiting for done...")
+    #     yield self.wait_for_done()
+    #     self.log.info(">> received done")
+    #     # deassert all
+    #     for s in cmd:
+    #         s <= 0
+    #     yield RisingEdge(self.clock)

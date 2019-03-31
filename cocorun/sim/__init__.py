@@ -155,8 +155,9 @@ class Sim(object):
             raise ValueError(
                 "Non-zero return code {}".format(rc))
         if runner.errors:
+            pl = 's' if runner.errors > 1 else ''
             raise ValueError(
-                "Got {} errors in output!".format(runner.errors))
+                f"Received {runner.errors} error{pl} in stdout")
 
 
     def run_test(self, cmd, run_config):
@@ -199,7 +200,10 @@ class Sim(object):
         env['COCOTB_ANSI_OUTPUT'] = '1'  # str(int(os.isatty(1)))
         env['COCOTB_SIM'] = '1'
 
-        self.run_cmd(cmd, run_config, env)
+        try:
+            self.run_cmd(cmd, run_config, env)
+        except ValueError as e:
+            print(f"run_test failed: {' '.join(e.args)}")
 
 
 

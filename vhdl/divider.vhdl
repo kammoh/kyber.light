@@ -17,11 +17,11 @@
 --                                  
 -----------------------------------------------------------------------------------------------------------------------
 --
---  unit name: full name (shortname / entity name)
+--  unit name: divider
 --              
---! @file      .vhdl
+--! @file      divider.vhdl
 --
---! @brief     <file content, behavior, purpose, special usage notes>
+--! @brief     divide and remainder on KYBER_Q
 --
 --! @author    <Kamyar Mohajerani (kamyar@ieee.org)>
 --
@@ -39,16 +39,23 @@
 --
 --! @version   <v0.1>
 --
---! @details   blah blah
+--! @details     - modular reduction mod KYBER_Q = 7681 based on [1], also gives division which is used in compression
+--!              - streaming pipeline design, WITH back pressure for retaining valid data
+--!              -  "valid" flag travels down with data, stall if the out-going data is valid and the sink is not ready
+--!              - shared between polyvec_mac and compressor, arbitrated at top module
+--!              - smaller footprint than Barret reduction (TODO: numbers?)
+--!              - using 3 adders (14, 18, add by 1), 3 subtraction (13, 13 by constant, 4), 1x13-bit <= comparator, 
+--!                         and 2x13 2:1 muxes
 --!
 --
 --
 --! <b>Dependencies:</b>\n
---! <Entity Name,...>
+--!   kyber_pkg
 --!
 --! <b>References:</b>\n
---! <reference one> \n
---! <reference two>
+--!       [1] Moller and Granlund, "Improved Division by Invariant Integers," IEEE Transactions on Computers, 2011
+--!
+-- 
 --!
 --! <b>Modified by:</b>\n
 --! Author: Kamyar Mohajerani
@@ -67,20 +74,22 @@ use ieee.numeric_std.all;
 
 use work.kyber_pkg.all;
 
--- divide and remainder on KYBER_Q = 7681
--- based on: Moller and Granlund, "Improved Division by Invariant Integers," IEEE Transactions on Computers, Feb. 2011
--- using 3 adders (14, 18, add by 1), 3 subtraction (13, 13 by constant, 4), 1x13-bit <= comparator, and 2x13 2:1 muxes
-
 entity divider is
 	generic(
-		G_IN_WIDTH : positive := 25;     -- <= 26 bits, while i_u = <u1,u0> u0,u1 < 2^13 , u1 < KYBER_Q
-		G_PIPELINE_LEVELS                : integer := 3 -- TODO
+		G_IN_WIDTH : positive := 25     -- <= 26 bits, while i_u = <u1,u0> u0,u1 < 2^13 , u1 < KYBER_Q
 	);
 	port(
-		clk   : in  std_logic;
-		i_u   : in  unsigned(G_IN_WIDTH - 1 downto 0);
-		o_rem : out T_coef_us;
-      o_div : out T_coef_us
+		clk               : in  std_logic;
+		rst               : in  std_logic;
+		--
+		i_uin_data        : in  unsigned(G_IN_WIDTH - 1 downto 0);
+		i_uin_valid       : in  std_logic;
+		o_uin_ready       : out  std_logic;
+		--
+		o_remout_data     : out T_coef_us;
+		o_divout_data     : out T_coef_us;
+		o_remdivout_valid : out std_logic;
+		i_remdivout_ready : in std_logic
 	);
 end entity divider;
 
@@ -91,13 +100,16 @@ architecture RTL of divider is
 	signal q0, q1, q1_times_d                            : T_coef_us;
 	signal r0, r0_minus_d                                : T_coef_us;
 	signal adjust                                        : boolean;
-	-- piplne registers
+	-- pipeline registers
 	signal r0_reg, q0_reg, q1_reg, u0_reg, remainder_reg : T_coef_us;
+	signal valid_pipe                                    : std_logic_vector(C_DIVIDER_PIPELINE_LEVELS - 1 downto 0); -- reg 0: input, reg G_PIPELINE_LEVELS - 1: output
 	signal q_reg                                         : unsigned(25 downto 0);
+	signal stall                                         : boolean;
+
 begin
 	-- i_u = <u1,u0>
-	u0 <= i_u(12 downto 0);
-	u1 <= resize(i_u(G_IN_WIDTH - 1 downto 13), 13);
+	u0 <= i_uin_data(12 downto 0);
+	u1 <= resize(i_uin_data(G_IN_WIDTH - 1 downto 13), 13);
 
 	-- v (reciprocal of 7681) = 544 = 2^9 + 2^5 (10 bit)
 	u1_times_v <= ((17 downto 13 => '0') & u1(12 downto 4) + u1(12 downto 0)) & u1(3 downto 0);
@@ -120,19 +132,34 @@ begin
 	pipe_reg_proc : process(clk) is
 	begin
 		if rising_edge(clk) then
-			r0_reg        <= r0;
-			q0_reg        <= q0;
-			q1_reg        <= q1;
-			q_reg         <= q;
-			u0_reg        <= u0;
-			if adjust then
-			remainder_reg <= r0_minus_d;
-			else 
-				remainder_reg <= r0_reg;
+			if rst = '1' then
+				valid_pipe <= (others => '0');
+			else
+				if not stall then
+					valid_pipe <= shift_in_left(valid_pipe, i_uin_valid);
+					r0_reg     <= r0;
+					q0_reg     <= q0;
+					q1_reg     <= q1;
+					q_reg      <= q;
+					u0_reg     <= u0;
+
+					if adjust then
+						remainder_reg <= r0_minus_d;
+					else
+						remainder_reg <= r0_reg;
+					end if;
+				end if;
 			end if;
 		end if;
 	end process pipe_reg_proc;
 
-	o_div <= q1_reg + 1 when adjust else q1_reg;
-	o_rem <= remainder_reg;
+	-- out ports
+	o_divout_data     <= q1_reg + 1 when adjust else q1_reg;
+	o_remout_data     <= remainder_reg;
+	o_remdivout_valid <= msb(valid_pipe);
+	
+	stall <= msb(valid_pipe) = '1' and i_remdivout_ready = '0';
+	
+	o_uin_ready <= '0' when stall else '1';
+	
 end architecture RTL;

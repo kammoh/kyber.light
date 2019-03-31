@@ -69,36 +69,94 @@ use work.kyber_pkg.all;
 
 entity compressor is
 	port(
-		clk          : in  std_logic;
-		rst          : in  std_logic;
+		clk            : in  std_logic;
+		rst            : in  std_logic;
+		-- Control
+		i_is_polyvec   : in  std_logic;
 		--
-		i_din_data   : in  T_coef_us;
-		i_din_valid  : in  std_logic;
-		o_din_ready  : out std_logic;
+		i_din_data     : in  T_coef_us;
+		i_din_valid    : in  std_logic;
+		o_din_ready    : out std_logic;
 		--
-		o_dout_data  : out T_byte_slv;
-		o_dout_valid : out std_logic;
-		i_dout_ready : in  std_logic
+		o_dout_data    : out T_byte_slv;
+		o_dout_valid   : out std_logic;
+		i_dout_ready   : in  std_logic;
+		-- divider
+		o_divin_data   : out unsigned(2 * KYBER_COEF_BITS - 1 downto 0);
+		o_divin_valid  : out std_logic;
+		i_divin_ready  : out std_logic;
+		i_divout_data  : in  T_coef_us;
+		i_divout_valid : in  std_logic;
+		o_divout_ready : out std_logic
 	);
 end entity compressor;
 
 architecture RTL of compressor is
+	signal a11_din_data   : std_logic_vector(11 - 1 downto 0);
+	signal a11_din_valid  : std_logic;
+	signal a11_din_ready  : std_logic;
+	signal a11_dout_data  : std_logic_vector(T_byte_slv'length - 1 downto 0);
+	signal a11_dout_valid : std_logic;
+	signal a11_dout_ready : std_logic;
+	signal a3_din_data    : std_logic_vector(3 - 1 downto 0);
+	signal a3_din_valid   : std_logic;
+	signal a3_din_ready   : std_logic;
+	signal a3_dout_data   : std_logic_vector(T_byte_slv'length - 1 downto 0);
+	signal a3_dout_valid  : std_logic;
+	signal a3_dout_ready  : std_logic;
 
 begin
-	asym_fifo_inst : entity work.asymmetric_fifo
+	asym_fifo_11_to_8 : entity work.asymmetric_fifo
 		generic map(
-			G_IN_WIDTH  => T_coef_us'length,
+			G_IN_WIDTH  => 11,
 			G_OUT_WIDTH => T_byte_slv'length
 		)
 		port map(
 			clk          => clk,
 			rst          => rst,
-			i_din_data   => std_logic_vector(i_din_data),
-			i_din_valid  => i_din_valid,
-			o_din_ready  => o_din_ready,
-			o_dout_data  => o_dout_data,
-			o_dout_valid => o_dout_valid,
-			i_dout_ready => i_dout_ready
+			i_din_data   => a11_din_data,
+			i_din_valid  => a11_din_valid,
+			o_din_ready  => a11_din_ready,
+			o_dout_data  => a11_dout_data,
+			o_dout_valid => a11_dout_valid,
+			i_dout_ready => a11_dout_ready
 		);
+
+	asym_fifo_3_to_8 : entity work.asymmetric_fifo
+		generic map(
+			G_IN_WIDTH  => 3,
+			G_OUT_WIDTH => T_byte_slv'length
+		)
+		port map(
+			clk          => clk,
+			rst          => rst,
+			i_din_data   => a3_din_data,
+			i_din_valid  => a3_din_valid,
+			o_din_ready  => a3_din_ready,
+			o_dout_data  => a3_dout_data,
+			o_dout_valid => a3_dout_valid,
+			i_dout_ready => a3_dout_ready
+		);
+
+	-- in -> divider
+	o_divin_data <= ("00" & i_din_data & "00000000000") + (KYBER_Q / 2) when i_is_polyvec = '1' else ("0000000000" & i_din_data & "000") + (KYBER_Q / 2);
+
+	o_divin_valid <= i_din_valid;
+	o_din_ready   <= i_divin_ready;
+
+	-- divider -> a3, a11
+	a3_din_data    <= std_logic_vector(i_divout_data(3 - 1 downto 0));
+	a3_din_valid   <= i_divout_valid and not i_is_polyvec;
+	--
+	a11_din_data   <= std_logic_vector(i_divout_data(11 - 1 downto 0));
+	a11_din_valid  <= i_divout_valid and i_is_polyvec;
+	--
+	o_divout_ready <= a11_dout_ready when i_is_polyvec = '1' else a3_dout_ready;
+
+	--  a3, a11 -> out
+	o_dout_data    <= a11_dout_data when i_is_polyvec = '1' else a3_dout_data;
+	o_dout_valid   <= a11_dout_valid when i_is_polyvec = '1' else a3_dout_valid;
+	a3_dout_ready  <= i_dout_ready and not i_is_polyvec;
+	a11_dout_ready <= i_dout_ready and i_is_polyvec;
 
 end architecture RTL;

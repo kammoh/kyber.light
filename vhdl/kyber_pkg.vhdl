@@ -68,8 +68,62 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 package kyber_pkg is
-	-----------------------------------------------------------=( Types (1) )=-----------------------------------------------------------------------
-	-----------------------------------------------------------=( Functions )=-----------------------------------------------------------------------
+	--------------------------------------------=( Types (1) )=--------------------------------------------------------
+	--------------------------------------------=( Functions )=--------------------------------------------------------
+	---- IEEE proposed
+
+	function MINIMUM(L, R : INTEGER) return INTEGER;
+	function MAXIMUM(L, R : INTEGER) return INTEGER;
+
+	function maximum(
+		l, r : UNSIGNED)                -- inputs
+	return UNSIGNED;
+
+	function maximum(
+		l, r : SIGNED)                  -- inputs
+	return SIGNED;
+
+	function minimum(
+		l, r : UNSIGNED)                -- inputs
+	return UNSIGNED;
+
+	function minimum(
+		l, r : SIGNED)                  -- inputs
+	return SIGNED;
+
+	function maximum(
+		l : UNSIGNED; r : NATURAL)      -- inputs
+	return UNSIGNED;
+
+	function maximum(
+		l : SIGNED; r : INTEGER)        -- inputs
+	return SIGNED;
+
+	function minimum(
+		l : UNSIGNED; r : NATURAL)      -- inputs
+	return UNSIGNED;
+
+	function minimum(
+		l : SIGNED; r : INTEGER)        -- inputs
+	return SIGNED;
+
+	function maximum(
+		l : NATURAL; r : UNSIGNED)      -- inputs
+	return UNSIGNED;
+
+	function maximum(
+		l : INTEGER; r : SIGNED)        -- inputs
+	return SIGNED;
+
+	function minimum(
+		l : NATURAL; r : UNSIGNED)      -- inputs
+	return UNSIGNED;
+
+	function minimum(
+		l : INTEGER; r : SIGNED)        -- inputs
+	return SIGNED;
+	------
+
 	-- extends maximum for 3 integers
 	function maximum(arg1 : integer; arg2 : integer; arg3 : integer) return integer;
 	--
@@ -110,35 +164,42 @@ package kyber_pkg is
 	function decode(en : std_logic; Sel : unsigned) return std_logic_vector;
 	--! Decoder with variable sized output (user specified) and enable
 	function decode(en : std_logic; Sel : std_logic_vector) return std_logic_vector;
+		
+		
+	function shift_in_left(arg : std_logic_vector; bit: std_logic) return std_logic_vector;
+
+	--! get the most-significant (highest indexed) bit 
+	function msb(arg : std_logic_vector) return std_logic;
 	--
-	------------------------------------------------------------=( Parameters )=---------------------------------------------------------------------	
-	constant KYBER_K         : positive     := 3; -- 2: Kyber512, 3: Kyber768 (recommended), 4: KYBER1024
+	function msb(arg : unsigned) return std_logic;
+	--
+	--------------------------------------------=( Parameters )=-------------------------------------------------------	
+	constant KYBER_K                   : positive     := 3; -- 2: Kyber512, 3: Kyber768 (recommended), 4: KYBER1024
 	--
 	type T_TECHNOLOGY is (XILINX, SAED32);
 	--
-	constant TECHNOLOGY      : T_TECHNOLOGY := SAED32; -- Synthesis technology
+	constant TECHNOLOGY                : T_TECHNOLOGY := SAED32; -- Synthesis technology
 	--
-	constant SAED32_SRAM_WC_L  : positive     := 128;
-	constant SAED32_SRAM_WC_M  : positive     := 64;
-	constant SAED32_SRAM_WC_S  : positive     := 32;
-	--
-	------------------------------------------------------------=( Constants )=----------------------------------------------------------------------	
-	constant KYBER_Q         : positive     := 7681;
-	constant KYBER_N         : positive     := 256;
-	constant KYBER_ETA       : positive     := 7 - KYBER_K; -- 5: Kyber512, 4: Kyber768 (recommended), 3: KYBER1024
-	constant KYBER_COEF_BITS : positive     := log2ceilnz(KYBER_Q); -- 13
-	constant KYBER_Q_US      : unsigned     := to_unsigned(KYBER_Q, KYBER_COEF_BITS);
-	constant KYBER_SYMBYTES  : positive     := 32;
-	------------------------------------------------------------=( Types (2) )=-----------------------------------------------------------------------
+	--------------------------------------------=( Constants )=--------------------------------------------------------	
+	constant KYBER_Q                   : positive     := 7681;
+	constant KYBER_N                   : positive     := 256;
+	
+	-- KYBER_ETA == 5: Kyber512, 4: Kyber768 (recommended), 3: KYBER1024
+	constant KYBER_ETA                 : positive     := 7 - KYBER_K; 
+	constant KYBER_COEF_BITS           : positive     := log2ceilnz(KYBER_Q); -- 13
+	constant KYBER_Q_US                : unsigned     := to_unsigned(KYBER_Q, KYBER_COEF_BITS);
+	constant KYBER_SYMBYTES            : positive     := 32;
+	constant C_DIVIDER_PIPELINE_LEVELS : natural      := 3;
+	--------------------------------------------=( Types (2) )=--------------------------------------------------------
 	subtype T_coef_slv is std_logic_vector(KYBER_COEF_BITS - 1 downto 0);
 	subtype T_coef_us is unsigned(KYBER_COEF_BITS - 1 downto 0);
 	subtype T_byte_slv is std_logic_vector(7 downto 0);
 	subtype T_byte_us is unsigned(7 downto 0);
 	--
 	--
-	------------------------------------------------------------=( Synthesis )=-------------------------------------------------
+	--------------------------------------------=( Synthesis )=--------------------------------------------------------
 	--
-	constant MEM_TECH        : string       := "SAED_MC";
+	constant MEM_TECH                  : string       := "SAED_MC";
 
 	--
 	attribute DONT_TOUCH_NETWORK : boolean;
@@ -174,11 +235,229 @@ package body kyber_pkg is
 		if n = 2 then
 			return half_adder(a_copy(1), a_copy(0));
 		elsif n = 3 then
-			return half_adder(a(2), a(1)) + a(0);
+			return half_adder(a(2), a(1)) + ('0' & a(0));
 		else
 			return ("0" & popcount(a_copy(n - 1 downto h))) + popcount(a_copy(h - 1 downto 0));
 		end if;
 	end function;
+
+	-------- IEEE proposed (additions)
+	--============================================================================
+	-- Id: C.43
+
+	constant NAU        : UNSIGNED(0 downto 1) := (others => '0');
+	constant NAS        : SIGNED(0 downto 1)   := (others => '0');
+	constant NO_WARNING : BOOLEAN              := false; -- default to emit warnings
+	function MAX(left, right : INTEGER) return INTEGER is
+	begin
+		if left > right then
+			return left;
+		else
+			return right;
+		end if;
+	end function MAX;
+
+	function MINIMUM(L, R : INTEGER) return INTEGER is
+	begin
+		if L > R then
+			return R;
+		else
+			return L;
+		end if;
+	end function MINIMUM;
+
+	function MAXIMUM(L, R : INTEGER) return INTEGER is
+	begin
+		if L > R then
+			return L;
+		else
+			return R;
+		end if;
+	end function MAXIMUM;
+
+	function TO_STRING(VALUE : INTEGER) return STRING is
+	begin
+		return INTEGER'image(VALUE);
+	end function TO_STRING;
+
+	function MINIMUM(L, R : REAL) return REAL is
+	begin
+		if L > R then
+			return R;
+		else
+			return L;
+		end if;
+	end function MINIMUM;
+
+	function MAXIMUM(L, R : UNSIGNED) return UNSIGNED is
+		constant SIZE : NATURAL := MAX(L'length, R'length);
+		variable L01  : UNSIGNED(SIZE - 1 downto 0);
+		variable R01  : UNSIGNED(SIZE - 1 downto 0);
+	begin
+		if ((L'length < 1) or (R'length < 1)) then
+			return NAU;
+		end if;
+		L01 := TO_01(RESIZE(L, SIZE), 'X');
+		if (L01(L01'left) = 'X') then
+			return L01;
+		end if;
+		R01 := TO_01(RESIZE(R, SIZE), 'X');
+		if (R01(R01'left) = 'X') then
+			return R01;
+		end if;
+		if L01 < R01 then
+			return R01;
+		else
+			return L01;
+		end if;
+	end function MAXIMUM;
+
+	-- signed output
+	function MAXIMUM(L, R : SIGNED) return SIGNED is
+		constant SIZE : NATURAL := MAX(L'length, R'length);
+		variable L01  : SIGNED(SIZE - 1 downto 0);
+		variable R01  : SIGNED(SIZE - 1 downto 0);
+	begin
+		if ((L'length < 1) or (R'length < 1)) then
+			return NAS;
+		end if;
+		L01 := TO_01(RESIZE(L, SIZE), 'X');
+		if (L01(L01'left) = 'X') then
+			return L01;
+		end if;
+		R01 := TO_01(RESIZE(R, SIZE), 'X');
+		if (R01(R01'left) = 'X') then
+			return R01;
+		end if;
+		if L01 < R01 then
+			return R01;
+		else
+			return L01;
+		end if;
+	end function MAXIMUM;
+
+	-- UNSIGNED output
+	function MINIMUM(L, R : UNSIGNED) return UNSIGNED is
+		constant SIZE : NATURAL := MAX(L'length, R'length);
+		variable L01  : UNSIGNED(SIZE - 1 downto 0);
+		variable R01  : UNSIGNED(SIZE - 1 downto 0);
+	begin
+		if ((L'length < 1) or (R'length < 1)) then
+			return NAU;
+		end if;
+		L01 := TO_01(RESIZE(L, SIZE), 'X');
+		if (L01(L01'left) = 'X') then
+			return L01;
+		end if;
+		R01 := TO_01(RESIZE(R, SIZE), 'X');
+		if (R01(R01'left) = 'X') then
+			return R01;
+		end if;
+		if L01 < R01 then
+			return L01;
+		else
+			return R01;
+		end if;
+	end function MINIMUM;
+
+	-- signed output
+	function MINIMUM(L, R : SIGNED) return SIGNED is
+		constant SIZE : NATURAL := MAX(L'length, R'length);
+		variable L01  : SIGNED(SIZE - 1 downto 0);
+		variable R01  : SIGNED(SIZE - 1 downto 0);
+	begin
+		if ((L'length < 1) or (R'length < 1)) then
+			return NAS;
+		end if;
+		L01 := TO_01(RESIZE(L, SIZE), 'X');
+		if (L01(L01'left) = 'X') then
+			return L01;
+		end if;
+		R01 := TO_01(RESIZE(R, SIZE), 'X');
+		if (R01(R01'left) = 'X') then
+			return R01;
+		end if;
+		if L01 < R01 then
+			return L01;
+		else
+			return R01;
+		end if;
+	end function MINIMUM;
+
+	-- Id: C.39
+	function MINIMUM(L : NATURAL; R : UNSIGNED)
+	return UNSIGNED is
+	begin
+		return MINIMUM(TO_UNSIGNED(L, R'length), R);
+	end function MINIMUM;
+
+	-- Id: C.40
+	function MINIMUM(L : INTEGER; R : SIGNED)
+	return SIGNED is
+	begin
+		return MINIMUM(TO_SIGNED(L, R'length), R);
+	end function MINIMUM;
+
+	-- Id: C.41
+	function MINIMUM(L : UNSIGNED; R : NATURAL)
+	return UNSIGNED is
+	begin
+		return MINIMUM(L, TO_UNSIGNED(R, L'length));
+	end function MINIMUM;
+
+	-- Id: C.42
+	function MINIMUM(L : SIGNED; R : INTEGER)
+	return SIGNED is
+	begin
+		return MINIMUM(L, TO_SIGNED(R, L'length));
+	end function MINIMUM;
+
+	-- Id: C.45
+	function MAXIMUM(L : NATURAL; R : UNSIGNED)
+	return UNSIGNED is
+	begin
+		return MAXIMUM(TO_UNSIGNED(L, R'length), R);
+	end function MAXIMUM;
+
+	-- Id: C.46
+	function MAXIMUM(L : INTEGER; R : SIGNED)
+	return SIGNED is
+	begin
+		return MAXIMUM(TO_SIGNED(L, R'length), R);
+	end function MAXIMUM;
+
+	-- Id: C.47
+	function MAXIMUM(L : UNSIGNED; R : NATURAL)
+	return UNSIGNED is
+	begin
+		return MAXIMUM(L, TO_UNSIGNED(R, L'length));
+	end function MAXIMUM;
+
+	-- Id: C.48
+	function MAXIMUM(L : SIGNED; R : INTEGER)
+	return SIGNED is
+	begin
+		return MAXIMUM(L, TO_SIGNED(R, L'length));
+	end function MAXIMUM;
+
+	function MAXIMUM(L, R : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR is
+	begin
+		return STD_ULOGIC_VECTOR(MAXIMUM(UNSIGNED(L), UNSIGNED(R)));
+	end function MAXIMUM;
+
+	-- Id: C.45
+	function MAXIMUM(L : NATURAL; R : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR is
+	begin
+		return STD_ULOGIC_VECTOR(MAXIMUM(L, UNSIGNED(R)));
+	end function MAXIMUM;
+
+	-- Id: C.47
+	function MAXIMUM(L : STD_ULOGIC_VECTOR; R : NATURAL) return STD_ULOGIC_VECTOR is
+	begin
+		return STD_ULOGIC_VECTOR(MAXIMUM(UNSIGNED(L), R));
+	end function MAXIMUM;
+
+	----
 
 	function maximum(arg1 : integer; arg2 : integer; arg3 : integer) return integer is
 	begin
@@ -282,6 +561,22 @@ package body kyber_pkg is
 	begin
 		return decode(en, unsigned(Sel));
 	end function;
+
+	function shift_in_left(arg : std_logic_vector; bit: std_logic) return std_logic_vector is
+	begin
+		return arg(arg'length - 2 downto 0) & bit;
+	end function;
+
+
+	function msb(arg : std_logic_vector) return std_logic is
+	begin
+		return arg(arg'length - 1);
+	end;
+
+	function msb(arg : unsigned) return std_logic is
+	begin
+		return arg(arg'length - 1);
+	end;
 
 	-------------------------------------------------------------------------------------------------------------------
 	----------------------------------------- std_logic_1164_additions ------------------------------------------------

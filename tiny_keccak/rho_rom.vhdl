@@ -75,11 +75,11 @@ entity rho_rom is
 end entity rho_rom;
 
 architecture RTL of rho_rom is
-	type t_lut is array (0 to 13) of unsigned(rho_shift_const'length - 1 downto 0);
+	type T_rom is array (0 to 13) of unsigned(rho_shift_const'length - 1 downto 0);
 
-	signal rom : t_lut := (
+	constant rom : T_rom := (
 		-- (MY_RHO[2*i] << 6) | MY_RHO[2*i - 1]
-		X"000", 
+		X"000",
 		X"0BF", X"964", X"51C", X"27A",
 		X"F6C", X"576", X"667", X"4D7",
 		X"AF1", X"BB8", X"0FE", X"C88",
