@@ -23,7 +23,6 @@ void poly_compress(unsigned char *r, const poly *a)
   {
     for(j=0;j<8;j++) {
       uint16_t coef = freeze(a->coeffs[i + j]);
-      uint16_t cc = coef % KYBER_Q;
       uint8_t x = (( (coef << 3) + KYBER_Q / 2) / KYBER_Q) & 7;
     //   uint16_t y = 0;
     //   for (int m = 0; m < 3; ++m) {
@@ -117,7 +116,7 @@ void poly_print(const poly *a) {
   for (i = 0; i < KYBER_N; i++) {
     printf("%" PRIx16 " ", freeze(a->coeffs[i]));
   }
-  printf("%" PRIx16 "\n", freeze(a->coeffs[i]));
+  printf("\n");
 }
 
 void poly_freeze(poly *a){
@@ -177,6 +176,13 @@ void poly_getnoise(poly *r,const unsigned char *seed, unsigned char nonce)
   extseed[KYBER_SYMBYTES] = nonce;
 
   shake256(buf,KYBER_ETA*KYBER_N/4,extseed,KYBER_SYMBYTES+1);
+
+  printf("\n poly_getnoise : \n");
+
+  for (i = 0; i < KYBER_ETA * KYBER_N / 4; ++i){
+      printf("%02X ", buf[i]);
+  }
+    printf("\n");
 
   cbd(r, buf);
 }

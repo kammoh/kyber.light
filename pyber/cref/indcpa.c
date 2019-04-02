@@ -275,7 +275,11 @@ void indcpa_enc(unsigned char *c,
 
   unsigned char c_prime[KYBER_CIPHERTEXTBYTES];
 
-  indcpa_enc_nontt(c_prime, m, pk, coins);
+  unsigned char pk_at_bytes[KYBER_POLYVECBYTES * (KYBER_K + 1)];
+
+  repack_at_pk(pk_at_bytes, pk);
+
+  indcpa_enc_nontt(c_prime, m, pk_at_bytes, coins);
 
   unpack_pk(&pkpv, seed, pk);
 
@@ -334,45 +338,96 @@ void unpack_pk_at_nontt(polyvec *pkpv_p, polyvec *at,
     polyvec_invntt(&at[i]);
   }
 }
+
+/**
+ ** unpack pk to (pk, at) in time domain and repack as bytes
+ ** "packed_bytes" must be KYBER_POLYVECBYTES * (KYBER_K + 1) bytes
+ **/
+//
+void repack_at_pk(unsigned char *pk_at_bytes, const unsigned char *pk) {
+  polyvec pkpv, at[KYBER_K];
+
+  unpack_pk_at_nontt(&pkpv, at, pk);
+  
+  for (int i = 0; i < KYBER_K; i++) {
+    polyvec_tobytes(pk_at_bytes + i * KYBER_POLYVECBYTES, &at[i]);
+  }
+  polyvec_tobytes(pk_at_bytes + KYBER_K * KYBER_POLYVECBYTES, &pkpv);
+}
+
+// deserialize:
+void at_pk_frombytes(polyvec *at, polyvec *pkpv, const unsigned char *bytes) {
+  
+  for (int i = 0; i < KYBER_K; i++) {
+    polyvec_frombytes(&at[i], bytes + i * KYBER_POLYVECBYTES);
+  }
+  polyvec_frombytes(pkpv, bytes + KYBER_K * KYBER_POLYVECBYTES);
+}
 void indcpa_enc_nontt(unsigned char *c, const unsigned char *m,
-                      const unsigned char *pk, const unsigned char *coins) {
+                          const unsigned char *pk_at_bytes, const unsigned char *coins) {
   polyvec s_pv, pkpv, at[KYBER_K], b_pv;
   poly v, msg_poly;
 
-  unpack_pk_at_nontt(&pkpv, at, pk);
+  at_pk_frombytes(at, &pkpv, pk_at_bytes);
 
-  //-----------------------------------------
-  unsigned char nonce = 0;
-  for (int i = 0; i < KYBER_K; i++)
+  printf("-- pkpv:\n");
+  polyvec_print(&pkpv);
+
+  printf("\n\n-- at:\n");
+  for(int i =0; i < KYBER_K; i++){
+    printf("\n ---- [%d] \n", i);
+    polyvec_print(&at[i]);
+  }
+
+      //-----------------------------------------
+      unsigned char nonce = 0;
+  for (int i = 0; i < KYBER_K; i++){
     poly_getnoise(s_pv.vec + i, coins, nonce++);
+  }
 
-  for (int i = 0; i < KYBER_K; i++)
-    poly_getnoise(b_pv.vec + i, coins, nonce++);
+  printf("\n\n-- s:\n");
+  polyvec_print(&s_pv);
 
-  poly_getnoise(&v, coins, nonce++);
-  //-----------------------------------------
+    for (int i = 0; i < KYBER_K; i++)
+        poly_getnoise(b_pv.vec + i, coins, nonce++);
 
-  // printf("======unpacked pk:\n");
-  // printf("   ===pk.seed:\n");
-  // for(i=0; i< KYBER_SYMBYTES; ++i){
-  //   printf("%X ", seed[i]);
-  // }
-  // printf("\n");
-  // printf("   ===pk.pkpv:\n");
-  // polyvec_print(&pkpv);
+    printf("\n\n-- b:\n");
+    polyvec_print(&b_pv);
 
-  for (int i = 0; i < KYBER_K; i++)
-    polyvec_nega_mac(&b_pv.vec[i], at + i, &s_pv, 0);
 
-  polyvec_nega_mac(&v, &pkpv, &s_pv, 0);
+    poly_getnoise(&v, coins, nonce++);
 
-  poly_frommsg(&msg_poly, m);
-  poly_add(&v, &v, &msg_poly);
+    printf("\n\n-- v:\n");
+    poly_print(&v);
+    //-----------------------------------------
 
-  // printf("======c.v:\n");
-  // poly_print(&v);
+    // printf("======unpacked pk:\n");
+    // printf("   ===pk.seed:\n");
+    // for(i=0; i< KYBER_SYMBYTES; ++i){
+    //   printf("%X ", seed[i]);
+    // }
+    // printf("\n");
+    // printf("   ===pk.pkpv:\n");
+    // polyvec_print(&pkpv);
 
-  pack_ciphertext(c, &b_pv, &v);
+    for (int i = 0; i < KYBER_K; i++)
+      polyvec_nega_mac(&b_pv.vec[i], at + i, &s_pv, 0);
+
+    printf("\n\n-- b after MAC:\n");
+    polyvec_print(&b_pv);
+
+    polyvec_nega_mac(&v, &pkpv, &s_pv, 0);
+
+    printf("\n\n-- V after MAC:\n");
+    poly_print(&v);
+
+    poly_frommsg(&msg_poly, m);
+    poly_add(&v, &v, &msg_poly);
+
+    // printf("======c.v:\n");
+    // poly_print(&v);
+
+    pack_ciphertext(c, &b_pv, &v);
 }
 
 int crypto_encrypt_open(unsigned char *m, unsigned long long *mlen,
@@ -438,6 +493,7 @@ void indcpa_dec_x(unsigned char *m, const unsigned char *c,
   poly v;
 
   unpack_ciphertext(&bp, &v, c);
+  
   unpack_sk(&skpv, sk);
   polyvec_invntt(&skpv);
 

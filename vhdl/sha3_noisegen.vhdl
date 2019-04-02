@@ -100,7 +100,7 @@ architecture RTL of sha3_noisegen is
 	------------------------------------------------------=( Constants )=----------------------------------------------------------
 	constant C_RATE_BITWIDTH   : positive   := log2ceilnz(C_SLICE_WIDTH);
 	constant C_SHA3_256_RATE   : positive   := 136; -- SHA3-256
-	constant C_SHA3_256_DELIM  : T_byte_slv := x"1F";
+	constant C_SHAKE256_DELIM  : T_byte_slv := x"1F";
 	constant C_SHA3_SENTINEL   : T_byte_slv := x"80";
 	constant C_FULL_RATE       : positive   := C_SHA3_256_RATE / 8;
 	constant C_CUT_RATE        : positive   := (KYBER_N - C_SHA3_256_RATE) / 8;
@@ -155,7 +155,7 @@ begin
 	coins_ram : entity work.ocram_sp
 		generic map(
 			WORD_BITS => T_byte_slv'length,
-			DEPTH  => G_MAX_IN_BYTES
+			DEPTH     => G_MAX_IN_BYTES
 		)
 		port map(
 			clk      => clk,
@@ -239,52 +239,61 @@ begin
 	begin
 		if rising_edge(clk) then
 			if rst = '1' then
-				state <= s_init;
+				state               <= s_init;
+				cram_dout_valid_reg <= '0';
 			else
 				case state is
 					when s_init =>
 						counter_reg         <= (others => '0');
 						cram_dout_valid_reg <= '0';
-						if i_recv_msg = '1'  then
+						if i_recv_msg = '1' then
 							state <= s_recv_msg;
-						elsif i_send_hash = '1'  then
+						elsif i_send_hash = '1' then
 							state <= s_keccak_init;
 						end if;
 					when s_recv_msg =>
-						if i_din_valid = '1'  then
+						if i_din_valid = '1' then
 							counter_reg <= counter_reg + 1;
 							if counter_reg = KYBER_SYMBYTES - 1 then
 								state <= s_done;
 							end if;
 						end if;
 					when s_keccak_init =>
-						if keccak_done = '1'  then
+						if keccak_done = '1' then
 							state <= s_keccak_init_done;
 						end if;
 					when s_keccak_init_done =>
 						state <= s_keccak_absorb;
 
 					when s_keccak_absorb =>
-						cram_dout_valid_reg <= '1';
-						if byte2hw_din_ready = '1'  or cram_dout_valid_reg = '0' then -- "FIFO" to be consumed or "FIFO" is empty
-							counter_reg <= counter_reg + 1;
+
+						if counter_reg = C_SHA3_256_RATE then
+							
+							if byte2hw_din_ready = '1' and byte2hw_din_valid = '1' then
+								cram_dout_valid_reg <= '0';
+							end if;
+							if keccak_done = '1' then
+								state <= s_keccak_absorb_done;
+							end if;
+						else
+							if byte2hw_din_ready = '1' or cram_dout_valid_reg = '0' then -- "FIFO" to be consumed or "FIFO" is empty
+								counter_reg <= counter_reg + 1;
+							end if;
+							cram_dout_valid_reg <= '1';
 						end if;
-						if keccak_done = '1'  then
-							state               <= s_keccak_absorb_done;
-							cram_dout_valid_reg <= '0';
-						end if;
+
 					when s_keccak_absorb_done =>
 						state <= s_keccak_squeeze_1;
 
 					when s_keccak_squeeze_1 =>
-						if keccak_done = '1'  then
+						if keccak_done = '1' then
 							state <= s_keccak_squeeze_1_done;
 						end if;
 					when s_keccak_squeeze_1_done =>
 						state <= s_keccak_squeeze_2;
 
 					when s_keccak_squeeze_2 =>
-						if keccak_done = '1'  then
+						if keccak_done = '1' then
 							state <= s_done;
 						end if;
 
@@ -298,6 +307,8 @@ begin
 		end if;
 	end process sync_proc;
 
+	cram_in_addr <= resize(counter_reg, cram_in_addr'length);
+
 	comb_proc : process(state, byte2hw_din_ready, counter_reg, cram_dout_valid_reg, cram_out_data, i_din_valid, i_nonce) is
 	begin
 		cram_ce        <= '0';
@@ -308,16 +319,14 @@ begin
 		o_din_ready    <= '0';
 		o_done         <= '0';
 
-		keccak_rate      <= C_FULL_RATE_US;
-		byte2hw_din_data <= cram_out_data;
-		cram_in_addr     <= (others => '0');
+		keccak_rate <= C_FULL_RATE_US;
 
 		if counter_reg <= KYBER_SYMBYTES then
-			cram_in_addr <= resize(counter_reg, cram_in_addr'length);
+			byte2hw_din_data <= cram_out_data;
 		elsif counter_reg = KYBER_SYMBYTES + 1 then
 			byte2hw_din_data <= std_logic_vector(i_nonce);
 		elsif counter_reg = KYBER_SYMBYTES + 2 then
-			byte2hw_din_data <= C_SHA3_256_DELIM;
+			byte2hw_din_data <= C_SHAKE256_DELIM;
 		elsif counter_reg = C_SHA3_256_RATE then -- sentinel
 			byte2hw_din_data <= C_SHA3_SENTINEL;
 		else

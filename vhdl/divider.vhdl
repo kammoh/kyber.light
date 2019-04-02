@@ -84,27 +84,31 @@ entity divider is
 		--
 		i_uin_data        : in  unsigned(G_IN_WIDTH - 1 downto 0);
 		i_uin_valid       : in  std_logic;
-		o_uin_ready       : out  std_logic;
+		o_uin_ready       : out std_logic;
 		--
 		o_remout_data     : out T_coef_us;
 		o_divout_data     : out T_coef_us;
 		o_remdivout_valid : out std_logic;
-		i_remdivout_ready : in std_logic
+		i_remdivout_ready : in  std_logic
 	);
 end entity divider;
 
 architecture RTL of divider is
-	signal u0, u1                                        : T_coef_us;
-	signal u1_times_v                                    : unsigned(17 downto 0); -- u1 * v,  23 bits >= (G_IN_WIDTH -13) + 10
-	signal q                                             : unsigned(25 downto 0); -- q = u1 * v + u , G_IN_WIDTH
-	signal q0, q1, q1_times_d                            : T_coef_us;
-	signal r0, r0_minus_d                                : T_coef_us;
-	signal adjust                                        : boolean;
+	signal u0, u1                         : T_coef_us;
+	signal u1_times_v                     : unsigned(17 downto 0); -- u1 * v,  23 bits >= (G_IN_WIDTH -13) + 10
+	signal q                              : unsigned(25 downto 0); -- q = u1 * v + u , G_IN_WIDTH
+	signal q0, q1, q1_times_d             : T_coef_us;
+	signal r0, r0_minus_d                 : T_coef_us;
+	signal adjust                         : boolean;
 	-- pipeline registers
-	signal r0_reg, q0_reg, q1_reg, u0_reg, remainder_reg : T_coef_us;
-	signal valid_pipe                                    : std_logic_vector(C_DIVIDER_PIPELINE_LEVELS - 1 downto 0); -- reg 0: input, reg G_PIPELINE_LEVELS - 1: output
-	signal q_reg                                         : unsigned(25 downto 0);
-	signal stall                                         : boolean;
+	signal r0_reg, q0_reg, q1_reg, u0_reg : T_coef_us;
+	signal divout_data, remout_reg        : T_coef_us;
+	--
+	-- reg 0: input, reg G_PIPELINE_LEVELS - 1: output
+	signal valid_pipe                     : std_logic_vector(C_DIVIDER_PIPELINE_LEVELS - 1 downto 0);
+	signal q_reg                          : unsigned(25 downto 0);
+	-- wires
+	signal stall                          : boolean;
 
 begin
 	-- i_u = <u1,u0>
@@ -144,22 +148,25 @@ begin
 					u0_reg     <= u0;
 
 					if adjust then
-						remainder_reg <= r0_minus_d;
+						remout_reg <= r0_minus_d;
+						divout_data <= q1_reg + 1;
 					else
-						remainder_reg <= r0_reg;
+						remout_reg <= r0_reg;
+						divout_data <= q1_reg;
 					end if;
+
 				end if;
 			end if;
 		end if;
 	end process pipe_reg_proc;
 
 	-- out ports
-	o_divout_data     <= q1_reg + 1 when adjust else q1_reg;
-	o_remout_data     <= remainder_reg;
+	o_divout_data     <= divout_data;
+	o_remout_data     <= remout_reg;
 	o_remdivout_valid <= msb(valid_pipe);
-	
+
 	stall <= msb(valid_pipe) = '1' and i_remdivout_ready = '0';
-	
+
 	o_uin_ready <= '0' when stall else '1';
-	
+
 end architecture RTL;

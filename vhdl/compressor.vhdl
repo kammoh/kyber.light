@@ -104,6 +104,7 @@ architecture RTL of compressor is
 	signal a3_dout_data   : std_logic_vector(T_byte_slv'length - 1 downto 0);
 	signal a3_dout_valid  : std_logic;
 	signal a3_dout_ready  : std_logic;
+	signal shifted        : unsigned(2 * T_coef_us'length - 1 downto 0);
 
 begin
 	asym_fifo_11_to_8 : entity work.asymmetric_fifo
@@ -139,7 +140,12 @@ begin
 		);
 
 	-- in -> divider
-	o_divin_data <= ("00" & i_din_data & "00000000000") + (KYBER_Q / 2) when i_is_polyvec = '1' else ("0000000000" & i_din_data & "000") + (KYBER_Q / 2);
+
+--	shifted <= ("00" & i_din_data & "00000000000") when i_is_polyvec = '1' else ("0000000000" & i_din_data & "000");
+
+	shifted <= shift_left(resize(i_din_data, shifted'length), 11) when i_is_polyvec = '1' else shift_left(resize(i_din_data, shifted'length), 3);
+
+	o_divin_data <= shifted + (KYBER_Q / 2);
 
 	o_divin_valid <= i_din_valid;
 	o_din_ready   <= i_divin_ready;
@@ -151,7 +157,7 @@ begin
 	a11_din_data   <= std_logic_vector(i_divout_data(11 - 1 downto 0));
 	a11_din_valid  <= i_divout_valid and i_is_polyvec;
 	--
-	o_divout_ready <= a11_dout_ready when i_is_polyvec = '1' else a3_dout_ready;
+	o_divout_ready <= a11_din_ready when i_is_polyvec = '1' else a3_din_ready;
 
 	--  a3, a11 -> out
 	o_dout_data    <= a11_dout_data when i_is_polyvec = '1' else a3_dout_data;

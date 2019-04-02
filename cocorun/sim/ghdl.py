@@ -37,7 +37,7 @@ class Ghdl(Sim):
         self.warn_args = ['-fcaret-diagnostics', '-fdiagnostics-show-option']
         # --warn-library --warn-default-binding --warn-binding --warn-reserved --warn-nested-comment --warn-parenthesis --warn-vital-generic --warn-delayed-checks --warn-body ' + \
         #'--warn-specs --warn-runtime-error --warn-shared --warn-hide --warn-unused --warn-others --warn-pure --warn-static -fcolor-diagnostics -fdiagnostics-show-option -fcaret-diagnostics'
-        self.optimize_args = '-O3'
+        self.optimize_args = ['-O3']
         self.wave_dump = None
         self.vpi_trace = None
         self.libs = dict()
@@ -78,7 +78,7 @@ class Ghdl(Sim):
         self.run_cmd(
             'ghdl -a --work={work} --workdir={workdir} --std={vhdl_std} {libs_arg} {warn_args} {optimize_args} {hdl_path}', sim_config)
 
-    def run_test(self, bundle_name, test_case: str = None):
+    def run_test(self, bundle_name, test_case: str = None, **kwargs):
 
         hdl_sources, mod = self.manifest.hdl_sources(bundle_name)
 
@@ -108,7 +108,7 @@ class Ghdl(Sim):
             'workdir': f'{work}/{vhdl_std}',
             'vhdl_std': vhdl_std,
             'warn_args': self.warn_args,
-            'optimize_args': self.optimize_args,
+            'optimize_args': ' '.join(self.optimize_args),
             'test_modules': test_modules,
             'test_case': test_case,
         }
@@ -118,11 +118,16 @@ class Ghdl(Sim):
             self.analyze(hdl, sim_config)
 
         sim_config['lib_args'] = self.libs_arg_str() # updated list of libs
-        elab_command = 'ghdl -e --work={work} --workdir={workdir} --std={vhdl_std} {warn_args} {optimize_args} {lib_args} {top_module_name}'
+        elab_command = '{cmd} -e --work={work} --workdir={workdir} --std={vhdl_std} {warn_args} {optimize_args} {lib_args} {top_module_name}'
         run_command = '{cmd} -r {top_module_name} --vpi={vpi} {vpi_trace} {gen} {vcd_arg} --ieee-asserts=disable'
-
+        
         self.run_cmd(elab_command, sim_config)
-        super(Ghdl, self).run_test(run_command, sim_config)
+        
+        elab_only = kwargs.pop("elab_only", False)
+
+        if not elab_only:
+            self.execute_test(run_command, sim_config)
+        
 
     @property
     def vcd_arg(self):

@@ -164,32 +164,33 @@ package kyber_pkg is
 	function decode(en : std_logic; Sel : unsigned) return std_logic_vector;
 	--! Decoder with variable sized output (user specified) and enable
 	function decode(en : std_logic; Sel : std_logic_vector) return std_logic_vector;
-		
-		
-	function shift_in_left(arg : std_logic_vector; bit: std_logic) return std_logic_vector;
+
+	function shift_in_left(arg : std_logic_vector; bit : std_logic) return std_logic_vector;
 
 	--! get the most-significant (highest indexed) bit 
 	function msb(arg : std_logic_vector) return std_logic;
 	--
 	function msb(arg : unsigned) return std_logic;
+	function msb(arg : signed) return std_logic;
 	--
 	--------------------------------------------=( Parameters )=-------------------------------------------------------	
-	constant KYBER_K                   : positive     := 3; -- 2: Kyber512, 3: Kyber768 (recommended), 4: KYBER1024
+	constant KYBER_K    : positive     := 3; -- 2: Kyber512, 3: Kyber768 (recommended), 4: KYBER1024
 	--
 	type T_TECHNOLOGY is (XILINX, SAED32);
 	--
-	constant TECHNOLOGY                : T_TECHNOLOGY := SAED32; -- Synthesis technology
+	constant TECHNOLOGY : T_TECHNOLOGY := XILINX; -- Synthesis technology
 	--
 	--------------------------------------------=( Constants )=--------------------------------------------------------	
-	constant KYBER_Q                   : positive     := 7681;
-	constant KYBER_N                   : positive     := 256;
-	
+	constant KYBER_Q    : positive     := 7681;
+	constant KYBER_N    : positive     := 256;
+
 	-- KYBER_ETA == 5: Kyber512, 4: Kyber768 (recommended), 3: KYBER1024
-	constant KYBER_ETA                 : positive     := 7 - KYBER_K; 
-	constant KYBER_COEF_BITS           : positive     := log2ceilnz(KYBER_Q); -- 13
-	constant KYBER_Q_US                : unsigned     := to_unsigned(KYBER_Q, KYBER_COEF_BITS);
-	constant KYBER_SYMBYTES            : positive     := 32;
-	constant C_DIVIDER_PIPELINE_LEVELS : natural      := 3;
+	constant KYBER_ETA                 : positive := 7 - KYBER_K;
+	constant KYBER_COEF_BITS           : positive := log2ceilnz(KYBER_Q); -- 13
+	constant KYBER_Q_US                : unsigned := to_unsigned(KYBER_Q, KYBER_COEF_BITS);
+	constant KYBER_Q_S                 : signed   := to_signed(KYBER_Q, KYBER_COEF_BITS);
+	constant KYBER_SYMBYTES            : positive := 32;
+	constant C_DIVIDER_PIPELINE_LEVELS : natural  := 3;
 	--------------------------------------------=( Types (2) )=--------------------------------------------------------
 	subtype T_coef_slv is std_logic_vector(KYBER_COEF_BITS - 1 downto 0);
 	subtype T_coef_us is unsigned(KYBER_COEF_BITS - 1 downto 0);
@@ -199,7 +200,7 @@ package kyber_pkg is
 	--
 	--------------------------------------------=( Synthesis )=--------------------------------------------------------
 	--
-	constant MEM_TECH                  : string       := "SAED_MC";
+	constant MEM_TECH                  : string   := "SAED_MC";
 
 	--
 	attribute DONT_TOUCH_NETWORK : boolean;
@@ -562,11 +563,10 @@ package body kyber_pkg is
 		return decode(en, unsigned(Sel));
 	end function;
 
-	function shift_in_left(arg : std_logic_vector; bit: std_logic) return std_logic_vector is
+	function shift_in_left(arg : std_logic_vector; bit : std_logic) return std_logic_vector is
 	begin
 		return arg(arg'length - 2 downto 0) & bit;
 	end function;
-
 
 	function msb(arg : std_logic_vector) return std_logic is
 	begin
@@ -574,6 +574,11 @@ package body kyber_pkg is
 	end;
 
 	function msb(arg : unsigned) return std_logic is
+	begin
+		return arg(arg'length - 1);
+	end;
+
+	function msb(arg : signed) return std_logic is
 	begin
 		return arg(arg'length - 1);
 	end;

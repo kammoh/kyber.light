@@ -159,8 +159,7 @@ class Sim(object):
             raise ValueError(
                 f"Received {runner.errors} error{pl} in stdout")
 
-
-    def run_test(self, cmd, run_config):
+    def execute_test(self, cmd, run_config):
         # run_config = dict(run_config)
 
         run_config['vpi'] = self.vpi
@@ -203,7 +202,7 @@ class Sim(object):
         try:
             self.run_cmd(cmd, run_config, env)
         except ValueError as e:
-            print(f"run_test failed: {' '.join(e.args)}")
+            print(f"execute_test failed: {' '.join(e.args)}")
 
 
 

@@ -22,8 +22,12 @@ void polyvec_compress(unsigned char *r, const polyvec *a)
   {
     for(j=0;j<KYBER_N/8;j++)
     {
-      for(k=0;k<8;k++)
-        t[k] = ((((uint32_t)freeze(a->vec[i].coeffs[8*j+k]) << 11) + KYBER_Q/2)/ KYBER_Q) & 0x7ff;
+      for(k=0;k<8;k++){
+        uint32_t tt = (uint32_t)freeze(a->vec[i].coeffs[8 * j + k]);
+        t[k] =((( tt << 11) + KYBER_Q / 2) / KYBER_Q) & 0x7ff;
+        // printf("coeffs=%X t[k]=%X\n", tt, t[k]);
+        // exit(1);
+      }
 
       r[11*j+ 0] =  t[0] & 0xff;
       r[11*j+ 1] = (t[0] >>  8) | ((t[1] & 0x1f) << 3);

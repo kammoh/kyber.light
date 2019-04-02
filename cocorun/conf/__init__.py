@@ -91,7 +91,7 @@ class Manifest:
             if isinstance(mod, str):
                 try:
                     mod = self.get_module(module_name)
-                except KeyError:
+                except KeyError as e:
                     self.log.error(f'dependency {module_name} does not exist in Manifest' )
                     exit(1)
             
@@ -112,7 +112,11 @@ class Manifest:
 
     def hdl_sources(self, top_module_name, sim = True):
         ret = []
-        module = self.get_module(top_module_name)
+        try:
+            module = self.get_module(top_module_name)
+        except KeyError as e:
+            print(f"Error in Manifest: {e.args[0]} not defined")
+            exit(1)
 
         for path, lib in self.module_dependencies(top_module_name, sim).items():
             ret.append(HdlSource(path=path, lib=lib, language=module.language) )

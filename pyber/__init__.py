@@ -15,10 +15,16 @@ KYBER_ETA = pyber_clib.KYBER_ETA
 KYBER_SYMBYTES = pyber_clib.KYBER_SYMBYTES
 KYBER_POLYBYTES = pyber_clib.KYBER_POLYBYTES
 KYBER_POLYVECBYTES = pyber_clib.KYBER_POLYVECBYTES
-
-
+KYBER_POLYCOMPRESSEDBYTES = pyber_clib.KYBER_POLYCOMPRESSEDBYTES
 KYBER_POLYVECCOMPRESSEDBYTES = pyber_clib.KYBER_POLYVECCOMPRESSEDBYTES
+KYBER_INDCPA_PUBLICKEYBYTES = pyber_clib.KYBER_INDCPA_PUBLICKEYBYTES
+KYBER_INDCPA_MSGBYTES = pyber_clib.KYBER_INDCPA_MSGBYTES
+KYBER_PUBLICKEYBYTES = pyber_clib.KYBER_PUBLICKEYBYTES
+KYBER_SECRETKEYBYTES = pyber_clib.KYBER_SECRETKEYBYTES
+KYBER_CIPHERTEXTBYTES = pyber_clib.KYBER_CIPHERTEXTBYTES
+KYBER_INDCPA_MSGBYTES = pyber_clib.KYBER_INDCPA_MSGBYTES
 
+KYBER_PKBYTES = KYBER_POLYVECBYTES * (KYBER_K + 1)
 
 def getnoise_bytes(coins, nonce):
     coins = list(coins)
@@ -26,12 +32,44 @@ def getnoise_bytes(coins, nonce):
     assert len(coins) == KYBER_SYMBYTES
     ccoins_buf = ffi.new(f'const unsigned char [{KYBER_SYMBYTES}]', coins)
     crbuf = ffi.new(f'unsigned char [{KYBER_ETA * KYBER_N // 4}]')
-    pyber_clib.getnoise_bytes(crbuf, ccoins_buf, nonce)
+    pyber_clib.poly_getnoise_bytes(crbuf, ccoins_buf, nonce)
     return list(crbuf)
 
 
-def unpack_pk_at(pk):
-    assert len(pk) == KYBER_POLYBYTES, f"length of public key must be KYBER_POLYBYTES={KYBER_POLYBYTES} bytes"
+def compressed_pk_bytes():
+    return KYBER_POLYVECCOMPRESSEDBYTES + KYBER_SYMBYTES
+
+def atpk_bytes(compressed_pk: bytes) -> bytes:
+    # assert isinstance(compressed_pk, bytes), "compressed_pk should be of type bytes"
+    assert len(compressed_pk) == compressed_pk_bytes(
+    ), f"length of public key must be {compressed_pk_bytes()} bytes but {len(compressed_pk)} bytes were provided"
+
+    print(f"expanding {compressed_pk_bytes()} bytes public-key to {KYBER_POLYVECBYTES * (KYBER_K + 1)} bytes")
+
+    cpk = ffi.new(f'const unsigned char [{compressed_pk_bytes()}]', compressed_pk)
+
+    c_at_pk_bytes = ffi.new(f'unsigned char [{KYBER_POLYVECBYTES * (KYBER_K + 1)}]')
+
+    pyber_clib.repack_at_pk(c_at_pk_bytes, cpk)
+
+    return bytes(c_at_pk_bytes)
+
+
+def indcpa_enc_nontt(msg, pkat, coins) -> bytes:
+    assert len(msg) == KYBER_INDCPA_MSGBYTES
+    assert len(pkat) == KYBER_PKBYTES
+    assert len(coins) == KYBER_SYMBYTES
+
+    cmsg = ffi.new(f'unsigned char [{KYBER_INDCPA_MSGBYTES}]', msg)
+    c_at_pk_bytes = ffi.new(f'unsigned char [{KYBER_POLYVECBYTES * (KYBER_K + 1)}]', pkat)
+    ccoins = ffi.new(f'unsigned char [{KYBER_PKBYTES}]', coins)
+    cct = ffi.new(f'unsigned char [{KYBER_CIPHERTEXTBYTES}]', coins)
+
+    pyber_clib.indcpa_enc_nontt(cct, cmsg, c_at_pk_bytes, ccoins)
+
+    return bytes(cct)
+
+
 
 
 class Polynomial():

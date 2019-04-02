@@ -294,7 +294,24 @@
 
 			"language": "vhdl.1993"
 		},
+		"cpa_tb": 
+		{
+			"path": "vhdl",
+			"top": "cpa_tb",
+			"files": 
+			[
+				"cpa_tb.vhdl"
+            ],
+            "tb_files" : [
+                "cpa_gen_io.py"
+            ],
+			"depends": 
+			[
+				"cpa_enc"
+			],
 
+			"language": "vhdl.1993"
+		},
 		"keccak_pkg": 
 		{
 			"path": "tiny_keccak",

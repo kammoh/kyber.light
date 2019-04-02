@@ -75,7 +75,10 @@ entity cpa_enc is
 		clk           : in  std_logic;
 		rst           : in  std_logic;
 		-- Data inputs
-		i_start       : in  std_logic;
+		i_start_enc   : in  std_logic;
+		i_start_dec   : in  std_logic;
+		i_recv_pk     : in  std_logic;
+		i_recv_sk     : in  std_logic;
 		o_done        : out std_logic;
 		--
 		i_coins_data  : in  T_byte_slv;
@@ -99,8 +102,11 @@ architecture RTL of cpa_enc is
 	---------------------------------------------=( Types )=------------------------------------------------------------
 	type T_state is (S_init,
 	                 S_recv_coins, S_recv_AT_PK,
+	                 S_recv_sk, S_recv_ct,
+	                 S_polymac_neg,
+	                 S_send_m,
 	                 S_polynoise_s, S_polynoise_bv, S_polymac,
-	                 S_send_b_v,
+	                 S_send_b, S_send_b_flush, S_send_v,
 	                 S_done
 	                );                  -- TODO overlap (parallel) operations?
 	--
@@ -170,12 +176,14 @@ architecture RTL of cpa_enc is
 	signal polymac_remout_ready     : std_logic;
 	signal compressor_divout_data   : T_coef_us;
 	signal compressor_divin_ready   : std_logic;
+	signal compressor_dout_valid    : std_logic;
 
 begin
 
 	noisegen_coinin_data <= i_coins_data;
 	cbd_din_data         <= noisegen_dout_data;
 	polymac_rama_blk     <= poly_rama_blk_cntr_reg;
+	o_ct_valid           <= compressor_dout_valid;
 
 	serializer_inst : entity work.decompressor
 		port map(
@@ -256,7 +264,7 @@ begin
 			i_din_valid    => compressor_din_valid,
 			o_din_ready    => compressor_din_ready,
 			o_dout_data    => o_ct_data,
-			o_dout_valid   => o_ct_valid,
+			o_dout_valid   => compressor_dout_valid,
 			i_dout_ready   => i_ct_ready,
 			o_divin_data   => compressor_divin_data,
 			o_divin_valid  => compressor_divin_valid,
@@ -298,33 +306,35 @@ begin
 		);
 	--- 
 	-- divider arbitration
-	uin_data               <= polymac_remin_data when polymac_is_using_divider = '1' else compressor_divin_data;
+	uin_data <= polymac_remin_data when polymac_is_using_divider = '1' else compressor_divin_data;
 	-- uin.valid activated only in states
-	polymac_remin_ready    <= uin_ready and polymac_is_using_divider;
-	compressor_divin_ready <= uin_ready and polymac_is_using_divider;
 
 	sync_proc : process(clk) is
 	begin
 		if rising_edge(clk) then
 			if rst = '1' then
+				report "reset:  state => S_init";
 				state <= S_init;
 			else
 				case state is
 					when S_init =>
 						nonce_reg              <= (others => '0');
 						poly_rama_blk_cntr_reg <= (others => '0');
-						if i_start = '1' then
+						if i_start_enc = '1' then
+							report "state => S_recv_coins";
 							state <= S_recv_coins;
 						end if;
 
 					when S_recv_coins =>
 						if noisegen_done = '1' then
+							report "state => S_recv_AT_PK";
 							state <= S_recv_AT_PK;
 						end if;
 					when S_recv_AT_PK =>
 						if polymac_done = '1' then
 							poly_rama_blk_cntr_reg <= poly_rama_blk_cntr_reg + 1;
 							if poly_rama_blk_cntr_reg = KYBER_K then
+								report "state => S_polynoise_s";
 								state                  <= S_polynoise_s;
 								poly_rama_blk_cntr_reg <= (others => '0');
 							end if;
@@ -335,6 +345,7 @@ begin
 							nonce_reg <= nonce_reg + 1;
 						end if;
 						if polymac_done = '1' then
+							report "state => S_polynoise_bv";
 							state <= S_polynoise_bv;
 						end if;
 
@@ -343,6 +354,7 @@ begin
 							nonce_reg              <= nonce_reg + 1;
 							poly_rama_blk_cntr_reg <= poly_rama_blk_cntr_reg + 1;
 							if poly_rama_blk_cntr_reg = KYBER_K then
+								report "state => S_polymac";
 								state                  <= S_polymac;
 								poly_rama_blk_cntr_reg <= (others => '0');
 							end if;
@@ -352,22 +364,48 @@ begin
 						if polymac_done = '1' then
 							poly_rama_blk_cntr_reg <= poly_rama_blk_cntr_reg + 1;
 							if poly_rama_blk_cntr_reg = KYBER_K then
-								state                  <= S_send_b_v;
+								report "state => S_send_b";
+								state                  <= S_send_b;
 								poly_rama_blk_cntr_reg <= (others => '0');
 							end if;
 						end if;
 
-					when S_send_b_v =>
+					when S_send_b =>
 						if polymac_done = '1' then
 							poly_rama_blk_cntr_reg <= poly_rama_blk_cntr_reg + 1;
-							if poly_rama_blk_cntr_reg = KYBER_K then
-								state                  <= S_done;
-								poly_rama_blk_cntr_reg <= (others => '0');
+							if poly_rama_blk_cntr_reg = KYBER_K - 1 then
+								report "state => S_send_b_flush";
+								state                  <= S_send_b_flush;
 							end if;
+						end if;
+
+					when S_send_b_flush =>
+						if compressor_divout_valid = '0' and compressor_dout_valid = '0' then
+							report "state => S_send_v";
+							state <= S_send_v;
+						end if;
+
+					when S_send_v =>
+						if polymac_done = '1' then
+							report "state => S_done";
+							state                  <= S_done;
+							poly_rama_blk_cntr_reg <= (others => '0');
 						end if;
 
 					when S_done =>
-						state <= S_init;
+						-- wait for ack from master (caller)
+						if i_start_enc = '0' then
+							report "state => S_init";
+							state <= S_init;
+						end if;
+					when S_recv_sk =>
+						null;
+					when S_recv_ct =>
+						null;
+					when S_polymac_neg =>
+						null;
+					when S_send_m =>
+						null;
 
 				end case;
 			end if;
@@ -377,9 +415,10 @@ begin
 	comb_proc : process(                --
 	state, cbd_coeffout_data, compressor_din_ready, i_coins_valid, i_pkmsg_valid, --
 	msgadd_msgin_ready, msgadd_polyin_ready, msgadd_polyout_data, msgadd_polyout_valid, noisegen_coinin_ready, --
-	noisegen_done, noisegen_dout_valid, poly_rama_blk_cntr_reg, polymac_din_ready, polymac_done, --
+	noisegen_done, noisegen_dout_valid, polymac_din_ready, polymac_done, --
 	polymac_dout_data, polymac_dout_valid, decomp_coefout_data, decomp_coefout_valid, decomp_din_ready, --
-	compressor_divin_valid, compressor_divout_ready, polymac_remin_valid, polymac_remout_ready, remdivout_valid --
+	compressor_divin_valid, compressor_divout_ready, polymac_remin_valid, polymac_remout_ready, remdivout_valid, --
+	uin_ready                           --
 	) is
 	begin
 		polymac_recv_aa         <= '0';
@@ -409,6 +448,9 @@ begin
 		remdivout_ready         <= '0';
 		uin_valid               <= '0';
 		polymac_remout_valid    <= '0';
+		polymac_remin_ready     <= '0';
+		compressor_divin_ready  <= '0';
+		compressor_is_polyvec   <= '0';
 
 		case state is
 			when S_init =>
@@ -421,11 +463,11 @@ begin
 
 			when S_recv_AT_PK =>
 				polymac_recv_aa      <= not polymac_done;
-				o_pkmsg_ready        <= decomp_din_ready;
+				o_pkmsg_ready        <= decomp_din_ready and not polymac_done;
 				polymac_din_valid    <= decomp_coefout_valid;
 				polymac_din_data     <= unsigned(decomp_coefout_data);
 				decomp_coefout_ready <= polymac_din_ready;
-				decomp_din_valid     <= i_pkmsg_valid;
+				decomp_din_valid     <= i_pkmsg_valid and not polymac_done;
 
 			when S_polynoise_s =>
 				polymac_recv_bb     <= not polymac_done;
@@ -434,15 +476,19 @@ begin
 				noisegen_dout_ready <= polymac_din_ready;
 
 			when S_polynoise_bv =>
-				polymac_recv_v <= not polymac_done;
+				polymac_recv_v      <= not polymac_done;
+				noisegen_send_hash  <= not noisegen_done;
+				polymac_din_valid   <= noisegen_dout_valid;
+				noisegen_dout_ready <= polymac_din_ready;
 
 			when S_polymac =>
 				uin_valid            <= polymac_remin_valid;
 				polymac_do_mac       <= not polymac_done;
 				remdivout_ready      <= polymac_remout_ready;
+				polymac_remin_ready  <= uin_ready;
 				polymac_remout_valid <= remdivout_valid;
 
-			when S_send_b_v =>
+			when S_send_b =>
 				-- ack when "done"
 				polymac_send_v <= not polymac_done;
 
@@ -451,34 +497,60 @@ begin
 				compressor_divout_valid <= remdivout_valid;
 				remdivout_ready         <= compressor_divout_ready;
 
-				if poly_rama_blk_cntr_reg = KYBER_K then
-					-- sending out 'v' through msg_add
+				compressor_divin_ready <= uin_ready;
 
-					--- polymac.dout -> msg_add.polyin
-					polymac_dout_ready  <= msgadd_polyin_ready;
-					msgadd_polyin_valid <= polymac_dout_valid; -- valid only in this state
+				-- sending out polyvec b directly from polymac
+				compressor_is_polyvec <= '1';
 
-					--- msg_add.polyout -> compressor.din
-					compressor_din_data  <= msgadd_polyout_data;
-					compressor_din_valid <= msgadd_polyout_valid;
-					msgadd_polyout_ready <= compressor_din_ready;
+				--- polyvec.dout -> compressir.din
+				compressor_din_data  <= polymac_dout_data;
+				compressor_din_valid <= polymac_dout_valid;
+				polymac_dout_ready   <= compressor_din_ready;
+				
+			when S_send_b_flush=>
+				compressor_divout_valid <= remdivout_valid;
+				remdivout_ready         <= compressor_divout_ready;
 
-					--- i_pkmsg -> msg_add.msgin
-					msgadd_msgin_valid <= i_pkmsg_valid;
-					o_pkmsg_ready      <= msgadd_msgin_ready;
+				-- sending out polyvec b directly from polymac
+				compressor_is_polyvec <= '1';
+								
 
-				else
-					-- sending out b directly from polymac
+			when S_send_v =>
+				-- ack when "done"
+				polymac_send_v <= not polymac_done;
 
-					--- polyvec.dout -> compressir.din
-					compressor_din_data  <= polymac_dout_data;
-					compressor_din_valid <= polymac_dout_valid;
-					polymac_dout_ready   <= compressor_din_ready;
+				uin_valid <= compressor_divin_valid;
 
-				end if;
+				compressor_divout_valid <= remdivout_valid;
+				remdivout_ready         <= compressor_divout_ready;
+
+				compressor_divin_ready <= uin_ready;
+
+				-- sending out poly 'v' through msg_add
+
+				--- polymac.dout -> msg_add.polyin
+				polymac_dout_ready  <= msgadd_polyin_ready;
+				msgadd_polyin_valid <= polymac_dout_valid; -- valid only in this state
+
+				--- msg_add.polyout -> compressor.din
+				compressor_din_data  <= msgadd_polyout_data;
+				compressor_din_valid <= msgadd_polyout_valid;
+				msgadd_polyout_ready <= compressor_din_ready;
+
+				--- i_pkmsg -> msg_add.msgin
+				msgadd_msgin_valid <= i_pkmsg_valid;
+				o_pkmsg_ready      <= msgadd_msgin_ready;
 
 			when S_done =>
 				o_done <= '1';
+			when S_recv_sk =>
+				null;
+			when S_recv_ct =>
+				null;
+			when S_polymac_neg =>
+				null;
+			when S_send_m =>
+				null;
 
 		end case;
 	end process comb_proc;

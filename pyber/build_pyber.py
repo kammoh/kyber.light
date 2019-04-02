@@ -3,9 +3,14 @@ from pathlib import Path
 ffibuilder = FFI()
 import os
 
+ROOT_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
+
 #print("Path(__file__)=", os.path.abspath(__file__))
-src_path = Path('/Users/kamyar/source/pqc/kyber/ref') #Path(__file__).parents[1].joinpath('kyber','ref')
+# src_path = Path(ROOT_DIR).joinpath('cref')  # Path(__file__).parents[1].joinpath('kyber','ref')
+src_path = Path(ROOT_DIR).joinpath('cref')
 assert src_path.exists(), f"{src_path} does not exist"
+
+print 
 
 ffibuilder.cdef(
 """
@@ -15,6 +20,16 @@ ffibuilder.cdef(
     #define KYBER_Q ...
     #define KYBER_ETA ...
     #define KYBER_INDCPA_BYTES ...
+    #define KYBER_POLYBYTES ...
+    #define KYBER_POLYVECBYTES ...
+    #define KYBER_POLYVECCOMPRESSEDBYTES ...
+    #define KYBER_POLYCOMPRESSEDBYTES ...
+    #define KYBER_INDCPA_PUBLICKEYBYTES ...
+    #define KYBER_INDCPA_MSGBYTES ...
+    #define KYBER_PUBLICKEYBYTES ...
+    #define KYBER_SECRETKEYBYTES ...
+    #define KYBER_INDCPA_MSGBYTES ...
+    #define KYBER_CIPHERTEXTBYTES ...
     
     typedef struct{
         uint16_t coeffs[KYBER_N];
@@ -25,7 +40,7 @@ ffibuilder.cdef(
     } polyvec;
 
     // ADDED FOR TESTING:
-    void getnoise_bytes(unsigned char *r, const unsigned char *seed, const unsigned char nonce);
+    void poly_getnoise_bytes(unsigned char *r, const unsigned char *seed, const unsigned char nonce);
 
     void cbd(poly *r, const unsigned char *buf); // sizeof(buf) = KYBER_ETA * KYBER_N / 4
 
@@ -44,14 +59,17 @@ ffibuilder.cdef(
     // added by me:
     void polyvec_nega_mac(poly *r, const polyvec *a, const polyvec *b, int neg);
     void poly_freeze(poly *a);
-    // added by me and probably does not make much sense
+    void at_pk_frombytes(polyvec *at, polyvec *pkpv, const unsigned char *bytes);
+    void repack_at_pk(unsigned char *pk_at_bytes, const unsigned char *pk);
+    void indcpa_enc_nontt(unsigned char *c, const unsigned char *m,
+                      const unsigned char *pk_at_bytes,
+                      const unsigned char *coins);
     int crypto_encrypt(unsigned char *c, unsigned long long *clen,
                    const unsigned char *m, unsigned long long mlen,
                    const unsigned char *pk);
     int crypto_encrypt_open(unsigned char *m, unsigned long long *mlen,
                         const unsigned char *c, unsigned long long clen,
                         const unsigned char *sk);
-    // added by me
     int crypto_encrypt_keypair(unsigned char *pk, unsigned char *sk);
 
 
@@ -88,6 +106,13 @@ ffibuilder.set_source("_pyber",
 f"""
     #include "{src_path}/poly.h"
     #include "{src_path}/polyvec.h"
+    #include "{src_path}/indcpa.h"
+    #include "{src_path}/params.h"
+    #include "{src_path}/reduce.h"
+    #include "{src_path}/cbd.h"
+    #include "{src_path}/ntt.h"
+    #include "{src_path}/fips202.h"
+    #include "{src_path}/fips202.h"
 """ +
 """
 

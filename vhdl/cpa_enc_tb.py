@@ -30,7 +30,8 @@ from cocotb.generators.bit import wave, intermittent_single_cycles, random_50_pe
 from cocotb.generators.byte import random_data, get_bytes
 from cocotb.handle import ModifiableObject
 from cmd_tester import CmdDoneTester
-from pyber import KYBER_SYMBYTES, KYBER_N, getnoise_bytes
+from pyber import KYBER_SYMBYTES, KYBER_INDCPA_MSGBYTES, pkat_bytes, compressed_pk_bytes
+import pyber
 import itertools
 
 
@@ -48,15 +49,25 @@ def func_test(dut, valid_gen=None, ready_gen=None):
 
     dut.i_start <= 1
 
-    yield tb.drive_input('coins', range(KYBER_SYMBYTES))
-    yield tb.drive_input('pkmsg', range(2000))
-    yield tb.drive_input('pkmsg', range(2000))
+    coins = [i & 0xff for i in range(KYBER_SYMBYTES)]
+    pk = [i & 0xff for i in range(compressed_pk_bytes())]
+    pkat = list(pkat_bytes(pk))
+    msg = [i & 0xff for i in range(KYBER_INDCPA_MSGBYTES)]
+    exp = list(pyber.indcpa_enc_nontt(msg, pkat, coins))
+    # This should come first!
+    tb.expect_output('ct', exp )
+    
+    tb.log.info("sending coins")
+    yield tb.drive_input('coins', coins )
 
-    exp = [1, 2, 3, 4, 5] 
-    yield tb.expect_output('ct', exp )
+    tb.log.info("sending PK + AT")
+    yield tb.drive_input('pkmsg', pkat)
 
+    tb.log.info("sending message")
+    yield tb.drive_input('pkmsg', msg)
+
+    tb.log.info("waiting for done")
     yield tb.wait_for_done()
-
 
     raise tb.scoreboard.result
 

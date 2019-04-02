@@ -73,7 +73,7 @@ class ValidReadyDriver(ValidatedBusDriver):
         """Args:
             byte_string (bytes): A string of hex to send over the bus.
         """
-        self.log.info(f"send_butes {len(byte_string)}")
+        self.log.info(f"send_bytes: sending {len(byte_string)}")
         # Avoid spurious object creation by recycling
         clkedge = RisingEdge(self.clock)
 
@@ -175,11 +175,13 @@ class ValidReadyDriver(ValidatedBusDriver):
 
         for word in words_iterable:
             if not firstword or (firstword and sync):
+                self.log.debug("_send_iterable: yielding 1 clock")
                 yield clkedge
                 firstword = False
             # Insert a gap where valid is low
             if not self.on:
                 self.bus.valid <= 0
+                self.log.debug(f"_send_iterable: yielding {self.off} off cycles")
                 for _ in range(self.off):
                     yield clkedge
 
@@ -224,10 +226,13 @@ class ValidReadyMonitor(BusMonitor):
         "firstSymbolInHighOrderBits": True,
     }
 
-
-    def __init__(self, entity, name, clock, callback, **kwargs):
+    def __init__(self, *args, **kwargs):
         config = kwargs.pop('config', {})
-        super().__init__(entity, name, clock, callback=callback, **kwargs)
+
+        BusMonitor.__init__(self, *args, **kwargs)
+
+        self.on = True
+        self.off = False
 
         self.config = self._default_config.copy()
 
@@ -235,11 +240,13 @@ class ValidReadyMonitor(BusMonitor):
             self.config[configoption] = value
             self.log.debug("Setting config option %s to %s" %
                            (configoption, str(value)))
-        
-        self.num_expected_words = None
-        self.ready_generator = None
 
-    def set_ready_generator(self, ready_generator=None):
+        self.on, self.off = True, False
+        
+        self.num_expected_words = kwargs.pop('num_expected_words', None)
+        self.ready_generator = kwargs.pop('ready_generator', None)
+
+    def set_ready_generator(self, ready_generator):
         """Set a new ready generator for this bus."""
         self.ready_generator = ready_generator
         self._next_readys()
@@ -275,29 +282,40 @@ class ValidReadyMonitor(BusMonitor):
 
         words = []
 
+        # for s in ['data', 'valid', 'ready']:
+        #     if not hasattr(self.bus, s):
+        #         self.log.info(f"{self.bus._name} does not have a {s} signal")
+        #         # raise TestError
+        #     else:
+        #         self.log.info(f"{s} is in {self.bus._name} ({ getattr(self.bus, s)._name})")
+
+        self.bus.ready <= 0
+
         while True:
             yield clkedge
-            yield rdonly
 
-            if self.in_reset:
-                continue
-
+            # if self.in_reset:
+            #     continue
             if not self.on:
+                self.log.debug(f"skipping {self.off} off cycles")
                 self.bus.ready <= 0
                 for _ in range(self.off):
                     yield clkedge
                 # Grab the next set of on/off values
                 self._next_readys()
-
             # Consume a valid cycle
             if self.on is not True and self.on:
                 self.on -= 1
 
             self.bus.ready <= 1
 
+            yield rdonly
+
             while not self.bus.valid.value:
+                self.log.debug(f"waiting for {self.name}.valid")
                 yield clkedge
             
+            self.log.debug(f"received {self.bus.data.value} on {self.name}")
             words.append(self.bus.data.value)
                 # self.log.debug(f"received word {len(words)}{self.num_out_words} ")
             if self.num_expected_words and len(words) >= self.num_expected_words:
@@ -324,7 +342,6 @@ class ValidReadyTester(object):
         self.inoutports = {}
         for thing_ in dut:
             if isinstance(thing_, ModifiableObject) and thing_._is_port:
-                self.log.debug(f"port {thing_._name} dir: {thing_._port_direction} {thing_._port_direction_string}")
                 if thing_._port_direction == 1:
                     self.inports[thing_._name] = thing_
                 elif thing_._port_direction == 2:
@@ -332,10 +349,6 @@ class ValidReadyTester(object):
                 else:
                     self.inoutports[thing_._name] = thing_
         
-        self.log.debug(f"in ports: {self.inports.keys()}")
-        self.log.debug(f"out ports: {self.outports.keys()}")
-
-
         self.drivers = {}
         self.monitors = {}
 
@@ -359,44 +372,57 @@ class ValidReadyTester(object):
     @cocotb.coroutine
     def drive_input(self, in_bus_name, in_words, valid_gen = None):
         if in_bus_name not in self.drivers:
-            self.check_bus(in_bus_name, is_input=True)
             self.drivers[in_bus_name] = ValidReadyDriver(self.dut, in_bus_name, self.clock)
         if valid_gen:
             self.drivers[in_bus_name].set_valid_generator(valid_gen())
 
         yield self.drivers[in_bus_name].send(in_words)
 
-    @cocotb.coroutine
-    def expect_output(self, out_bus_name, expected_output, ready_gen=None, compare_fn=None, callback=None):
+    def expect_output(self, out_bus_name, expected_output, ready_gen=None, compare_fn=None):
         if out_bus_name not in self.monitors:
-            self.check_bus(out_bus_name, is_input=False)
-            self.monitors[out_bus_name] = ValidReadyMonitor(self.dut, out_bus_name, self.clock, callback=callback if callback else self.model)
+            self.log.debug(f"adding monitor on {out_bus_name}")
+            self.monitors[out_bus_name] = ValidReadyMonitor(self.dut, out_bus_name, self.clock, callback=self.model)
+            self.log.debug(f"monitor added {out_bus_name}")
         
         monitor = self.monitors[out_bus_name]
         monitor.set_ready_generator(ready_gen)
         monitor.num_expected_words = len(expected_output)
+        self.log.info(f"adding interface {out_bus_name} with expected_output={expected_output}")
         self.scoreboard.add_interface(monitor, expected_output, compare_fn=compare_fn, strict_type=True)
 
     # TODO only checks right now, FIXME later
     def check_bus(self, bus_name, is_input):
         found = False
+        data = None
+        valid = None
+        ready = None
         for in_fix, out_fix in [('i', 'o'), ('in', 'out')]:
             for fmt in ['{bus_name}_{p}', '{fix}_{bus_name}_{p}', '{bus_name}_{p}_{fix}']:
-                not_found = False
-                for sigs, isin in [('data', is_input), ('valid', is_input), ('ready', not is_input)]:
-
-                    if (isin and fmt.format(bus_name=bus_name, p=sigs, fix=in_fix) not in self.inports) or   \
-                            (not isin and fmt.format(bus_name=bus_name, p=sigs, fix=out_fix) not in self.outports):
-                        not_found = True
-                        break
-                if not not_found:
+                if is_input:
+                    dv_fix = in_fix
+                    r_fix = out_fix
+                    dv_list = self.inports
+                    r_list = self.outports
+                else:
+                    dv_fix = out_fix
+                    r_fix = in_fix
+                    dv_list = self.outports
+                    r_list = self.inports
+                try:
+                    data = dv_list[fmt.format(bus_name=bus_name, p='data', fix=dv_fix)]
+                    valid = dv_list[fmt.format(bus_name=bus_name, p='valid', fix=dv_fix)]
+                    ready = r_list[fmt.format(bus_name=bus_name, p='ready', fix=r_fix)]
                     found = True
                     break
+                except:
+                    continue
             if found:
                 break
+
         if not found:
             self.log.error(f"{bus_name} bus signals not found")
             raise TestError
+        return (data, valid, ready)
 
     @cocotb.coroutine
     def wait_transaction(self):
