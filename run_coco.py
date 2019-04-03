@@ -25,10 +25,10 @@ if args.synth:
     if args.synth == 'vivado':
         vivado = Vivado.from_manifest(manifest)
 
-        frequency = 170  # Mhz
+        frequency = 125  # Mhz
 
         vivado.run_flow(args.bundle_name, target_frequency=frequency,
-                        part='xc7z020clg400-1', synth_directive='AreaOptimized_high', opt_directive='ExploreWithRemap')
+                        part='xc7a100tcsg324-1', synth_directive='AreaOptimized_high', opt_directive='ExploreWithRemap')
 
         summary = vivado.lastrun_timing_summary()
         pprint(summary)

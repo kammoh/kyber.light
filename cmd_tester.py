@@ -64,8 +64,9 @@ class ValidReadyDriver(ValidatedBusDriver):
         rdonly = ReadOnly()
         clkedge = RisingEdge(self.clock)
         yield rdonly
-        while not self.bus.ready.value:
-            yield clkedge
+        ready = self.bus.ready
+        while ready.value != 1:
+            yield Edge(ready)
             yield rdonly
 
     @cocotb.coroutine
@@ -291,8 +292,11 @@ class ValidReadyMonitor(BusMonitor):
 
         self.bus.ready <= 0
 
+        yield clkedge
+
+        self.bus.ready <= 1
+
         while True:
-            yield clkedge
 
             # if self.in_reset:
             #     continue
@@ -301,26 +305,27 @@ class ValidReadyMonitor(BusMonitor):
                 self.bus.ready <= 0
                 for _ in range(self.off):
                     yield clkedge
+                self.bus.ready <= 1
                 # Grab the next set of on/off values
                 self._next_readys()
             # Consume a valid cycle
             if self.on is not True and self.on:
                 self.on -= 1
 
-            self.bus.ready <= 1
-
             yield rdonly
 
-            while not self.bus.valid.value:
-                self.log.debug(f"waiting for {self.name}.valid")
-                yield clkedge
+            while self.bus.valid.value != 1:
+                yield Edge(self.bus.valid)
             
-            self.log.debug(f"received {self.bus.data.value} on {self.name}")
-            words.append(self.bus.data.value)
+            # self.log.info(f"received {self.bus.data.value} {len(words)}/{self.num_expected_words} on {self.name}")
+            words.append(int(self.bus.data.value))
                 # self.log.debug(f"received word {len(words)}{self.num_out_words} ")
             if self.num_expected_words and len(words) >= self.num_expected_words:
+                self.log.debug(f"transaction complete: {self.num_expected_words} words")
                 self._recv(words)
                 words = []
+
+            yield clkedge
 
 
 class ValidReadyTester(object):
@@ -378,17 +383,23 @@ class ValidReadyTester(object):
 
         yield self.drivers[in_bus_name].send(in_words)
 
-    def expect_output(self, out_bus_name, expected_output, ready_gen=None, compare_fn=None):
-        if out_bus_name not in self.monitors:
+
+    def expect_output(self, out_bus_name, expected_output, ready_gen=None):
+        if out_bus_name in self.monitors:
+            monitor, queue = self.monitors[out_bus_name]
+        else:
             self.log.debug(f"adding monitor on {out_bus_name}")
-            self.monitors[out_bus_name] = ValidReadyMonitor(self.dut, out_bus_name, self.clock, callback=self.model)
+            monitor = ValidReadyMonitor(self.dut, out_bus_name, self.clock)  # , callback=self.model
+            queue = []
+            self.monitors[out_bus_name] = (monitor, queue)
             self.log.debug(f"monitor added {out_bus_name}")
-        
-        monitor = self.monitors[out_bus_name]
+            
+            self.scoreboard.add_interface(monitor, queue, strict_type=True)
+
+        queue.append(expected_output)
         monitor.set_ready_generator(ready_gen)
         monitor.num_expected_words = len(expected_output)
-        self.log.info(f"adding interface {out_bus_name} with expected_output={expected_output}")
-        self.scoreboard.add_interface(monitor, expected_output, compare_fn=compare_fn, strict_type=True)
+        self.log.info(f"expecting {len(expected_output)} bytes on bus: {out_bus_name}")
 
     # TODO only checks right now, FIXME later
     def check_bus(self, bus_name, is_input):
@@ -473,7 +484,7 @@ class CmdDoneTester(ValidReadyTester):
     @cocotb.coroutine
     def wait_for_done(self, value=1):
         done = self.done_signal
-        while done != value:
+        while done.value != value:
             yield Edge(done)
 
     # @cocotb.coroutine

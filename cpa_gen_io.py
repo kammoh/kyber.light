@@ -4,6 +4,7 @@ from pathlib import Path
 import subprocess
 from cocorun.conf import Manifest
 from cocorun.sim.ghdl import Ghdl
+from itertools import zip_longest
 
 
 coins = [i & 0xff for i in range(KYBER_SYMBYTES)]
@@ -31,8 +32,12 @@ sim.run_test('cpa_tb', elab_only=True)
 subprocess.run(['./cpa_tb', '--ieee-asserts=disable'])
 
 with Path('out.txt').open('r') as outfile:
-    for e, line in zip(exp_str, outfile.readlines()):
-        o = str(line.strip().lower())
+    out = [ line.strip().lower() for line in outfile.readlines()]
+    if len(out) != len(exp):
+        print(f"[ERROR] expected {len(exp)} words but received {len(out)} words")
+    for i, (e, o) in enumerate(zip_longest(exp_str, out)):
         if e != o:
-            print(f"ERROR!!! got [{o}] {len(o)} {isinstance(o, str)} /= expected {e} {len(e)} {isinstance(e, str)}")
+            print(f"[ERROR] @output #{i:>4}  expected: {e}  received: {o}")
             exit(1)
+
+print("output matched expected output")

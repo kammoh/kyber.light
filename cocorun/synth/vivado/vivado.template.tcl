@@ -60,7 +60,7 @@ proc reportCriticalPaths { fileName } {
 {% for source in hdl_sources %}
     {% if source.language == 'vhdl.2008' %}
 read_vhdl -vhdl2008 {{source.path}} -library {{source.lib}}
-    {% elif source.language == 'vhdl' %}
+    {% elif source.language.startswith('vhdl') %}
 read_vhdl {{source.path}} -library {{source.lib}}
     {% elif source.language == 'verilog' %}
 read_verilog {{source.path}} -library {{source.lib}}

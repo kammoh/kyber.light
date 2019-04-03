@@ -30,17 +30,16 @@ pathlib.Path.copytree = _copytree
 
 def options_to_str(d):
     r = ""
-    for k,v in d.items():
+    for k, v in d.items():
         if v:
             r += f'-{k} '
             if isinstance(v, dict):
-                r += f'-{k} '.join([ f'{x}={y}' for x,y in v.items() ])
+                r += f'-{k} '.join([f'{x}={y}' for x, y in v.items()])
             elif isinstance(v, Iterable) and not isinstance(v, str):
                 r += f'-{k} '.join(v)
             elif not isinstance(v, bool):
                 r += f'{v} '
     return r
-
 
 
 def parse_report(file, header):
@@ -53,7 +52,7 @@ def parse_report(file, header):
             for _ in range(2):
                 while True:
                     line = file.readline()
-                    if not line: 
+                    if not line:
                         raise ParseException("End of file")
                     line = line.strip()
                     if len(line) > 1 and not line.startswith("--") and not line.startswith("| "):
@@ -73,16 +72,20 @@ def parse_report(file, header):
 class SynthTool:
     pass
 
+
 class ParseException(Exception):
     pass
 
-class Table():
-    def __init__(self,name,header,data):
-        self.name=name
-        self.header=header
-        self.data=data
 
-## FIXME VERY BAD MESSY CODE WILL DEFINITLY BREAK TODO ******
+class Table():
+    def __init__(self, name, header, data):
+        self.name = name
+        self.header = header
+        self.data = data
+
+# FIXME VERY BAD MESSY CODE WILL DEFINITLY BREAK TODO ******
+
+
 def read_until(rf, pattern, g=1, anti_pattern=None, max_len=None):
     p = re.compile(pattern)
     if anti_pattern:
@@ -95,18 +98,17 @@ def read_until(rf, pattern, g=1, anti_pattern=None, max_len=None):
         if not line:
             return ret
         line = line.strip()
-        if ap and len(ret)>0 and ap.match(line):
+        if ap and len(ret) > 0 and ap.match(line):
             return ret
         l = []
         for i in p.finditer(line):
             l.append(i.group(g))
-        if len(l)>0:
+        if len(l) > 0:
             ret.append(l)
             if max_len and len(ret) >= max_len:
                 return ret
         elif len(ret) > 0:
             return ret
-
 
 
 class Vivado(SynthTool):
@@ -135,10 +137,10 @@ class Vivado(SynthTool):
             intra_clock = parse_report(repf, 'Intra Clock Table')
             return intra_clock
 
-    ## FIXME VERY MESSY CODE PARSE USING PROPER MEANS
+    # FIXME VERY MESSY CODE PARSE USING PROPER MEANS
     ## FIXME TODO ###
     def lastrun_utilization(self):
-        tables={}
+        tables = {}
         with self.lastrun_path.joinpath('reports').joinpath('post_route_util.rpt').open() as rf:
             while True:
                 # try:
@@ -152,41 +154,41 @@ class Vivado(SynthTool):
                 header = headers[0]
 
                 data_rows = read_until(rf, r'\s+([\w\*]|\w[^\|]*[\w\*])\s+\|', anti_pattern=r'^(\+[\-]+)+\+')
-                tables[table_name] = Table(table_name, header, data_rows)    
+                tables[table_name] = Table(table_name, header, data_rows)
 
         return tables
 
     def lastrun_print_utilization(self):
         tables = self.lastrun_utilization()
-        for table_name in ['Slice Logic', 'Memory','DSP']:
+        for table_name in ['Slice Logic', 'Memory', 'DSP']:
             for row in tables[table_name].data:
                 print(f"{row[0]:30} {row[1]:10}")
 
     def run_flow(self, mm, target_frequency, part, **kwargs):
-        
+
         hdl_sources, mod = self.manifest.hdl_sources(mm)
 
         top_module_name = mod.top
 
         synth_options = {
-            'top': top_module_name, 
+            'top': top_module_name,
             'part': part,
-            'quiet': kwargs.pop('synth_quiet', False), 
-            'resource_sharing': kwargs.pop('synth_resource_sharing', None), 
+            'quiet': kwargs.pop('synth_quiet', False),
+            'resource_sharing': kwargs.pop('synth_resource_sharing', None),
             'retiming': kwargs.pop('synth_retiming', True),
             'directive': kwargs.pop('synth_directive', None),
             'flatten_hierarchy': kwargs.pop('flatten_hierarchy', 'rebuilt'),
             'generics': kwargs.pop('generics', None)
         }
         opt_options = {
-             'directive': kwargs.pop('opt_directive', None),
-             'quiet': kwargs.pop('opt_quiet', False),
+            'directive': kwargs.pop('opt_directive', None),
+            'quiet': kwargs.pop('opt_quiet', False),
         }
 
         phys_opt_options = {
             'retime': True,
             'hold_fix': True,
-            'rewire' : True
+            'rewire': True
         }
 
         synth_prefix = 'synth_'
@@ -203,18 +205,17 @@ class Vivado(SynthTool):
             elif arg.startswith(phys_opt_prefix):
                 phys_opt_options[arg[len(phys_opt_prefix)]:] = value
 
-
         run_dir_name = f'synth.{self.__class__.__name__}.{top_module_name}.{datetime.datetime.now()}'.replace(
             ' ', '.').replace(':', '.')
-        run_path=pathlib.Path(run_dir_name)
+        run_path = pathlib.Path(run_dir_name)
 
         if not run_path.exists():
-            run_path.mkdir(parents = True)
+            run_path.mkdir(parents=True)
         if not run_path.is_dir():
             raise FileNotFoundError("run_dir is not a directory")
 
-        source_path=pathlib.Path('sources')
-        local_hdl_path=run_path.joinpath(source_path)
+        source_path = pathlib.Path('sources')
+        local_hdl_path = run_path.joinpath(source_path)
 
         # copy sources to build directory
 
@@ -223,18 +224,17 @@ class Vivado(SynthTool):
             exit(1)
 
         for hdl in hdl_sources:
-            src_path=pathlib.Path(hdl.path)
-            src_hierarchy=src_path.parent
+            src_path = pathlib.Path(hdl.path)
+            src_hierarchy = src_path.parent
             if src_hierarchy.is_absolute():
-                src_hierarchy=src_hierarchy.relative_to(pathlib.Path.cwd())
-            dst_hierarchy=local_hdl_path.joinpath(src_hierarchy)
-            dst_rel_path=source_path.joinpath(src_hierarchy)
+                src_hierarchy = src_hierarchy.relative_to(pathlib.Path.cwd())
+            dst_hierarchy = local_hdl_path.joinpath(src_hierarchy)
+            dst_rel_path = source_path.joinpath(src_hierarchy)
 
-            dst_hierarchy.mkdir(parents = True, exist_ok = True)
+            dst_hierarchy.mkdir(parents=True, exist_ok=True)
 
             shutil.copy(src_path, dst_hierarchy)
-            hdl.path=str(dst_rel_path.joinpath(src_path.name))
-            
+            hdl.path = str(dst_rel_path.joinpath(src_path.name))
 
         print("HDL SOURCES:")
         for hdl in hdl_sources:
@@ -243,38 +243,36 @@ class Vivado(SynthTool):
                 library = 'None'
             print(f"{hdl.language:10} {library:10} {hdl.path}")
 
-        j2_env=Environment(loader = FileSystemLoader(
-            THIS_DIR), trim_blocks = True, lstrip_blocks = True, autoescape = select_autoescape(['tcl']))
+        j2_env = Environment(loader=FileSystemLoader(
+            THIS_DIR), trim_blocks=True, lstrip_blocks=True, autoescape=select_autoescape(['tcl']))
 
-        scripts_relpath=pathlib.Path('scripts')
-        tcl_file_relpath=scripts_relpath.joinpath('vivado.tcl')
-        xdc_file_relpath=scripts_relpath.joinpath('clock.xdc')
+        scripts_relpath = pathlib.Path('scripts')
+        tcl_file_relpath = scripts_relpath.joinpath('vivado.tcl')
+        xdc_file_relpath = scripts_relpath.joinpath('clock.xdc')
 
-        xdcs=[XdcSource(xdc_file_relpath)]
+        xdcs = [XdcSource(xdc_file_relpath)]
 
+        tcl_template = j2_env.get_template('vivado.template.tcl')
+        tcl = tcl_template.render(
+            top_module_name=top_module_name, hdl_sources=hdl_sources,
+            xdcs=xdcs, output_dir='.', part=part, synth_options=options_to_str(synth_options),
+            opt_options=options_to_str(opt_options))
 
-        tcl_template=j2_env.get_template('vivado.template.tcl')
-        tcl=tcl_template.render(
-            top_module_name = top_module_name, hdl_sources = hdl_sources,
-            xdcs = xdcs, output_dir = '.', part=part, synth_options=options_to_str(synth_options),
-            opt_options=options_to_str(opt_options) )
+        clock_template = j2_env.get_template('clock.template.xdc')
+        xdc = clock_template.render(
+            period=1000/target_frequency, name='clk', port_name='clk')
 
-        clock_template=j2_env.get_template('clock.template.xdc')
-        xdc=clock_template.render(
-            period = 1000/target_frequency, name = 'clk', port_name = 'clk')
-
-        tcl_path=run_path.joinpath(tcl_file_relpath)
+        tcl_path = run_path.joinpath(tcl_file_relpath)
         if not tcl_path.parent.exists():
-            tcl_path.parent.mkdir(parents = True)
+            tcl_path.parent.mkdir(parents=True)
 
-        with run_path.joinpath(tcl_file_relpath).open(mode = 'w') as tf:
+        with run_path.joinpath(tcl_file_relpath).open(mode='w') as tf:
             tf.write(tcl)
 
-        with run_path.joinpath(xdc_file_relpath).open(mode = 'w') as xf:
+        with run_path.joinpath(xdc_file_relpath).open(mode='w') as xf:
             xf.write(xdc)
-            
 
-        cmd=["vivado", "-mode", "batch", "-nojournal",
+        cmd = ["vivado", "-mode", "batch", "-nojournal",
                "-source", str(tcl_file_relpath)]  # , "-tclargs", "3", "4"] "-notrace",
 
         quiet = False

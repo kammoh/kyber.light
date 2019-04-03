@@ -84,7 +84,8 @@ entity compressor is
 		-- divider
 		o_divin_data   : out unsigned(2 * KYBER_COEF_BITS - 1 downto 0);
 		o_divin_valid  : out std_logic;
-		i_divin_ready  : out std_logic;
+		i_divin_ready  : in  std_logic;
+		--
 		i_divout_data  : in  T_coef_us;
 		i_divout_valid : in  std_logic;
 		o_divout_ready : out std_logic
@@ -141,7 +142,7 @@ begin
 
 	-- in -> divider
 
---	shifted <= ("00" & i_din_data & "00000000000") when i_is_polyvec = '1' else ("0000000000" & i_din_data & "000");
+	--	shifted <= ("00" & i_din_data & "00000000000") when i_is_polyvec = '1' else ("0000000000" & i_din_data & "000");
 
 	shifted <= shift_left(resize(i_din_data, shifted'length), 11) when i_is_polyvec = '1' else shift_left(resize(i_din_data, shifted'length), 3);
 

@@ -30,7 +30,7 @@ from cocotb.generators.bit import wave, intermittent_single_cycles, random_50_pe
 from cocotb.generators.byte import random_data, get_bytes
 from cocotb.handle import ModifiableObject
 from cmd_tester import CmdDoneTester
-from pyber import KYBER_SYMBYTES, KYBER_INDCPA_MSGBYTES, pkat_bytes, compressed_pk_bytes
+from pyber import KYBER_SYMBYTES, KYBER_INDCPA_MSGBYTES, atpk_bytes, compressed_pk_bytes
 import pyber
 import itertools
 
@@ -44,16 +44,20 @@ def func_test(dut, valid_gen=None, ready_gen=None):
 
     
     tb = CmdDoneTester(dut, dut.clk)
+    clkedge = RisingEdge(dut.clk)
 
     yield tb.reset()
 
-    dut.i_start <= 1
+    dut.i_start_dec <= 0
+    dut.i_start_enc <= 1
 
-    coins = [i & 0xff for i in range(KYBER_SYMBYTES)]
-    pk = [i & 0xff for i in range(compressed_pk_bytes())]
-    pkat = list(pkat_bytes(pk))
-    msg = [i & 0xff for i in range(KYBER_INDCPA_MSGBYTES)]
-    exp = list(pyber.indcpa_enc_nontt(msg, pkat, coins))
+    coins = [tb.rnd.randint(0, 0xff) for _ in range(KYBER_SYMBYTES)]  # [i & 0xff for i in range(KYBER_SYMBYTES)]
+    pk = [tb.rnd.randint(0, 0xff) for i in range(compressed_pk_bytes())]
+    atpk = list(atpk_bytes(pk))
+    msg = [tb.rnd.randint(0, 0xff) for i in range(KYBER_INDCPA_MSGBYTES)]
+    exp = list(pyber.indcpa_enc_nontt(msg, atpk, coins))
+    exp_str = [hex(e)[2:].zfill(2) for e in exp]
+
     # This should come first!
     tb.expect_output('ct', exp )
     
@@ -61,7 +65,7 @@ def func_test(dut, valid_gen=None, ready_gen=None):
     yield tb.drive_input('coins', coins )
 
     tb.log.info("sending PK + AT")
-    yield tb.drive_input('pkmsg', pkat)
+    yield tb.drive_input('pkmsg', atpk)
 
     tb.log.info("sending message")
     yield tb.drive_input('pkmsg', msg)
@@ -69,14 +73,17 @@ def func_test(dut, valid_gen=None, ready_gen=None):
     tb.log.info("waiting for done")
     yield tb.wait_for_done()
 
+    yield clkedge
+    yield clkedge
+
     raise tb.scoreboard.result
 
 
 # Tests
 factory = TestFactory(func_test)
 
-# factory.add_option( "valid_gen", [None, intermittent_single_cycles, random_50_percent])
-factory.add_option("valid_gen", [None])
-# factory.add_option("subtract", [False])
+factory.add_option( "valid_gen", [intermittent_single_cycles, random_50_percent])
+factory.add_option( "ready_gen", [intermittent_single_cycles, random_50_percent])
+# factory.add_option("valid_gen", [None])
 
 factory.generate_tests()

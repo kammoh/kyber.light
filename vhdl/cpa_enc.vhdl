@@ -386,7 +386,7 @@ begin
 						end if;
 
 					when S_send_v =>
-						if polymac_done = '1' then
+						if polymac_done = '1' and compressor_dout_valid = '0' and remdivout_valid = '0' then
 							report "state => S_done";
 							state                  <= S_done;
 							poly_rama_blk_cntr_reg <= (others => '0');
@@ -476,21 +476,21 @@ begin
 				noisegen_dout_ready <= polymac_din_ready;
 
 			when S_polynoise_bv =>
-				polymac_recv_v      <= not polymac_done;
+				polymac_recv_v      <= not polymac_done; -- auto-restart for b[0..3],v
 				noisegen_send_hash  <= not noisegen_done;
 				polymac_din_valid   <= noisegen_dout_valid;
 				noisegen_dout_ready <= polymac_din_ready;
 
 			when S_polymac =>
 				uin_valid            <= polymac_remin_valid;
-				polymac_do_mac       <= not polymac_done;
+				polymac_do_mac       <= not polymac_done; -- auto-restart
 				remdivout_ready      <= polymac_remout_ready;
 				polymac_remin_ready  <= uin_ready;
 				polymac_remout_valid <= remdivout_valid;
 
 			when S_send_b =>
 				-- ack when "done"
-				polymac_send_v <= not polymac_done;
+				polymac_send_v <= not polymac_done; -- auto-restart
 
 				uin_valid <= compressor_divin_valid;
 
@@ -517,7 +517,7 @@ begin
 
 			when S_send_v =>
 				-- ack when "done"
-				polymac_send_v <= not polymac_done;
+				polymac_send_v <= '1'; -- no auto-restart
 
 				uin_valid <= compressor_divin_valid;
 

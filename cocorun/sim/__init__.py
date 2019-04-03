@@ -1,8 +1,7 @@
 import subprocess
 import os
-import os.path
-import re
 import sys
+import re
 from typing import Dict, List, Callable
 import collections
 import sysconfig
@@ -10,11 +9,52 @@ import cocotb
 import platform
 import pathlib
 import logging
-from ..conf import *
+import asyncio
 
 import colorlog
 
-import asyncio
+from ..conf import *
+
+
+
+
+async def _read_stream(stream, cb):
+    while True:
+        line = await stream.readline()
+        if line:
+            cb(line)
+        else:
+            break
+
+
+async def _stream_subprocess(cmd, env, stdout_cb, stderr_cb, pipe=False):
+    if pipe:
+        process = await asyncio.create_subprocess_exec(*cmd,
+                                                       stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, env=env)
+
+        await asyncio.wait([
+            _read_stream(process.stdout, stdout_cb),
+            _read_stream(process.stderr, stderr_cb)
+        ])
+    else:
+        process = await asyncio.create_subprocess_exec(*cmd, env=env)
+
+    return await process.wait()
+
+
+def _async_execute(cmd, env, stdout_cb, stderr_cb):
+    loop = asyncio.get_event_loop()
+
+    rc = loop.run_until_complete(
+        _stream_subprocess(
+            cmd,
+            env,
+            stdout_cb,
+            stderr_cb,
+        ))
+    # loop.close()
+    return rc
+
 
 class CommandRunner():
     def __init__(self, cmd, env, error_regex):
@@ -22,7 +62,7 @@ class CommandRunner():
         self.cmd = cmd
         self.env = env
         self.errors = 0
-    
+
     # async def _read_stream(self, stream):
     #     while True:
     #         line = await stream.readline()
@@ -42,7 +82,7 @@ class CommandRunner():
     #         self._read_stream(process.stderr)
     #     ])
     #     return await process.wait()
-    
+
     def execute(self):
         self.errors = 0
         # loop = asyncio.get_event_loop()
@@ -51,19 +91,30 @@ class CommandRunner():
         # def escape_ansi(line):
         #     ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]')
         #     return ansi_escape.sub('', line)
-        proc = subprocess.Popen(
-            self.cmd, env=self.env, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True)
+        # proc = subprocess.Popen(self.cmd, env=self.env)
+        # proc = subprocess.Popen(
+        #     self.cmd, env=self.env, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True)
 
-        for line in proc.stdout:
-            if not line:
-                break
-            sys.stdout.write(line)
+        # for line in proc.stdout:
+        #     if not line:
+        #         break
+        #     sys.stdout.write(line)
+        #     if self.error_regex.search(line):
+        #         self.errors += 1
+        # proc.stdout.close()
+        # rc = proc.wait()
+
+        def _proc_stream(x):
+            line = x.decode()
+            print(line, end='')
             if self.error_regex.search(line):
                 self.errors += 1
-        proc.stdout.close()
-        rc = proc.wait()
+                #         self.errors += 1
+
+        rc = _async_execute(self.cmd, self.env, _proc_stream, _proc_stream)
 
         return rc
+
 
 class Sim(object):
     def __init__(self, manifest: Manifest, log_level='INFO'):
@@ -97,7 +148,7 @@ class Sim(object):
         self.vpi_dir = platform_libs_dir
         self.vpi = os.path.join(platform_libs_dir, 'cocotb.vpi')
 
-        need_to_build_vpi = True # FIXME
+        need_to_build_vpi = True  # FIXME
 
         if need_to_build_vpi:
             # TODO FIXME Move eslewhere
@@ -149,7 +200,7 @@ class Sim(object):
         cmd = command.split()
         err_regex = re.compile(r"ERROR\s+(\s*(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]?)*Failed")
         runner = CommandRunner(cmd, env, err_regex)
-        self.log.debug('running ' + ' '.join(cmd)) # to get rid of spurious whitespace
+        self.log.debug('running ' + ' '.join(cmd))  # to get rid of spurious whitespace
         rc = runner.execute()
         if rc:
             raise ValueError(
@@ -205,7 +256,4 @@ class Sim(object):
             print(f"execute_test failed: {' '.join(e.args)}")
 
 
-
-__all__ = [
-    'Ghdl', 'Sim'
-]
+__all__ = ['Sim']
