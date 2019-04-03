@@ -70,11 +70,13 @@ begin
 					if i_pkmsg_valid = '0' or o_pkmsg_ready = '1' then
 						readline(filein, line_in);
 						hread(line_in, temp);
-						i_pkmsg_valid <= '1'; -- TODO random
 						i_pkmsg_data  <= temp;
+						i_pkmsg_valid <= '1'; -- TODO random
 					end if;
 				else
-					i_pkmsg_valid <= '0';
+					if o_pkmsg_ready = '1' then
+						i_pkmsg_valid <= '0';
+					end if;
 				end if;
 
 			end if;
@@ -99,7 +101,9 @@ begin
 						i_coins_valid <= '1'; -- TODO random
 					end if;
 				else
-					i_coins_valid <= '0';
+					if o_coins_ready = '1' then
+						i_coins_valid <= '0';
+					end if;
 				end if;
 			end if;
 		end if;

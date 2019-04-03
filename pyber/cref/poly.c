@@ -24,17 +24,19 @@ void poly_compress(unsigned char *r, const poly *a)
     for(j=0;j<8;j++) {
       uint16_t coef = freeze(a->coeffs[i + j]);
       uint8_t x = (( (coef << 3) + KYBER_Q / 2) / KYBER_Q) & 7;
-    //   uint16_t y = 0;
-    //   for (int m = 0; m < 3; ++m) {
-    //     if (cc >= (KYBER_Q) / 2){
-    //       y = (y << 1) | 1;
-    //       cc -= KYBER_Q / 2;
-    //     } else {
-    //       y = (y << 1);
-    //     }
-    //     cc = (cc << 1);
-    //   }
-    //   printf("%c x = %X y = %d coef=%d\n", x==y?' ':'*', x, y, coef % KYBER_Q);
+    //   printf("poly_compress coef=%04X x=%X\n", coef, x);
+      //   uint16_t y = 0;
+      //   for (int m = 0; m < 3; ++m) {
+      //     if (cc >= (KYBER_Q) / 2){
+      //       y = (y << 1) | 1;
+      //       cc -= KYBER_Q / 2;
+      //     } else {
+      //       y = (y << 1);
+      //     }
+      //     cc = (cc << 1);
+      //   }
+      //   printf("%c x = %X y = %d coef=%d\n", x==y?' ':'*', x, y, coef %
+      //   KYBER_Q);
       t[j] = x;
     }
 
@@ -177,12 +179,12 @@ void poly_getnoise(poly *r,const unsigned char *seed, unsigned char nonce)
 
   shake256(buf,KYBER_ETA*KYBER_N/4,extseed,KYBER_SYMBYTES+1);
 
-  printf("\n poly_getnoise : \n");
+//   printf("\n poly_getnoise : \n");
 
-  for (i = 0; i < KYBER_ETA * KYBER_N / 4; ++i){
-      printf("%02X ", buf[i]);
-  }
-    printf("\n");
+//   for (i = 0; i < KYBER_ETA * KYBER_N / 4; ++i){
+//       printf("%02X ", buf[i]);
+//   }
+//     printf("\n");
 
   cbd(r, buf);
 }

@@ -370,14 +370,14 @@ void indcpa_enc_nontt(unsigned char *c, const unsigned char *m,
 
   at_pk_frombytes(at, &pkpv, pk_at_bytes);
 
-  printf("-- pkpv:\n");
-  polyvec_print(&pkpv);
+//   printf("-- pkpv:\n");
+//   polyvec_print(&pkpv);
 
-  printf("\n\n-- at:\n");
-  for(int i =0; i < KYBER_K; i++){
-    printf("\n ---- [%d] \n", i);
-    polyvec_print(&at[i]);
-  }
+//   printf("\n\n-- at:\n");
+//   for(int i =0; i < KYBER_K; i++){
+//     printf("\n ---- [%d] \n", i);
+//     polyvec_print(&at[i]);
+//   }
 
       //-----------------------------------------
       unsigned char nonce = 0;
@@ -385,20 +385,20 @@ void indcpa_enc_nontt(unsigned char *c, const unsigned char *m,
     poly_getnoise(s_pv.vec + i, coins, nonce++);
   }
 
-  printf("\n\n-- s:\n");
-  polyvec_print(&s_pv);
+//   printf("\n\n-- s:\n");
+//   polyvec_print(&s_pv);
 
     for (int i = 0; i < KYBER_K; i++)
         poly_getnoise(b_pv.vec + i, coins, nonce++);
 
-    printf("\n\n-- b:\n");
-    polyvec_print(&b_pv);
+    // printf("\n\n-- b:\n");
+    // polyvec_print(&b_pv);
 
 
     poly_getnoise(&v, coins, nonce++);
 
-    printf("\n\n-- v:\n");
-    poly_print(&v);
+    // printf("\n\n-- v:\n");
+    // poly_print(&v);
     //-----------------------------------------
 
     // printf("======unpacked pk:\n");
@@ -413,16 +413,23 @@ void indcpa_enc_nontt(unsigned char *c, const unsigned char *m,
     for (int i = 0; i < KYBER_K; i++)
       polyvec_nega_mac(&b_pv.vec[i], at + i, &s_pv, 0);
 
-    printf("\n\n-- b after MAC:\n");
-    polyvec_print(&b_pv);
+    // printf("\n\n-- b after MAC:\n");
+    // polyvec_print(&b_pv);
 
     polyvec_nega_mac(&v, &pkpv, &s_pv, 0);
 
-    printf("\n\n-- V after MAC:\n");
-    poly_print(&v);
+    // printf("\n\n-- V after MAC:\n");
+    // poly_print(&v);
 
     poly_frommsg(&msg_poly, m);
+    
+    // printf("\n\n-- msg_polyC:\n");
+    // poly_print(&msg_poly);
+
     poly_add(&v, &v, &msg_poly);
+
+    // printf("\n\n-- V after msgadd:\n");
+    // poly_print(&v);
 
     // printf("======c.v:\n");
     // poly_print(&v);

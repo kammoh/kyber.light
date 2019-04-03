@@ -89,6 +89,8 @@ end entity msg_add;
 architecture RTL of msg_add is
 	signal msg_bit_data  : std_logic_vector(0 downto 0);
 	signal msg_bit_valid : std_logic;
+	signal msg_bit_ready : std_logic;
+	signal polyin_munus  : T_coef_us;
 
 begin
 
@@ -105,19 +107,23 @@ begin
 			o_din_ready  => o_msgin_ready,
 			o_dout_data  => msg_bit_data,
 			o_dout_valid => msg_bit_valid,
-			i_dout_ready => i_polyout_ready
+			i_dout_ready => msg_bit_ready
 		);
 
 	o_polyout_valid <= msg_bit_valid and i_polyin_valid;
-	o_polyin_ready  <= i_polyout_ready;
 
-	comb_proc : process(i_polyin_data, msg_bit_data(0)) is
+	o_polyin_ready <= i_polyout_ready and msg_bit_valid; -- consumer ready and all ingredients are valid!
+	msg_bit_ready  <= i_polyout_ready and i_polyin_valid; -- consumer ready and other all ingredients are valid!
+
+	polyin_munus <= i_polyin_data - (KYBER_Q / 2);
+
+	comb_proc : process(i_polyin_data, msg_bit_data, polyin_munus) is
 	begin
-		if msg_bit_data(0) = '1'  then
-			if i_polyin_data > KYBER_Q / 2 then
-				o_polyout_data <= i_polyin_data - KYBER_Q / 2;
+		if msg_bit_data(0) = '1' then
+			if msb(polyin_munus) = '0' then
+				o_polyout_data <= polyin_munus;
 			else
-				o_polyout_data <= i_polyin_data + KYBER_Q / 2;
+				o_polyout_data <= i_polyin_data + ((KYBER_Q + 1) / 2);
 			end if;
 		else
 			o_polyout_data <= i_polyin_data;
