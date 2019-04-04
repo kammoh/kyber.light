@@ -171,18 +171,26 @@ package kyber_pkg is
 	function msb(arg : std_logic_vector) return std_logic;
 	--
 	function msb(arg : unsigned) return std_logic;
+	--
 	function msb(arg : signed) return std_logic;
 	--
-	--------------------------------------------=( Parameters )=-------------------------------------------------------	
-	constant KYBER_K    : positive     := 3; -- 2: Kyber512, 3: Kyber768 (recommended), 4: KYBER1024
+	--------------------------------------------=( Synthesis )=--------------------------------------------------------
 	--
 	type T_TECHNOLOGY is (XILINX, SAED32);
+	attribute DONT_TOUCH_NETWORK : boolean;
 	--
-	constant TECHNOLOGY : T_TECHNOLOGY := XILINX; -- Synthesis technology
+	attribute DONT_TOUCH         : boolean;
 	--
+	--------------------------------------------=( Parameters )=-------------------------------------------------------	
+	constant KYBER_K             : positive     := 3; -- 2: Kyber512, 3: Kyber768 (recommended), 4: KYBER1024
+	--
+	--
+	--------------------------------------------=( Synthesis Parameters )=---------------------------------------------
+	constant TECHNOLOGY          : T_TECHNOLOGY := XILINX; -- Synthesis technology
+
 	--------------------------------------------=( Constants )=--------------------------------------------------------	
-	constant KYBER_Q    : positive     := 7681;
-	constant KYBER_N    : positive     := 256;
+	constant KYBER_Q : positive := 7681;
+	constant KYBER_N : positive := 256;
 
 	-- KYBER_ETA == 5: Kyber512, 4: Kyber768 (recommended), 3: KYBER1024
 	constant KYBER_ETA                 : positive := 7 - KYBER_K;
@@ -197,25 +205,6 @@ package kyber_pkg is
 	subtype T_byte_slv is std_logic_vector(7 downto 0);
 	subtype T_byte_us is unsigned(7 downto 0);
 	--
-	--
-	--------------------------------------------=( Synthesis )=--------------------------------------------------------
-	--
-	constant MEM_TECH                  : string   := "SAED_MC";
-
-	--
-	attribute DONT_TOUCH_NETWORK : boolean;
-	--
-	attribute DONT_TOUCH         : boolean;
-	-------------------------------------------------------------------------------------------------------------------
-	----------------------------------------- std_logic_1164_additions ------------------------------------------------
-	---------------------------------------- only required for VHDL < 2008 --------------------------------------------
-	--	function to_hstring(value : STD_ULOGIC_VECTOR) return STRING;
-	--	function to_hstring(value : STD_LOGIC_VECTOR) return STRING;
-	--	function to_string(value : STD_ULOGIC_VECTOR) return STRING;
-	--	function to_string(value : STD_LOGIC_VECTOR) return STRING;
-	--	function to_string(value : integer) return STRING;
-	--	function to_string(value : time) return STRING;
-	--	function to_hstring(value : bit_vector) return STRING;
 end package kyber_pkg;
 
 package body kyber_pkg is

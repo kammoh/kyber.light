@@ -17,9 +17,9 @@
 --                                  
 -----------------------------------------------------------------------------------------------------------------------
 --
---  unit name: Kyber CPA Encrypt/Decrypt
+--  unit name: Kyber CPA Encrypt/Decrypt top
 --              
---! @file      .vhdl
+--! @file      cpa_enc.vhdl
 --
 --! @language  VHDL 1993/2002/2008
 --
@@ -59,8 +59,11 @@
 --! <date> KM: <log>\n
 --! <extended description>
 -----------------------------------------------------------------------------------------------------------------------
---! @todo <next thing to do> \n
---
+--! @todo  TODO   termination flushing should be really based on not_empty to work with future modifications 
+--!                     right now optimized away and works with current number of stages
+--!        TODO   add not_empty out port to all pipelines/FIFOs = or(valid bits FIFO, sub-modules not_empty)
+--!
+--!        TODO   overlapped (parallel) operation of keccak and polyvec_mac
 -----------------------------------------------------------------------------------------------------------------------
 --===================================================================================================================--
 library ieee;
@@ -74,23 +77,25 @@ entity cpa_enc is
 	port(
 		clk           : in  std_logic;
 		rst           : in  std_logic;
-		-- Data inputs
+		-- 
 		i_start_enc   : in  std_logic;
 		i_start_dec   : in  std_logic;
 		i_recv_pk     : in  std_logic;
 		i_recv_sk     : in  std_logic;
 		o_done        : out std_logic;
-		--
+		-- random coins input, corresponds to RDI
 		i_coins_data  : in  T_byte_slv;
 		i_coins_valid : in  std_logic;
 		o_coins_ready : out std_logic;
-		--
-		i_pkmsg_data  : in  T_byte_slv;
-		i_pkmsg_valid : in  std_logic;
-		o_pkmsg_ready : out std_logic;
-		--
-
-		-- Data output
+		-- public key input, corresponds to PDI
+		i_pk_data     : in  T_byte_slv;
+		i_pk_valid    : in  std_logic;
+		o_pk_ready    : out std_logic;
+		-- message input, corresponds to SDI
+		i_msg_data    : in  T_byte_slv;
+		i_msg_valid   : in  std_logic;
+		o_msg_ready   : out std_logic;
+		-- ciphertext output, corresponds to PDO
 		o_ct_data     : out T_byte_slv;
 		o_ct_valid    : out std_logic;
 		i_ct_ready    : in  std_logic
@@ -98,6 +103,7 @@ entity cpa_enc is
 end entity cpa_enc;
 
 architecture RTL of cpa_enc is
+
 	---------------------------------------------=( Constants )=--------------------------------------------------------
 	---------------------------------------------=( Types )=------------------------------------------------------------
 	type T_state is (S_init,
@@ -108,7 +114,7 @@ architecture RTL of cpa_enc is
 	                 S_polynoise_s, S_polynoise_bv, S_polymac,
 	                 S_send_b, S_send_b_flush, S_send_v,
 	                 S_done
-	                );                  -- TODO overlap (parallel) operations?
+	                );
 	--
 	---------------------------------------------=( Registers/FFs )=----------------------------------------------------
 	signal state                  : T_state;
@@ -117,66 +123,69 @@ architecture RTL of cpa_enc is
 	--
 	---------------------------------------------=( Wires )=------------------------------------------------------------
 
-	signal polymac_recv_aa          : std_logic;
-	signal polymac_recv_bb          : std_logic;
-	signal polymac_recv_v           : std_logic;
-	signal polymac_send_v           : std_logic;
-	signal polymac_do_mac           : std_logic;
-	signal polymac_done             : std_logic;
-	signal polymac_subtract         : std_logic;
-	signal polymac_rama_blk         : unsigned(log2ceilnz(KYBER_K + 1) - 1 downto 0);
-	signal polymac_din_data         : T_coef_us;
-	signal polymac_din_valid        : std_logic;
-	signal polymac_din_ready        : std_logic;
-	signal polymac_dout_data        : T_coef_us;
-	signal polymac_dout_valid       : std_logic;
-	signal polymac_dout_ready       : std_logic;
-	signal cbd_din_data             : T_byte_Slv;
-	signal cbd_coeffout_data        : T_coef_slv;
-	signal noisegen_recv_msg        : std_logic;
-	signal noisegen_send_hash       : std_logic;
-	signal noisegen_done            : std_logic;
-	signal noisegen_coinin_data     : T_byte_slv;
-	signal noisegen_coinin_valid    : std_logic;
-	signal noisegen_coinin_ready    : std_logic;
-	signal noisegen_dout_data       : T_byte_slv;
-	signal noisegen_dout_valid      : std_logic;
-	signal noisegen_dout_ready      : std_logic;
-	signal compressor_din_data      : T_coef_us;
-	signal compressor_din_valid     : std_logic;
-	signal compressor_din_ready     : std_logic;
-	signal msgadd_polyin_valid      : std_logic;
-	signal msgadd_polyin_ready      : std_logic;
-	signal msgadd_msgin_valid       : std_logic;
-	signal msgadd_msgin_ready       : std_logic;
-	signal msgadd_polyout_data      : T_coef_us;
-	signal msgadd_polyout_valid     : std_logic;
-	signal msgadd_polyout_ready     : std_logic;
-	signal decomp_din_valid         : std_logic;
-	signal decomp_din_ready         : std_logic;
-	signal decomp_coefout_data      : T_Coef_slv;
-	signal decomp_coefout_valid     : std_logic;
-	signal decomp_coefout_ready     : std_logic;
-	signal polymac_is_using_divider : std_logic;
-	signal polymac_remin_data       : unsigned(2 * KYBER_COEF_BITS - 1 downto 0);
-	signal polymac_remin_valid      : std_logic;
-	signal remdivout_valid          : std_logic;
-	signal compressor_is_polyvec    : std_logic;
-	signal uin_data                 : unsigned(2 * KYBER_COEF_BITS - 1 downto 0);
-	signal uin_valid                : std_logic;
-	signal compressor_divin_data    : unsigned(2 * KYBER_COEF_BITS - 1 downto 0);
-	signal compressor_divin_valid   : std_logic;
-	signal uin_ready                : std_logic;
-	signal remdivout_ready          : std_logic;
-	signal compressor_divout_valid  : std_logic;
-	signal compressor_divout_ready  : std_logic;
-	signal polymac_remin_ready      : std_logic;
-	signal polymac_remout_data      : T_coef_us;
-	signal polymac_remout_valid     : std_logic;
-	signal polymac_remout_ready     : std_logic;
-	signal compressor_divout_data   : T_coef_us;
-	signal compressor_divin_ready   : std_logic;
-	signal compressor_dout_valid    : std_logic;
+	signal polymac_recv_aa            : std_logic;
+	signal polymac_recv_bb            : std_logic;
+	signal polymac_recv_v             : std_logic;
+	signal polymac_send_v             : std_logic;
+	signal polymac_do_mac             : std_logic;
+	signal polymac_done               : std_logic;
+	signal polymac_subtract           : std_logic;
+	signal polymac_rama_blk           : unsigned(log2ceilnz(KYBER_K + 1) - 1 downto 0);
+	signal polymac_din_data           : T_coef_us;
+	signal polymac_din_valid          : std_logic;
+	signal polymac_din_ready          : std_logic;
+	signal polymac_dout_data          : T_coef_us;
+	signal polymac_dout_valid         : std_logic;
+	signal polymac_dout_ready         : std_logic;
+	signal cbd_din_data               : T_byte_Slv;
+	signal cbd_coeffout_data          : T_coef_slv;
+	signal noisegen_recv_msg          : std_logic;
+	signal noisegen_send_hash         : std_logic;
+	signal noisegen_done              : std_logic;
+	signal noisegen_coinin_data       : T_byte_slv;
+	signal noisegen_coinin_valid      : std_logic;
+	signal noisegen_coinin_ready      : std_logic;
+	signal noisegen_dout_data         : T_byte_slv;
+	signal noisegen_dout_valid        : std_logic;
+	signal noisegen_dout_ready        : std_logic;
+	signal compressor_din_data        : T_coef_us;
+	signal compressor_din_valid       : std_logic;
+	signal compressor_din_ready       : std_logic;
+	signal msgadd_polyin_valid        : std_logic;
+	signal msgadd_polyin_ready        : std_logic;
+	signal msgadd_msgin_valid         : std_logic;
+	signal msgadd_msgin_ready         : std_logic;
+	signal msgadd_polyout_data        : T_coef_us;
+	signal msgadd_polyout_valid       : std_logic;
+	signal msgadd_polyout_ready       : std_logic;
+	signal deserializer_din_data      : T_byte_slv;
+	signal deserializer_din_valid     : std_logic;
+	signal deserializer_din_ready     : std_logic;
+	signal deserializer_coefout_data  : T_Coef_slv;
+	signal deserializer_coefout_valid : std_logic;
+	signal deserializer_coefout_ready : std_logic;
+	signal polymac_is_using_divider   : std_logic;
+	signal polymac_remin_data         : unsigned(2 * KYBER_COEF_BITS - 1 downto 0);
+	signal polymac_remin_valid        : std_logic;
+	signal remdivout_valid            : std_logic;
+	signal compressor_is_polyvec      : std_logic;
+	signal uin_data                   : unsigned(2 * KYBER_COEF_BITS - 1 downto 0);
+	signal uin_valid                  : std_logic;
+	signal compressor_divin_data      : unsigned(2 * KYBER_COEF_BITS - 1 downto 0);
+	signal compressor_divin_valid     : std_logic;
+	signal uin_ready                  : std_logic;
+	signal remdivout_ready            : std_logic;
+	signal compressor_divout_valid    : std_logic;
+	signal compressor_divout_ready    : std_logic;
+	signal polymac_remin_ready        : std_logic;
+	signal polymac_remout_data        : T_coef_us;
+	signal polymac_remout_valid       : std_logic;
+	signal polymac_remout_ready       : std_logic;
+	signal compressor_divout_data     : T_coef_us;
+	signal compressor_divin_ready     : std_logic;
+	signal compressor_dout_valid      : std_logic;
+	signal msgadd_msgin_data          : T_byte_slv;
+	signal compressor_is_msg          : std_logic;
 
 begin
 
@@ -185,16 +194,16 @@ begin
 	polymac_rama_blk     <= poly_rama_blk_cntr_reg;
 	o_ct_valid           <= compressor_dout_valid;
 
-	serializer_inst : entity work.decompressor
+	deserializer_inst : entity work.deserializer
 		port map(
 			clk             => clk,
 			rst             => rst,
-			i_din_data      => i_pkmsg_data,
-			i_din_valid     => decomp_din_valid,
-			o_din_ready     => decomp_din_ready,
-			o_coefout_data  => decomp_coefout_data,
-			o_coefout_valid => decomp_coefout_valid,
-			i_coefout_ready => decomp_coefout_ready
+			i_din_data      => deserializer_din_data,
+			i_din_valid     => deserializer_din_valid,
+			o_din_ready     => deserializer_din_ready,
+			o_coefout_data  => deserializer_coefout_data,
+			o_coefout_valid => deserializer_coefout_valid,
+			i_coefout_ready => deserializer_coefout_ready
 		);
 
 	sha3_noisegen_inst : entity work.sha3_noisegen
@@ -256,9 +265,14 @@ begin
 		);
 
 	compressor_inst : entity work.compressor
+		generic map(
+			G_ENCRYPT => True,
+			G_DECRYPT => False
+		)
 		port map(
 			clk            => clk,
 			rst            => rst,
+			i_is_msg       => compressor_is_msg,
 			i_is_polyvec   => compressor_is_polyvec,
 			i_din_data     => compressor_din_data,
 			i_din_valid    => compressor_din_valid,
@@ -274,6 +288,13 @@ begin
 			o_divout_ready => compressor_divout_ready
 		);
 
+	compressor_is_msg <= '0';
+
+	-- i_pk -> deserializer
+	deserializer_din_data  <= i_pk_data;
+	deserializer_din_valid <= i_pk_valid;
+	o_pk_ready             <= deserializer_din_ready;
+
 	msgadd_inst : entity work.msg_add
 		port map(
 			clk             => clk,
@@ -281,13 +302,18 @@ begin
 			i_polyin_data   => polymac_dout_data,
 			i_polyin_valid  => msgadd_polyin_valid,
 			o_polyin_ready  => msgadd_polyin_ready,
-			i_msgin_data    => i_pkmsg_data,
+			i_msgin_data    => msgadd_msgin_data,
 			i_msgin_valid   => msgadd_msgin_valid,
 			o_msgin_ready   => msgadd_msgin_ready,
 			o_polyout_data  => msgadd_polyout_data,
 			o_polyout_valid => msgadd_polyout_valid,
 			i_polyout_ready => msgadd_polyout_ready
 		);
+
+	--- i_msg -> msg_add.msgin
+	msgadd_msgin_data  <= i_msg_data;
+	msgadd_msgin_valid <= i_msg_valid;
+	o_msg_ready        <= msgadd_msgin_ready;
 
 	divider_inst : entity work.divider
 		generic map(
@@ -307,7 +333,7 @@ begin
 	--- 
 	-- divider arbitration
 	uin_data <= polymac_remin_data when polymac_is_using_divider = '1' else compressor_divin_data;
-	-- uin.valid activated only in states
+	-- uin.valid activated only per state basis
 
 	sync_proc : process(clk) is
 	begin
@@ -320,22 +346,30 @@ begin
 					when S_init =>
 						nonce_reg              <= (others => '0');
 						poly_rama_blk_cntr_reg <= (others => '0');
-						if i_start_enc = '1' then
+						if i_recv_pk = '1' then
+							report ">> [command] recv_pk";
+							report "state => S_recv_pk";
+							state <= S_recv_AT_PK;
+						elsif i_start_enc = '1' then
+							report ">> [command] start_enc";
 							report "state => S_recv_coins";
 							state <= S_recv_coins;
 						end if;
 
 					when S_recv_coins =>
 						if noisegen_done = '1' then
-							report "state => S_recv_AT_PK";
-							state <= S_recv_AT_PK;
+							report "state => S_polynoise_s";
+							state <= S_polynoise_s;
+--							state <= S_send_b; -- FIXME TESTING
 						end if;
+
 					when S_recv_AT_PK =>
 						if polymac_done = '1' then
 							poly_rama_blk_cntr_reg <= poly_rama_blk_cntr_reg + 1;
 							if poly_rama_blk_cntr_reg = KYBER_K then
-								report "state => S_polynoise_s";
-								state                  <= S_polynoise_s;
+								report "<< [done] (recv_pk)";
+								report "state => S_done";
+								state                  <= S_done;
 								poly_rama_blk_cntr_reg <= (others => '0');
 							end if;
 						end if;
@@ -375,7 +409,7 @@ begin
 							poly_rama_blk_cntr_reg <= poly_rama_blk_cntr_reg + 1;
 							if poly_rama_blk_cntr_reg = KYBER_K - 1 then
 								report "state => S_send_b_flush";
-								state                  <= S_send_b_flush;
+								state <= S_send_b_flush;
 							end if;
 						end if;
 
@@ -387,6 +421,7 @@ begin
 
 					when S_send_v =>
 						if polymac_done = '1' and compressor_dout_valid = '0' and remdivout_valid = '0' then
+							report "<< [done] (start_enc)";
 							report "state => S_done";
 							state                  <= S_done;
 							poly_rama_blk_cntr_reg <= (others => '0');
@@ -394,7 +429,7 @@ begin
 
 					when S_done =>
 						-- wait for ack from master (caller)
-						if i_start_enc = '0' then
+						if (i_start_enc or i_recv_pk) = '0' then
 							report "state => S_init";
 							state <= S_init;
 						end if;
@@ -413,44 +448,41 @@ begin
 	end process sync_proc;
 
 	comb_proc : process(                --
-	state, cbd_coeffout_data, compressor_din_ready, i_coins_valid, i_pkmsg_valid, --
-	msgadd_msgin_ready, msgadd_polyin_ready, msgadd_polyout_data, msgadd_polyout_valid, noisegen_coinin_ready, --
+	state, cbd_coeffout_data, compressor_din_ready, i_coins_valid, --
+	msgadd_polyin_ready, msgadd_polyout_data, msgadd_polyout_valid, noisegen_coinin_ready, --
 	noisegen_done, noisegen_dout_valid, polymac_din_ready, polymac_done, --
-	polymac_dout_data, polymac_dout_valid, decomp_coefout_data, decomp_coefout_valid, decomp_din_ready, --
+	polymac_dout_data, polymac_dout_valid, deserializer_coefout_data, deserializer_coefout_valid, --
 	compressor_divin_valid, compressor_divout_ready, polymac_remin_valid, polymac_remout_ready, remdivout_valid, --
 	uin_ready                           --
 	) is
 	begin
-		polymac_recv_aa         <= '0';
-		polymac_recv_bb         <= '0';
-		polymac_recv_v          <= '0';
-		polymac_do_mac          <= '0';
-		polymac_send_v          <= '0';
-		polymac_subtract        <= '0';
-		polymac_din_valid       <= '0';
-		polymac_dout_ready      <= '0';
-		noisegen_recv_msg       <= '0';
-		noisegen_send_hash      <= '0';
-		noisegen_coinin_valid   <= '0';
-		noisegen_dout_ready     <= '0';
-		decomp_din_valid        <= '0';
-		decomp_coefout_ready    <= '0';
-		msgadd_polyin_valid     <= '0';
-		msgadd_msgin_valid      <= '0';
-		msgadd_polyout_ready    <= '0';
-		o_pkmsg_ready           <= '0';
-		o_coins_ready           <= '0';
-		o_done                  <= '0';
-		polymac_din_data        <= unsigned(cbd_coeffout_data);
-		compressor_din_data     <= (others => '0');
-		compressor_din_valid    <= '0';
-		compressor_divout_valid <= '0';
-		remdivout_ready         <= '0';
-		uin_valid               <= '0';
-		polymac_remout_valid    <= '0';
-		polymac_remin_ready     <= '0';
-		compressor_divin_ready  <= '0';
-		compressor_is_polyvec   <= '0';
+		polymac_recv_aa            <= '0';
+		polymac_recv_bb            <= '0';
+		polymac_recv_v             <= '0';
+		polymac_do_mac             <= '0';
+		polymac_send_v             <= '0';
+		polymac_subtract           <= '0';
+		polymac_din_valid          <= '0';
+		polymac_dout_ready         <= '0';
+		noisegen_recv_msg          <= '0';
+		noisegen_send_hash         <= '0';
+		noisegen_coinin_valid      <= '0';
+		noisegen_dout_ready        <= '0';
+		deserializer_coefout_ready <= '0';
+		msgadd_polyin_valid        <= '0';
+		msgadd_polyout_ready       <= '0';
+		o_coins_ready              <= '0';
+		o_done                     <= '0';
+		polymac_din_data           <= unsigned(cbd_coeffout_data);
+		compressor_din_data        <= (others => '0');
+		compressor_din_valid       <= '0';
+		compressor_divout_valid    <= '0';
+		remdivout_ready            <= '0';
+		uin_valid                  <= '0';
+		polymac_remout_valid       <= '0';
+		polymac_remin_ready        <= '0';
+		compressor_divin_ready     <= '0';
+		compressor_is_polyvec      <= '0';
 
 		case state is
 			when S_init =>
@@ -462,12 +494,10 @@ begin
 				noisegen_coinin_valid <= i_coins_valid;
 
 			when S_recv_AT_PK =>
-				polymac_recv_aa      <= not polymac_done;
-				o_pkmsg_ready        <= decomp_din_ready and not polymac_done;
-				polymac_din_valid    <= decomp_coefout_valid;
-				polymac_din_data     <= unsigned(decomp_coefout_data);
-				decomp_coefout_ready <= polymac_din_ready;
-				decomp_din_valid     <= i_pkmsg_valid and not polymac_done;
+				polymac_recv_aa            <= not polymac_done;
+				polymac_din_valid          <= deserializer_coefout_valid;
+				polymac_din_data           <= unsigned(deserializer_coefout_data);
+				deserializer_coefout_ready <= polymac_din_ready;
 
 			when S_polynoise_s =>
 				polymac_recv_bb     <= not polymac_done;
@@ -490,56 +520,46 @@ begin
 
 			when S_send_b =>
 				-- ack when "done"
-				polymac_send_v <= not polymac_done; -- auto-restart
-
-				uin_valid <= compressor_divin_valid;
-
+				polymac_send_v          <= not polymac_done; -- auto-restart
+				--
+				uin_valid               <= compressor_divin_valid;
+				--
 				compressor_divout_valid <= remdivout_valid;
 				remdivout_ready         <= compressor_divout_ready;
-
-				compressor_divin_ready <= uin_ready;
-
+				--
+				compressor_divin_ready  <= uin_ready;
 				-- sending out polyvec b directly from polymac
-				compressor_is_polyvec <= '1';
-
+				compressor_is_polyvec   <= '1';
 				--- polyvec.dout -> compressir.din
-				compressor_din_data  <= polymac_dout_data;
-				compressor_din_valid <= polymac_dout_valid;
-				polymac_dout_ready   <= compressor_din_ready;
-				
-			when S_send_b_flush=>
+				compressor_din_data     <= polymac_dout_data;
+				compressor_din_valid    <= polymac_dout_valid;
+				polymac_dout_ready      <= compressor_din_ready;
+
+			when S_send_b_flush =>
 				compressor_divout_valid <= remdivout_valid;
 				remdivout_ready         <= compressor_divout_ready;
 
 				-- sending out polyvec b directly from polymac
 				compressor_is_polyvec <= '1';
-								
 
 			when S_send_v =>
 				-- ack when "done"
-				polymac_send_v <= '1'; -- no auto-restart
-
-				uin_valid <= compressor_divin_valid;
-
+				polymac_send_v          <= '1'; -- no auto-restart
+				--
+				uin_valid               <= compressor_divin_valid;
+				--
 				compressor_divout_valid <= remdivout_valid;
 				remdivout_ready         <= compressor_divout_ready;
-
-				compressor_divin_ready <= uin_ready;
-
+				--
+				compressor_divin_ready  <= uin_ready;
 				-- sending out poly 'v' through msg_add
-
 				--- polymac.dout -> msg_add.polyin
-				polymac_dout_ready  <= msgadd_polyin_ready;
-				msgadd_polyin_valid <= polymac_dout_valid; -- valid only in this state
-
+				polymac_dout_ready      <= msgadd_polyin_ready;
+				msgadd_polyin_valid     <= polymac_dout_valid; -- valid only in this state
 				--- msg_add.polyout -> compressor.din
-				compressor_din_data  <= msgadd_polyout_data;
-				compressor_din_valid <= msgadd_polyout_valid;
-				msgadd_polyout_ready <= compressor_din_ready;
-
-				--- i_pkmsg -> msg_add.msgin
-				msgadd_msgin_valid <= i_pkmsg_valid;
-				o_pkmsg_ready      <= msgadd_msgin_ready;
+				compressor_din_data     <= msgadd_polyout_data;
+				compressor_din_valid    <= msgadd_polyout_valid;
+				msgadd_polyout_ready    <= compressor_din_ready;
 
 			when S_done =>
 				o_done <= '1';

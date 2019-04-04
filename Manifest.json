@@ -232,13 +232,13 @@
 			"language": "vhdl.1993"
 		},
 
-		"decompressor": 
+		"deserializer": 
 		{
 			"path": "vhdl",
-			"top": "decompressor",
+			"top": "deserializer",
 			"files": 
 			[
-				"decompressor.vhdl"
+				"deserializer.vhdl"
 			],
 
 			"depends": 
@@ -289,7 +289,7 @@
 				"cbd",
 				"compressor",
 				"msg_add",
-				"decompressor"
+				"deserializer"
 			],
 
 			"language": "vhdl.1993"

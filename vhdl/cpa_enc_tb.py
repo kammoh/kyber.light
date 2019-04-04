@@ -42,14 +42,14 @@ def compare_lists(l1, l2):
 @cocotb.coroutine
 def func_test(dut, valid_gen=None, ready_gen=None):
 
-    
     tb = CmdDoneTester(dut, dut.clk)
     clkedge = RisingEdge(dut.clk)
 
     yield tb.reset()
 
     dut.i_start_dec <= 0
-    dut.i_start_enc <= 1
+    dut.i_start_enc <= 0
+    dut.i_recv_pk <= 0
 
     coins = [tb.rnd.randint(0, 0xff) for _ in range(KYBER_SYMBYTES)]  # [i & 0xff for i in range(KYBER_SYMBYTES)]
     pk = [tb.rnd.randint(0, 0xff) for i in range(compressed_pk_bytes())]
@@ -59,22 +59,31 @@ def func_test(dut, valid_gen=None, ready_gen=None):
     exp_str = [hex(e)[2:].zfill(2) for e in exp]
 
     # This should come first!
-    tb.expect_output('ct', exp )
-    
-    tb.log.info("sending coins")
-    yield tb.drive_input('coins', coins )
+    tb.expect_output('ct', exp)
 
     tb.log.info("sending PK + AT")
-    yield tb.drive_input('pkmsg', atpk)
+    dut.i_recv_pk <= 1
+    yield tb.drive_input('pk', atpk)
+
+    yield tb.wait_for_done()
+    yield clkedge  # optional
+    dut.i_recv_pk <= 0
+    yield clkedge  # optional
+
+    tb.log.info("sending coins")
+    dut.i_start_enc <= 1
+    yield tb.drive_input('coins', coins)
 
     tb.log.info("sending message")
-    yield tb.drive_input('pkmsg', msg)
+    yield tb.drive_input('msg', msg)
 
     tb.log.info("waiting for done")
     yield tb.wait_for_done()
 
-    yield clkedge
-    yield clkedge
+    dut.i_start_enc <= 0
+
+    yield clkedge  # optional
+    yield clkedge  # optional
 
     raise tb.scoreboard.result
 
@@ -82,8 +91,8 @@ def func_test(dut, valid_gen=None, ready_gen=None):
 # Tests
 factory = TestFactory(func_test)
 
-factory.add_option( "valid_gen", [intermittent_single_cycles, random_50_percent])
-factory.add_option( "ready_gen", [intermittent_single_cycles, random_50_percent])
+# factory.add_option("valid_gen", [intermittent_single_cycles, random_50_percent])
+# factory.add_option("ready_gen", [intermittent_single_cycles, random_50_percent])
 # factory.add_option("valid_gen", [None])
 
 factory.generate_tests()

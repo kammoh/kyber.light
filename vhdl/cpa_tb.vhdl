@@ -149,9 +149,9 @@ begin
 			i_coins_data  => i_coins_data,
 			i_coins_valid => i_coins_valid,
 			o_coins_ready => o_coins_ready,
-			i_pkmsg_data  => i_pkmsg_data,
-			i_pkmsg_valid => i_pkmsg_valid,
-			o_pkmsg_ready => o_pkmsg_ready,
+			i_pk_data  => i_pkmsg_data,
+			i_pk_valid => i_pkmsg_valid,
+			o_pk_ready => o_pkmsg_ready,
 			o_ct_data     => o_ct_data,
 			o_ct_valid    => o_ct_valid,
 			i_ct_ready    => i_ct_ready

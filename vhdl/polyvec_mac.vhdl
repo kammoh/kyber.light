@@ -101,10 +101,11 @@ entity polyvec_mac is
 		o_dout_data    : out T_coef_us;
 		o_dout_valid   : out std_logic;
 		i_dout_ready   : in  std_logic;
-		--
+		-- output to divider (divider's input)
 		o_remin_data   : out unsigned(2 * KYBER_COEF_BITS - 1 downto 0);
 		o_remin_valid  : out std_logic;
 		i_remin_ready  : in  std_logic;
+		-- input from divider (divider's output)
 		i_remout_data  : in  T_coef_us;
 		i_remout_valid : in  std_logic;
 		o_remout_ready : out std_logic;
