@@ -190,7 +190,7 @@ begin
 		while state /= encrypt_done loop
 			wait until rising_edge(clk) and i_ct_ready = '1' and o_ct_valid = '1';
 			temp := o_ct_data;
-			report "received " & to_hstring(temp) severity note;
+--			report "received " & to_hstring(temp) severity note;
 			hwrite(line_out, temp);
 			writeline(fileout, line_out);
 		end loop;
@@ -213,9 +213,9 @@ begin
 			i_rnd_valid => i_coins_valid,
 			o_rnd_ready => o_coins_ready,
 			--
-			i_pt_data   => i_pt_data,
-			i_pt_valid  => i_pt_valid,
-			o_pt_ready  => o_pt_ready,
+			i_msg_data   => i_pt_data,
+			i_msg_valid  => i_pt_valid,
+			o_msg_ready  => o_pt_ready,
 			--
 			i_pk_data   => i_pk_data,
 			i_pk_valid  => i_pk_valid,

@@ -15,7 +15,8 @@ manifest.parser.add_argument('--synth', dest='synth', action='store',
 manifest.parser.add_argument('--debug', dest='debug', action='store_const', const=True, default=False,
                              help='turn debug on')
 
-manifest.parser.add_argument('--mod', dest='bundle_name', action='store', help='target bundle name in Manifest', required=True)
+manifest.parser.add_argument('bundle_name', action='store',
+                             help='target bundle name in Manifest')
 manifest.parser.add_argument('--sim-dump', dest='sim_dump', action='store_const', const=True, default=False, help='dump wave in simulation')
 
 args = manifest.parser.parse_args()

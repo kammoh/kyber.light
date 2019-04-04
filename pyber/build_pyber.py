@@ -10,7 +10,6 @@ ROOT_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
 src_path = Path(ROOT_DIR).joinpath('cref')
 assert src_path.exists(), f"{src_path} does not exist"
 
-print 
 
 ffibuilder.cdef(
 """

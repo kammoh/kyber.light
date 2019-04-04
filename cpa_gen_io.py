@@ -31,6 +31,7 @@ with Path("coins.in.txt").open('w') as fi:
 manifest = Manifest.load_from_file()
 sim = Ghdl(manifest, log_level='INFO')
 sim.run_test('cpa_tb', elab_only=True)
+
 # subprocess.run(['./cpa_tb', '--wave=enc_tb.ghw', '--ieee-asserts=disable'])
 subprocess.run(['./cpa_tb', '--ieee-asserts=disable'])
 

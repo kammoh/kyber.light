@@ -120,7 +120,7 @@ void poly_tobytes(unsigned char *r, const poly *a)
 #include <stdio.h>
 #include <stdlib.h>
 
-void poly_print(const poly *a) {
+void poly_dump(const poly *a) {
   int i;
 
   for (i = 0; i < KYBER_N; i++) {

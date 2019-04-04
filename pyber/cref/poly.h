@@ -30,6 +30,6 @@ void poly_invntt(poly *r);
 void poly_add(poly *r, const poly *a, const poly *b);
 void poly_sub(poly *r, const poly *a, const poly *b);
 
-void poly_print(const poly *a);
+void poly_dump(const poly *a);
 
 #endif

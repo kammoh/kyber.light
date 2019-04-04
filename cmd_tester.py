@@ -17,6 +17,17 @@ from cocotb.generators.bit import (
 from cocotb.log import SimLog
 from cocotb.generators.byte import random_data, get_bytes
 from cocotb.handle import ModifiableObject
+import itertools
+
+
+def compare_lists(l1, l2):
+    if len(l1) != len(l2):
+        print(f'lengths differ! len(l1)={len(l1)} != len(l2)={len(l2)}')
+    return [f"@{x[0]}: {hex(x[1])} != {hex(y)}" for x, y in itertools.zip_longest(enumerate(l1), l2) if x[1] != y]
+
+
+def to_hex_str(lst):
+    return [hex(e)[2:].zfill(2) for e in lst]
 
 
 def get_words(nwords, generator):
@@ -41,7 +52,7 @@ class ValidReadyDriver(ValidatedBusDriver):
 
     def __init__(self, entity, name, clock, **kwargs):
         # config = kwargs.pop('config', {})
-        ValidatedBusDriver.__init__(entity=entity, name=name, clock=clock, **kwargs)
+        ValidatedBusDriver.__init__(self, entity=entity, name=name, clock=clock, **kwargs)
         self.config = self._default_config.copy()
 
         self.clock = clock
@@ -58,7 +69,6 @@ class ValidReadyDriver(ValidatedBusDriver):
     @cocotb.coroutine
     def _wait_ready(self):
         """Wait for a ready cycle on the bus before continuing.
-
             Can no longer drive values this cycle...
         """
         rdonly = ReadOnly()
@@ -404,7 +414,7 @@ class ValidReadyTester(object):
             self.scoreboard.add_interface(monitor, queue, strict_type=True)
 
         queue.append(expected_output)
-        monitor.set_ready_generator(ready_generator)
+        monitor.set_ready_generator(ready_generator())
         monitor.num_expected_words = len(expected_output)
         self.log.info(f"expecting {len(expected_output)} bytes on bus: {out_bus_name}")
 
@@ -462,9 +472,13 @@ class ValidReadyTester(object):
     @cocotb.coroutine
     def reset(self):
         self.log.debug("Resetting DUT")
+        self.dut.rst <= 0
+        yield FallingEdge(self.clock)
         self.dut.rst <= 1
         yield RisingEdge(self.clock)
         yield RisingEdge(self.clock)
+        yield RisingEdge(self.clock)
+        yield FallingEdge(self.clock)
         self.dut.rst <= 0
         yield FallingEdge(self.clock)
         self.log.debug("Out of reset")
@@ -473,12 +487,14 @@ class ValidReadyTester(object):
 class CmdDoneTester(ValidReadyTester):
     def __init__(self, dut, clock, **kwargs):
         """ init """
+        dut._log.info(f"initializing CmdDoneTester...")
         done_sig_name = kwargs.pop('done_signal', 'o_done')
-        ValidReadyTester.__init__(dut, clock, **kwargs)
+        ValidReadyTester.__init__(self, dut, clock, **kwargs)
         if not done_sig_name in self.outports:
             self.log.error(f"{done_sig_name} is not an output port of DUT")
             raise TestError
         self.done_signal = getattr(dut, done_sig_name)
+        self.log.info(f"CmdDoneTester initialized")
 
     # def register_commands(self, commands_dict):
     #     for cmd, signals in commands_dict.items():

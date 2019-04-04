@@ -348,12 +348,18 @@ void repack_at_pk(unsigned char *pk_at_bytes, const unsigned char *pk) {
   polyvec pkpv, at[KYBER_K];
 
   unpack_pk_at_nontt(&pkpv, at, pk);
-  
+
   for (int i = 0; i < KYBER_K; i++) {
-    polyvec_tobytes(pk_at_bytes + i * KYBER_POLYVECBYTES, &at[i]);
+      printf("at[%d]:\n", i);
+      polyvec_dump(&at[i]);
   }
-  polyvec_tobytes(pk_at_bytes + KYBER_K * KYBER_POLYVECBYTES, &pkpv);
-}
+
+
+    for (int i = 0; i < KYBER_K; i++) {
+      polyvec_tobytes(pk_at_bytes + i * KYBER_POLYVECBYTES, &at[i]);
+    }
+    polyvec_tobytes(pk_at_bytes + KYBER_K * KYBER_POLYVECBYTES, &pkpv);
+  }
 
 // deserialize:
 void at_pk_frombytes(polyvec *at, polyvec *pkpv, const unsigned char *bytes) {

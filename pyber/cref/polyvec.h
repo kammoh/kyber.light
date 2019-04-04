@@ -22,6 +22,6 @@ void polyvec_nega_mac(poly *r, const polyvec *a, const polyvec *b, int neg);
 
 void polyvec_add(polyvec *r, const polyvec *a, const polyvec *b);
 
-void polyvec_print(const polyvec *pv);
+void polyvec_dump(const polyvec *pv);
 
 #endif

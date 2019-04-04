@@ -149,7 +149,7 @@ begin
 
 	mux_proc : process(                 --
 	i_is_polyvec, a11_din_ready, a3_din_ready, addition, a11_dout_data, --
-	a11_dout_valid, a3_dout_data, a3_dout_valid --
+	a11_dout_valid, a3_dout_data, a3_dout_valid, mutliplier_din_data --
 	) is
 	begin
 		if i_is_polyvec = '1' then

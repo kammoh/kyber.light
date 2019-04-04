@@ -6,6 +6,8 @@ from typing import List, Iterable as IterableType
 import shutil
 from math import log2, ceil
 import os
+import sys
+import itertools
 
 
 KYBER_N = pyber_clib.KYBER_N
@@ -25,6 +27,8 @@ KYBER_CIPHERTEXTBYTES = pyber_clib.KYBER_CIPHERTEXTBYTES
 KYBER_INDCPA_MSGBYTES = pyber_clib.KYBER_INDCPA_MSGBYTES
 
 KYBER_PKBYTES = KYBER_POLYVECBYTES * (KYBER_K + 1)
+
+
 
 def getnoise_bytes(coins, nonce):
     coins = list(coins)
@@ -252,6 +256,16 @@ def test_polyvec_decompress():
     polyvec = polyvec_decompress(ct_bytes)
     polyvec.dump()
 
+def test_cpa_enc():
+    coins = [i & 0xff for i in range(KYBER_SYMBYTES)]
+    pk = [i & 0xff for i in range(compressed_pk_bytes())]
+    msg = [i & 0xff for i in range(KYBER_INDCPA_MSGBYTES)]
+
+    atpk = list(atpk_bytes(pk))
+    exp = list(indcpa_enc_nontt(msg, atpk, coins))
+
+    print(f"exp: {to_hex_str(exp)}")
+
 
 
 __all__ = ['pyber_clib', 'polyvec_nega_mac', 'KYBER_N', 'poly_decompress', 'polyvec_decompress',
@@ -260,8 +274,13 @@ __all__ = ['pyber_clib', 'polyvec_nega_mac', 'KYBER_N', 'poly_decompress', 'poly
 
 
 if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print("need 1 arg")
+        exit (1)
+    test_func = globals()['test_' + sys.argv[1]]
+    test_func()
+    exit(0)
     test_polyvec_decompress()
-    exit(1)
     # r2 = Polynomial.cbd(range(KYBER_ETA * KYBER_N // 4))
     # r2.dump()
 

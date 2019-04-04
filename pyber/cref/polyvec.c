@@ -395,10 +395,10 @@ void polyvec_add(polyvec *r, const polyvec *a, const polyvec *b)
 /*************
 * dump polyvec
 *************/
-void polyvec_print(const polyvec *pv) {
+void polyvec_dump(const polyvec *pv) {
   int i;
   for (i = 0; i < KYBER_K; i++) {
-    printf(" PV [%d]: ", i);
-    poly_print(&pv->vec[i]);
+    printf("    -- vec[%d]: ", i);
+    poly_dump(&pv->vec[i]);
   }
 }
