@@ -88,7 +88,7 @@ architecture RTL of decompressor is
 	signal mutliplier_din_data   : unsigned(11 - 1 downto 0);
 	signal mutliplier_din_valid  : std_logic;
 	signal mutliplier_din_ready  : std_logic;
-	signal mutliplier_dout_data  : unsigned(KYBER_COEF_BITS + 11 - 2 - 1 downto 0);
+	signal mutliplier_dout_data  : unsigned(KYBER_COEF_BITS + 11 - 1 downto 0);
 	signal mutliplier_dout_valid : std_logic;
 	signal mutliplier_dout_ready : std_logic;
 	signal a11_din_data          : std_logic_vector(T_byte_slv'length - 1 downto 0);
@@ -145,7 +145,7 @@ begin
 	a11_din_data  <= i_bytein_data;
 	a11_din_valid <= i_bytein_valid;
 
-	addition <= ("0" & mutliplier_dout_data) + (i_is_polyvec & "0000000" & not i_is_polyvec);
+	addition <= resize(shift_right(mutliplier_dout_data, 2), addition) + (i_is_polyvec & "0000000" & not i_is_polyvec);
 
 	mux_proc : process(                 --
 	i_is_polyvec, a11_din_ready, a3_din_ready, addition, a11_dout_data, --
@@ -174,7 +174,7 @@ begin
 
 	-- TODO ------------------------------------------------
 	------- begin FIXME ------------------------------------
-	mutliplier_dout_data  <= resize(mutliplier_din_data * KYBER_Q_US, mutliplier_dout_data);
+	mutliplier_dout_data  <= mutliplier_din_data * KYBER_Q_US;
 	mutliplier_dout_valid <= mutliplier_din_valid;
 	mutliplier_din_ready  <= mutliplier_dout_ready;
 	------- end   FIXME ------------------------------------

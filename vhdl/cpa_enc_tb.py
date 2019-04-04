@@ -24,6 +24,9 @@ def cpa_enc_tb(dut, debug=True, valid_generator=intermittent_single_cycles, read
         testbench for CPA encrypt top module
     """
     tb = CmdDoneTester(dut, dut.clk, valid_generator=valid_generator, ready_generator=ready_generator)
+
+    yield tb.reset()  # important!
+
     clkedge = RisingEdge(dut.clk)
 
     dut.i_start_dec <= 0
@@ -38,7 +41,6 @@ def cpa_enc_tb(dut, debug=True, valid_generator=intermittent_single_cycles, read
         coins = [tb.rnd.randint(0, 0xff) for _ in range(KYBER_SYMBYTES)]  # [i & 0xff for i in range(KYBER_SYMBYTES)]
         pk = [tb.rnd.randint(0, 0xff) for i in range(compressed_pk_bytes())]
         msg = [tb.rnd.randint(0, 0xff) for i in range(KYBER_INDCPA_MSGBYTES)]
-
 
     atpk = list(atpk_bytes(pk))
     exp = list(pyber.indcpa_enc_nontt(msg, atpk, coins))

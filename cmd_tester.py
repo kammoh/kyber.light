@@ -324,12 +324,13 @@ class ValidReadyMonitor(BusMonitor):
                 self.on -= 1
 
             yield rdonly
-
+            
             while self.bus.valid.value != 1:
-                yield Edge(self.bus.valid)
+                yield clkedge
+                yield rdonly
             
             # self.log.info(f"received {self.bus.data.value} {len(words)}/{self.num_expected_words} on {self.name}")
-            words.append(int(self.bus.data.value))
+            words.append((self.bus.data.value))
                 # self.log.debug(f"received word {len(words)}{self.num_out_words} ")
             if self.num_expected_words and len(words) >= self.num_expected_words:
                 self.log.debug(f"transaction complete: {self.num_expected_words} words")
@@ -380,8 +381,6 @@ class ValidReadyTester(object):
         self.clk_period = kwargs.get('clk_period', 10)
         self.clk_thread = cocotb.fork(Clock(self.clock, self.clk_period, 'ns').start())
 
-        cocotb.fork(self.reset())
-
         self.log.info("ValidReadyTester initialized")
 
     @property
@@ -414,7 +413,8 @@ class ValidReadyTester(object):
             self.scoreboard.add_interface(monitor, queue, strict_type=True)
 
         queue.append(expected_output)
-        monitor.set_ready_generator(ready_generator())
+        if ready_generator:
+            monitor.set_ready_generator(ready_generator())
         monitor.num_expected_words = len(expected_output)
         self.log.info(f"expecting {len(expected_output)} bytes on bus: {out_bus_name}")
 
