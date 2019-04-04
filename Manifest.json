@@ -231,6 +231,25 @@
 
 			"language": "vhdl.1993"
 		},
+		"decompressor": 
+		{
+			"path": "vhdl",
+			"top": "decompressor",
+			"files": 
+			[
+				"decompressor.vhdl"
+			],
+            "tb_files": [
+                "decompressor_tb.py"
+            ],
+			"depends": 
+			[
+				"asymmetric_fifo",
+				"keccak_pkg"
+			],
+
+			"language": "vhdl.1993"
+		},
 
 		"deserializer": 
 		{

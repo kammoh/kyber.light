@@ -17,9 +17,9 @@
 --                                  
 -----------------------------------------------------------------------------------------------------------------------
 --
---  unit name: full name (shortname / entity name)
+--  unit name: Deserializer
 --              
---! @file      .vhdl
+--! @file      deserializer.vhdl
 --
 --! @brief     <file content, behavior, purpose, special usage notes>
 --

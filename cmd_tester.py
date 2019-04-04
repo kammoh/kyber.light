@@ -41,7 +41,7 @@ class ValidReadyDriver(ValidatedBusDriver):
 
     def __init__(self, entity, name, clock, **kwargs):
         # config = kwargs.pop('config', {})
-        super().__init__(entity=entity, name=name, clock=clock, **kwargs)
+        ValidatedBusDriver.__init__(entity=entity, name=name, clock=clock, **kwargs)
         self.config = self._default_config.copy()
 
         self.clock = clock
@@ -62,7 +62,7 @@ class ValidReadyDriver(ValidatedBusDriver):
             Can no longer drive values this cycle...
         """
         rdonly = ReadOnly()
-        clkedge = RisingEdge(self.clock)
+        # clkedge = RisingEdge(self.clock)
         yield rdonly
         ready = self.bus.ready
         while ready.value != 1:
@@ -202,18 +202,19 @@ class ValidReadyDriver(ValidatedBusDriver):
     @cocotb.coroutine
     def _driver_send(self, pkt, sync=True):
         dut = self.entity
-        if isinstance(pkt, bytes):
-            if len(self.bus.data) % 8 != 0:
-                self.log.info("_driver_send: self.bus.data) is not multiple of 8")
-                raise TestError
-            self.log.info("Sending packet of length %d bytes" % len(pkt))
-            self.log.info(hexdump(pkt))
-            yield self._send_bytes(pkt, sync=sync)
-            # self.log.info(
-            #     "Successfully sent packet of length %d bytes" % len(pkt))
-        elif isinstance(pkt, str):
-            yield self._send_bin_string(pkt, sync=sync)
-        elif isinstance(pkt, Iterable):
+        # if isinstance(pkt, bytes):
+        #     if len(self.bus.data) % 8 != 0:
+        #         self.log.info("_driver_send: self.bus.data) is not multiple of 8")
+        #         raise TestError
+        #     self.log.info("Sending packet of length %d bytes" % len(pkt))
+        #     self.log.info(hexdump(pkt))
+        #     yield self._send_bytes(pkt, sync=sync)
+        #     # self.log.info(
+        #     #     "Successfully sent packet of length %d bytes" % len(pkt))
+        # elif isinstance(pkt, str):
+        #     yield self._send_bin_string(pkt, sync=sync)
+        # el
+        if isinstance(pkt, Iterable):
             yield self._send_iterable(pkt, sync=sync)
         else:
             self.log.error("Unknown data to send")
@@ -363,6 +364,9 @@ class ValidReadyTester(object):
         self.rnd = random.Random()
         self.rnd.seed(kwargs.get('seed', None))
 
+        self.valid_generator = kwargs.get('valid_generator', None)
+        self.ready_generator = kwargs.get('ready_generator', None)
+
         self.clk_period = kwargs.get('clk_period', 10)
         self.clk_thread = cocotb.fork(Clock(self.clock, self.clk_period, 'ns').start())
 
@@ -375,16 +379,19 @@ class ValidReadyTester(object):
         return self.scoreboard.result
 
     @cocotb.coroutine
-    def drive_input(self, in_bus_name, in_words, valid_gen = None):
+    def drive_input(self, in_bus_name, in_words, valid_generator=None):
+        if not valid_generator:
+            valid_generator = self.valid_generator
         if in_bus_name not in self.drivers:
             self.drivers[in_bus_name] = ValidReadyDriver(self.dut, in_bus_name, self.clock)
-        if valid_gen:
-            self.drivers[in_bus_name].set_valid_generator(valid_gen())
+        if valid_generator:
+            self.drivers[in_bus_name].set_valid_generator(valid_generator())
 
         yield self.drivers[in_bus_name].send(in_words)
 
-
-    def expect_output(self, out_bus_name, expected_output, ready_gen=None):
+    def expect_output(self, out_bus_name, expected_output, ready_generator=None):
+        if not ready_generator:
+            ready_generator = self.ready_generator
         if out_bus_name in self.monitors:
             monitor, queue = self.monitors[out_bus_name]
         else:
@@ -397,7 +404,7 @@ class ValidReadyTester(object):
             self.scoreboard.add_interface(monitor, queue, strict_type=True)
 
         queue.append(expected_output)
-        monitor.set_ready_generator(ready_gen)
+        monitor.set_ready_generator(ready_generator)
         monitor.num_expected_words = len(expected_output)
         self.log.info(f"expecting {len(expected_output)} bytes on bus: {out_bus_name}")
 
@@ -467,7 +474,7 @@ class CmdDoneTester(ValidReadyTester):
     def __init__(self, dut, clock, **kwargs):
         """ init """
         done_sig_name = kwargs.pop('done_signal', 'o_done')
-        super().__init__(dut, clock, **kwargs)
+        ValidReadyTester.__init__(dut, clock, **kwargs)
         if not done_sig_name in self.outports:
             self.log.error(f"{done_sig_name} is not an output port of DUT")
             raise TestError

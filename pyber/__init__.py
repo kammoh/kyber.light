@@ -70,8 +70,6 @@ def indcpa_enc_nontt(msg, pkat, coins) -> bytes:
     return bytes(cct)
 
 
-
-
 class Polynomial():
     def __init__(self, coeffs: IterableType[int]):
         assert isinstance(coeffs, Iterable) and all(isinstance(c, int) for c in coeffs) and len(coeffs) == KYBER_N, "wrong argument type"
@@ -177,6 +175,10 @@ class PolynomialVector():
     def zero(cls):
         return cls(polys=[Polynomial.zero() for _ in range(KYBER_K)])
 
+    @classmethod
+    def from_cpolyvec(cls, cpolyvec):
+        return cls(polys=[Polynomial.from_cpoly(cpolyvec.vec[i]) for i in range(KYBER_K)])
+
     def __iter__(self):
         for p in self.polys:
             yield from list(p) # flatten
@@ -211,7 +213,6 @@ def polyvec_nega_mac(p_r: Polynomial, pv_a: PolynomialVector, pv_b: PolynomialVe
     assert isinstance(p_r, Polynomial) and isinstance(
         pv_a, PolynomialVector) and isinstance(pv_b, PolynomialVector)
 
-
     cpolyvec_a = ffi.new('polyvec *', pv_a.to_cpolyvec())
     cpolyvec_b = ffi.new('polyvec *', pv_b.to_cpolyvec())
     cpoly_r = ffi.new('poly *', p_r.to_cpoly())
@@ -221,12 +222,46 @@ def polyvec_nega_mac(p_r: Polynomial, pv_a: PolynomialVector, pv_b: PolynomialVe
     return Polynomial(cpoly_r.coeffs) # need to copy!!!
 
 
-__all__ = ['pyber_clib', 'polyvec_nega_mac', 'KYBER_N',
+def poly_decompress(ct_bytes) -> Polynomial:
+    l = len(ct_bytes)
+    assert l == KYBER_POLYCOMPRESSEDBYTES, f"poly_decompress: arguments was {l} bytes but should be {KYBER_POLYCOMPRESSEDBYTES} bytes"
+    ca = ffi.new(f'const unsigned char [{l}]', ct_bytes)
+    cpoly = ffi.new('poly *')
+    pyber_clib.poly_decompress(cpoly, ca)
+    return Polynomial.from_cpoly(cpoly)
+
+def polyvec_decompress(ct_bytes) -> PolynomialVector:
+    l = len(ct_bytes)
+    assert l == KYBER_POLYVECCOMPRESSEDBYTES, f"polyvec_decompress: argument was {l} bytes but should be {KYBER_POLYVECCOMPRESSEDBYTES} bytes"
+
+    ca = ffi.new(f'const unsigned char [{l}]', ct_bytes)
+    cpolyvec = ffi.new('polyvec *')
+    pyber_clib.polyvec_decompress(cpolyvec, ca)
+    return PolynomialVector.from_cpolyvec(cpolyvec)
+
+
+def test_poly_decompress():
+    print("testing poly_decompress")
+    ct_bytes = bytes([i & 0xff for i in range(KYBER_POLYCOMPRESSEDBYTES)])
+    poly = poly_decompress(ct_bytes)
+    poly.dump()
+
+def test_polyvec_decompress():
+    print("testing poly_decompress")
+    ct_bytes = bytes([i & 0xff for i in range(KYBER_POLYVECCOMPRESSEDBYTES)])
+    polyvec = polyvec_decompress(ct_bytes)
+    polyvec.dump()
+
+
+
+__all__ = ['pyber_clib', 'polyvec_nega_mac', 'KYBER_N', 'poly_decompress', 'polyvec_decompress',
            'KYBER_K', 'KYBER_Q', 'KYBER_ETA', 'KYBER_POLYBYTES', 'KYBER_POLYVECBYTES', 
             'Polynomial', 'PolynomialVector', "getnoise_bytes"]
 
 
 if __name__ == '__main__':
+    test_polyvec_decompress()
+    exit(1)
     # r2 = Polynomial.cbd(range(KYBER_ETA * KYBER_N // 4))
     # r2.dump()
 

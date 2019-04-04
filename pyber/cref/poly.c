@@ -59,6 +59,12 @@ void poly_compress(unsigned char *r, const poly *a)
 void poly_decompress(poly *r, const unsigned char *a)
 {
   unsigned int i;
+//   printf("poly_decompress: \n");
+//   for(i = 0 ; i < KYBER_POLYCOMPRESSEDBYTES; ++i){
+//       printf("%02X ", a[i]);
+//   }
+//   printf("\n");
+
   for(i=0;i<KYBER_N;i+=8)
   {
     r->coeffs[i+0] =  (((a[0] & 7) * KYBER_Q) + 4)>> 3;
@@ -71,6 +77,8 @@ void poly_decompress(poly *r, const unsigned char *a)
     r->coeffs[i+7] = ((((a[2] >> 5)) * KYBER_Q) + 4)>> 3;
     a += 3;
   }
+
+//   poly_print(r);
 }
 
 /*************************************************

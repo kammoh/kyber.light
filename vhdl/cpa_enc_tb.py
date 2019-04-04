@@ -40,12 +40,10 @@ def compare_lists(l1, l2):
 
 
 @cocotb.coroutine
-def func_test(dut, valid_gen=None, ready_gen=None):
+def func_test(dut, valid_generator=None, ready_generator=None):
 
-    tb = CmdDoneTester(dut, dut.clk)
+    tb = CmdDoneTester(dut, dut.clk, valid_generator=valid_generator, ready_generator=ready_generator)
     clkedge = RisingEdge(dut.clk)
-
-    yield tb.reset()
 
     dut.i_start_dec <= 0
     dut.i_start_enc <= 0
@@ -56,7 +54,7 @@ def func_test(dut, valid_gen=None, ready_gen=None):
     atpk = list(atpk_bytes(pk))
     msg = [tb.rnd.randint(0, 0xff) for i in range(KYBER_INDCPA_MSGBYTES)]
     exp = list(pyber.indcpa_enc_nontt(msg, atpk, coins))
-    exp_str = [hex(e)[2:].zfill(2) for e in exp]
+    # exp_str = [hex(e)[2:].zfill(2) for e in exp]
 
     # This should come first!
     tb.expect_output('ct', exp)
@@ -75,7 +73,7 @@ def func_test(dut, valid_gen=None, ready_gen=None):
     yield tb.drive_input('coins', coins)
 
     tb.log.info("sending message")
-    yield tb.drive_input('msg', msg)
+    yield tb.drive_input('pt', msg)
 
     tb.log.info("waiting for done")
     yield tb.wait_for_done()
@@ -91,8 +89,8 @@ def func_test(dut, valid_gen=None, ready_gen=None):
 # Tests
 factory = TestFactory(func_test)
 
-# factory.add_option("valid_gen", [intermittent_single_cycles, random_50_percent])
-# factory.add_option("ready_gen", [intermittent_single_cycles, random_50_percent])
-# factory.add_option("valid_gen", [None])
+# Test configs
+factory.add_option("valid_generator", [intermittent_single_cycles, random_50_percent])
+factory.add_option("ready_generator", [intermittent_single_cycles, random_50_percent])
 
 factory.generate_tests()

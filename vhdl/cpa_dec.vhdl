@@ -154,9 +154,9 @@ begin
 			port map(
 				clk             => clk,
 				rst             => rst,
-				i_din_data      => i_din_data,
-				i_din_valid     => i_din_valid,
-				o_din_ready     => o_din_ready,
+				i_bytein_data      => i_din_data,
+				i_bytein_valid     => i_din_valid,
+				o_bytein_ready     => o_din_ready,
 				o_coefout_data  => o_coefout_data,
 				o_coefout_valid => o_coefout_valid,
 				i_coefout_ready => i_coefout_ready

@@ -84,17 +84,17 @@ entity cpa_enc is
 		i_recv_sk     : in  std_logic;
 		o_done        : out std_logic;
 		-- random coins input, corresponds to RDI
-		i_coins_data  : in  T_byte_slv;
-		i_coins_valid : in  std_logic;
-		o_coins_ready : out std_logic;
+		i_rnd_data  : in  T_byte_slv;
+		i_rnd_valid : in  std_logic;
+		o_rnd_ready : out std_logic;
 		-- public key input, corresponds to PDI
 		i_pk_data     : in  T_byte_slv;
 		i_pk_valid    : in  std_logic;
 		o_pk_ready    : out std_logic;
-		-- message input, corresponds to SDI
-		i_msg_data    : in  T_byte_slv;
-		i_msg_valid   : in  std_logic;
-		o_msg_ready   : out std_logic;
+		-- plaintext (message) input, corresponds to SDI
+		i_pt_data    : in  T_byte_slv;
+		i_pt_valid   : in  std_logic;
+		o_pt_ready   : out std_logic;
 		-- ciphertext output, corresponds to PDO
 		o_ct_data     : out T_byte_slv;
 		o_ct_valid    : out std_logic;
@@ -189,7 +189,7 @@ architecture RTL of cpa_enc is
 
 begin
 
-	noisegen_coinin_data <= i_coins_data;
+	noisegen_coinin_data <= i_rnd_data;
 	cbd_din_data         <= noisegen_dout_data;
 	polymac_rama_blk     <= poly_rama_blk_cntr_reg;
 	o_ct_valid           <= compressor_dout_valid;
@@ -311,9 +311,9 @@ begin
 		);
 
 	--- i_msg -> msg_add.msgin
-	msgadd_msgin_data  <= i_msg_data;
-	msgadd_msgin_valid <= i_msg_valid;
-	o_msg_ready        <= msgadd_msgin_ready;
+	msgadd_msgin_data  <= i_pt_data;
+	msgadd_msgin_valid <= i_pt_valid;
+	o_pt_ready        <= msgadd_msgin_ready;
 
 	divider_inst : entity work.divider
 		generic map(
@@ -448,7 +448,7 @@ begin
 	end process sync_proc;
 
 	comb_proc : process(                --
-	state, cbd_coeffout_data, compressor_din_ready, i_coins_valid, --
+	state, cbd_coeffout_data, compressor_din_ready, i_rnd_valid, --
 	msgadd_polyin_ready, msgadd_polyout_data, msgadd_polyout_valid, noisegen_coinin_ready, --
 	noisegen_done, noisegen_dout_valid, polymac_din_ready, polymac_done, --
 	polymac_dout_data, polymac_dout_valid, deserializer_coefout_data, deserializer_coefout_valid, --
@@ -471,7 +471,7 @@ begin
 		deserializer_coefout_ready <= '0';
 		msgadd_polyin_valid        <= '0';
 		msgadd_polyout_ready       <= '0';
-		o_coins_ready              <= '0';
+		o_rnd_ready              <= '0';
 		o_done                     <= '0';
 		polymac_din_data           <= unsigned(cbd_coeffout_data);
 		compressor_din_data        <= (others => '0');
@@ -490,8 +490,8 @@ begin
 
 			when S_recv_coins =>
 				noisegen_recv_msg     <= not noisegen_done;
-				o_coins_ready         <= noisegen_coinin_ready;
-				noisegen_coinin_valid <= i_coins_valid;
+				o_rnd_ready         <= noisegen_coinin_ready;
+				noisegen_coinin_valid <= i_rnd_valid;
 
 			when S_recv_AT_PK =>
 				polymac_recv_aa            <= not polymac_done;
