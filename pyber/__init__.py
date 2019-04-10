@@ -19,22 +19,24 @@ KYBER_POLYBYTES = pyber_clib.KYBER_POLYBYTES
 KYBER_POLYVECBYTES = pyber_clib.KYBER_POLYVECBYTES
 KYBER_POLYCOMPRESSEDBYTES = pyber_clib.KYBER_POLYCOMPRESSEDBYTES
 KYBER_POLYVECCOMPRESSEDBYTES = pyber_clib.KYBER_POLYVECCOMPRESSEDBYTES
-KYBER_INDCPA_PUBLICKEYBYTES = pyber_clib.KYBER_INDCPA_PUBLICKEYBYTES
 KYBER_INDCPA_MSGBYTES = pyber_clib.KYBER_INDCPA_MSGBYTES
 KYBER_PUBLICKEYBYTES = pyber_clib.KYBER_PUBLICKEYBYTES
-KYBER_SECRETKEYBYTES = pyber_clib.KYBER_SECRETKEYBYTES
 KYBER_CIPHERTEXTBYTES = pyber_clib.KYBER_CIPHERTEXTBYTES
 KYBER_INDCPA_MSGBYTES = pyber_clib.KYBER_INDCPA_MSGBYTES
+KYBER_INDCPA_PUBLICKEYBYTES = pyber_clib.KYBER_INDCPA_PUBLICKEYBYTES
+KYBER_INDCPA_SECRETKEYBYTES = pyber_clib.KYBER_INDCPA_SECRETKEYBYTES
 
 KYBER_PKBYTES = KYBER_POLYVECBYTES * (KYBER_K + 1)
 
 
+def to_hex_str(lst):
+    return [hex(e)[2:].zfill(2) for e in lst]
 
 def getnoise_bytes(coins, nonce):
     coins = list(coins)
     print(f"getnoise_bytes[PYTHON] coins={[ hex(c) for c in coins]} nonce={nonce}")
     assert len(coins) == KYBER_SYMBYTES
-    ccoins_buf = ffi.new(f'const unsigned char [{KYBER_SYMBYTES}]', coins)
+    ccoins_buf = ffi.new('const unsigned char []', coins)
     crbuf = ffi.new(f'unsigned char [{KYBER_ETA * KYBER_N // 4}]')
     pyber_clib.poly_getnoise_bytes(crbuf, ccoins_buf, nonce)
     return list(crbuf)
@@ -59,23 +61,60 @@ def atpk_bytes(compressed_pk: bytes) -> bytes:
     return bytes(c_at_pk_bytes)
 
 
+def indcpa_dec_nontt(ct, sk) -> bytes:
+    assert len(ct) == KYBER_CIPHERTEXTBYTES
+    assert len(sk) == KYBER_INDCPA_SECRETKEYBYTES
+    
+    cct = ffi.new('const unsigned char []', ct)
+    csk = ffi.new('const unsigned char []', sk)
+    cmsg = ffi.new(f'unsigned char [{KYBER_INDCPA_MSGBYTES}]')
+    pyber_clib.indcpa_dec_nontt(cmsg, cct, csk)
+
+    return bytes(cmsg)
+
+def indcpa_dec(ct, sk) -> bytes:
+    assert len(ct) == KYBER_CIPHERTEXTBYTES
+    assert len(sk) == KYBER_INDCPA_SECRETKEYBYTES
+    
+    cct = ffi.new('const unsigned char []', ct)
+    csk = ffi.new('const unsigned char []', sk)
+    cmsg = ffi.new(f'unsigned char [{KYBER_INDCPA_MSGBYTES}]')
+    pyber_clib.indcpa_dec(cmsg, cct, csk)
+
+    return bytes(cmsg)
+
+
 def indcpa_enc_nontt(msg, pkat, coins) -> bytes:
     assert len(msg) == KYBER_INDCPA_MSGBYTES
     assert len(pkat) == KYBER_PKBYTES
     assert len(coins) == KYBER_SYMBYTES
 
-    cmsg = ffi.new(f'unsigned char [{KYBER_INDCPA_MSGBYTES}]', msg)
-    c_at_pk_bytes = ffi.new(f'unsigned char [{KYBER_POLYVECBYTES * (KYBER_K + 1)}]', pkat)
-    ccoins = ffi.new(f'unsigned char [{KYBER_PKBYTES}]', coins)
-    cct = ffi.new(f'unsigned char [{KYBER_CIPHERTEXTBYTES}]', coins)
+    cmsg = ffi.new('const unsigned char []', msg)
+    c_at_pk_bytes = ffi.new('const unsigned char []', pkat)
+    ccoins = ffi.new('unsigned char []', coins)
+    cct = ffi.new(f'unsigned char [{KYBER_CIPHERTEXTBYTES}]')
 
     pyber_clib.indcpa_enc_nontt(cct, cmsg, c_at_pk_bytes, ccoins)
 
     return bytes(cct)
 
+def indcpa_enc(msg, pk, coins) -> bytes:
+    assert len(msg) == KYBER_INDCPA_MSGBYTES
+    assert len(pk) == KYBER_PUBLICKEYBYTES
+    assert len(coins) == KYBER_SYMBYTES
+
+    cmsg = ffi.new('unsigned char []', msg)
+    cpk = ffi.new('unsigned char []', pk)
+    ccoins = ffi.new('unsigned char []', coins)
+    cct = ffi.new(f'unsigned char [{KYBER_CIPHERTEXTBYTES}]')
+
+    pyber_clib.indcpa_enc(cct, cmsg, cpk, ccoins)
+
+    return bytes(cct)
+
 
 class Polynomial():
-    def __init__(self, coeffs: IterableType[int]):
+    def __init__(self, coeffs: List[int]):
         assert isinstance(coeffs, Iterable) and all(isinstance(c, int) for c in coeffs) and len(coeffs) == KYBER_N, "wrong argument type"
         self.coeffs = list(coeffs) # need to make a copy!!!
 
@@ -167,7 +206,7 @@ class Polynomial():
         return self.coeffs == other.coeffs
         
 class PolynomialVector():
-    def __init__(self, polys: IterableType[Polynomial]):
+    def __init__(self, polys: List[Polynomial]):
         assert isinstance(polys, Iterable) and all(isinstance(p, Polynomial) for p in polys) and len(polys) == KYBER_K, "wrong argument type"
         self.polys = polys
 
@@ -244,6 +283,25 @@ def polyvec_decompress(ct_bytes) -> PolynomialVector:
     return PolynomialVector.from_cpolyvec(cpolyvec)
 
 
+def indcpa_keypair():
+    cpk = ffi.new(f'unsigned char[{KYBER_INDCPA_PUBLICKEYBYTES}]')
+    csk = ffi.new(f'unsigned char[{KYBER_INDCPA_SECRETKEYBYTES}]')
+    pyber_clib.indcpa_keypair(cpk, csk)
+
+    return bytes(cpk), bytes(csk)
+
+
+def repack_sk_nontt(sk):
+    assert len(sk) == KYBER_INDCPA_SECRETKEYBYTES
+    csk = ffi.new(f'const unsigned char[]', sk)
+    cresk = ffi.new(f'unsigned char[{KYBER_INDCPA_SECRETKEYBYTES}]')
+    pyber_clib.repack_sk_nontt(cresk, csk)
+    print(f"in repack_sk_nontt: cresk={list(cresk)}")
+    resk = bytes(cresk)
+    assert len(
+        resk) == KYBER_INDCPA_SECRETKEYBYTES, f"result is {len(resk)} bytes but should be {KYBER_INDCPA_SECRETKEYBYTES} bytes "
+    return resk
+
 def test_poly_decompress():
     print("testing poly_decompress")
     ct_bytes = bytes([i & 0xff for i in range(KYBER_POLYCOMPRESSEDBYTES)])
@@ -261,7 +319,7 @@ def test_cpa_enc():
     pk = [i & 0xff for i in range(compressed_pk_bytes())]
     msg = [i & 0xff for i in range(KYBER_INDCPA_MSGBYTES)]
 
-    atpk = list(atpk_bytes(pk))
+    atpk = list(atpk_bytes(bytes(pk)))
     exp = list(indcpa_enc_nontt(msg, atpk, coins))
 
     print(f"exp: {to_hex_str(exp)}")
@@ -269,7 +327,10 @@ def test_cpa_enc():
 
 
 __all__ = ['pyber_clib', 'polyvec_nega_mac', 'KYBER_N', 'poly_decompress', 'polyvec_decompress',
-           'KYBER_K', 'KYBER_Q', 'KYBER_ETA', 'KYBER_POLYBYTES', 'KYBER_POLYVECBYTES', 
+           'indcpa_enc_nontt', 'indcpa_dec_nontt', 'to_hex_str',
+           'KYBER_K', 'KYBER_Q', 'KYBER_ETA', 
+           'KYBER_POLYBYTES', 'KYBER_POLYVECBYTES', 'KYBER_INDCPA_SECRETKEYBYTES',
+           'KYBER_CIPHERTEXTBYTES', 'KYBER_INDCPA_MSGBYTES',
             'Polynomial', 'PolynomialVector', "getnoise_bytes"]
 
 

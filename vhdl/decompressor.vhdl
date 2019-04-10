@@ -78,7 +78,7 @@ entity decompressor is
 		i_bytein_valid  : in  std_logic;
 		o_bytein_ready  : out std_logic;
 		--
-		o_coefout_data  : out T_Coef_slv;
+		o_coefout_data  : out T_Coef_us;
 		o_coefout_valid : out std_logic;
 		i_coefout_ready : in  std_logic
 	);
@@ -106,6 +106,22 @@ architecture RTL of decompressor is
 	signal addition              : unsigned(KYBER_COEF_BITS + 11 - 1 - 1 downto 0);
 
 begin
+
+	--	mutliplier_dout_data  <= mutliplier_din_data * KYBER_Q_US;
+	--	mutliplier_dout_valid <= mutliplier_din_valid;
+	--	mutliplier_din_ready  <= mutliplier_dout_ready;
+
+	ConstMult_7681_11_24_inst : entity work.ConstMult_7681_11_24
+		port map(
+			clk       => clk,
+			rst       => rst,
+			i_X_data  => mutliplier_din_data,
+			i_X_valid => mutliplier_din_valid,
+			o_X_ready => mutliplier_din_ready,
+			o_R_data  => mutliplier_dout_data,
+			o_R_valid => mutliplier_dout_valid,
+			i_R_ready => mutliplier_dout_ready
+		);
 
 	asym_fifo_8to11 : entity work.asymmetric_fifo
 		generic map(
@@ -140,16 +156,16 @@ begin
 		);
 
 	a3_din_data  <= i_bytein_data;
-	a3_din_valid <= i_bytein_valid;
+	a3_din_valid <= i_bytein_valid and not i_is_polyvec;
 
 	a11_din_data  <= i_bytein_data;
-	a11_din_valid <= i_bytein_valid;
+	a11_din_valid <= i_bytein_valid and i_is_polyvec;
 
-	addition <= resize(shift_right(mutliplier_dout_data, 2), addition) + (i_is_polyvec & "0000000" & not i_is_polyvec);
+	addition <= resize(shift_right(mutliplier_dout_data, 2), addition'length) + (i_is_polyvec & "0000000" & not i_is_polyvec);
 
 	mux_proc : process(                 --
 	i_is_polyvec, a11_din_ready, a3_din_ready, addition, a11_dout_data, --
-	a11_dout_valid, a3_dout_data, a3_dout_valid, mutliplier_din_data --
+	a11_dout_valid, a3_dout_data, a3_dout_valid --
 	) is
 	begin
 		if i_is_polyvec = '1' then
@@ -158,26 +174,19 @@ begin
 			mutliplier_din_data  <= unsigned(a11_dout_data);
 			mutliplier_din_valid <= a11_dout_valid;
 
-			o_coefout_data <= std_logic_vector(resize(shift_right(addition, 9), 13));
+			o_coefout_data <= resize(shift_right(addition, 9), 13);
 		else
 			o_bytein_ready <= a3_din_ready;
 
-			mutliplier_din_data  <= resize(unsigned(a3_dout_data), mutliplier_din_data);
+			mutliplier_din_data  <= resize(unsigned(a3_dout_data), mutliplier_din_data'length);
 			mutliplier_din_valid <= a3_dout_valid;
 
-			o_coefout_data <= std_logic_vector(resize(shift_right(addition, 1), 13));
+			o_coefout_data <= resize(shift_right(addition, 1), 13);
 		end if;
 	end process mux_proc;
 
 	a3_dout_ready  <= mutliplier_din_ready;
 	a11_dout_ready <= mutliplier_din_ready;
-
-	-- TODO ------------------------------------------------
-	------- begin FIXME ------------------------------------
-	mutliplier_dout_data  <= mutliplier_din_data * KYBER_Q_US;
-	mutliplier_dout_valid <= mutliplier_din_valid;
-	mutliplier_din_ready  <= mutliplier_dout_ready;
-	------- end   FIXME ------------------------------------
 
 	-- multiplier -> add -> shift -> out
 

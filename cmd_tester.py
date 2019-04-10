@@ -1,6 +1,7 @@
 import random
 import logging
 import math
+import os
 from collections.abc import Iterable
 import cocotb
 from cocotb.utils import hexdump
@@ -373,7 +374,9 @@ class ValidReadyTester(object):
         self.log.info("created scoreboard")
         
         self.rnd = random.Random()
-        self.rnd.seed(kwargs.get('seed', None))
+        
+        seed = os.getenv('RANDOM_SEED')
+        self.rnd.seed(seed)
 
         self.valid_generator = kwargs.get('valid_generator', None)
         self.ready_generator = kwargs.get('ready_generator', None)

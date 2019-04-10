@@ -78,8 +78,10 @@ void poly_decompress(poly *r, const unsigned char *a)
     a += 3;
   }
 
-    printf("result: \n");
+#ifdef DEBUG
+  printf("result: \n");
   poly_dump(r);
+#endif
 }
 
 /*************************************************

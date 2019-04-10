@@ -237,7 +237,8 @@
 			"top": "decompressor",
 			"files": 
 			[
-				"decompressor.vhdl"
+                "ConstMult_7681_11_24.vhdl",
+                "decompressor.vhdl"
 			],
             "tb_files": [
                 "decompressor_tb.py"
@@ -306,8 +307,31 @@
 				"sha3_noisegen",
 				"polyvec_mac",
 				"cbd",
-				"compressor",
+                "compressor",
+                "divider",
 				"msg_add",
+				"deserializer"
+			],
+
+			"language": "vhdl.1993"
+		},
+		"cpa_dec": 
+		{
+			"path": "vhdl",
+			"top": "cpa_dec",
+			"files": 
+			[
+				"cpa_dec.vhdl"
+            ],
+            "tb_files":[
+                "cpa_dec_tb.py"
+            ],
+			"depends": 
+			[
+                "polyvec_mac",
+                "divider",
+				"compressor",
+				"decompressor",
 				"deserializer"
 			],
 
@@ -333,7 +357,7 @@
 		},
 		"keccak_pkg": 
 		{
-			"path": "tiny_keccak",
+			"path": "vhdl/tiny_keccak",
 			"files": 
 			[
 				"keccak_pkg.vhdl"
@@ -342,7 +366,7 @@
 
 		"tiny_keccak": 
 		{
-			"path": "tiny_keccak",
+			"path": "vhdl/tiny_keccak",
 			"top": "keccak_core",
 			"tb_files": 
 			[

@@ -158,7 +158,7 @@ architecture RTL of polyvec_mac is
 	--
 	signal rama_ce               : std_logic;
 	signal rama_we               : std_logic;
-	signal rama_blk_addr         : unsigned(log2ceil(G_NUM_RAM_A_BLOCKS * KYBER_N) - 1 downto 0);
+	signal rama_blk_addr         : unsigned(log2ceil((KYBER_K + 1) * KYBER_N) - 1 downto 0);
 	signal rama_addr             : unsigned(log2ceil(G_NUM_RAM_A_BLOCKS * (KYBER_K + 1) * KYBER_N) - 1 downto 0);
 	signal v_addr                : unsigned(log2ceil((KYBER_K + 1) * KYBER_N) - 1 downto 0);
 	signal rama_din              : std_logic_vector(KYBER_COEF_BITS - 1 downto 0);

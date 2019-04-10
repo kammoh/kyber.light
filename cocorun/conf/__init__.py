@@ -25,7 +25,7 @@ class XdcSource():
 
 class Module:
     def __init__(self, name, d):
-        def get_as_list(key, is_file_list=True):
+        def get_as_list(key, is_file_list=True, optional=False):
             val_list = d.get(key,[])
             if not isinstance(val_list, list):
                 val_list = [val_list]
@@ -36,11 +36,17 @@ class Module:
                     if '*' in item:
                         g = glob.glob(p)
                         if not g or len(g) == 0:
-                            raise FileNotFoundError("pattern " + p + " did not match any files")
+                            if optional:
+                                print("pattern " + p + " did not match any files")
+                            else:
+                                raise FileNotFoundError("pattern " + p + " did not match any files")
                         ret_list += g
                     else:
                         if not pathlib.Path(p).exists():
-                            raise FileNotFoundError("file " + p + " not found")
+                            if optional:
+                                print("pattern " + p + " did not match any files")
+                            else:
+                                raise FileNotFoundError("file " + p + " not found")
                         ret_list.append(p)
                 else:
                     ret_list.append(item)
@@ -51,7 +57,7 @@ class Module:
         self.language = d.get('language',  'vhdl.2008')
         self.library = d.get('library',  None)
         self.path = d.get('path', ".")
-        self.tb_files = get_as_list('tb_files')
+        self.tb_files = get_as_list('tb_files', optional=True)
         self.sim_files = get_as_list('files.sim')
         files = get_as_list('files')
         self.files = [f for f in files if not f in self.tb_files]

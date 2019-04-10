@@ -29,7 +29,6 @@ def cpa_enc_tb(dut, debug=True, valid_generator=intermittent_single_cycles, read
 
     clkedge = RisingEdge(dut.clk)
 
-    dut.i_start_dec <= 0
     dut.i_start_enc <= 0
     dut.i_recv_pk <= 0
 

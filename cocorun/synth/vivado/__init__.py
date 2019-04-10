@@ -139,9 +139,16 @@ class Vivado(SynthTool):
 
     # FIXME VERY MESSY CODE PARSE USING PROPER MEANS
     ## FIXME TODO ###
-    def lastrun_utilization(self):
+    def report_utilization(self, path):
         tables = {}
-        with self.lastrun_path.joinpath('reports').joinpath('post_route_util.rpt').open() as rf:
+        if not path:
+            if not self.lastrun_path:
+                print(f"No lastrun_path available. Run flow or manulally specify synthesis path")
+                exit(1)
+            path = self.lastrun_path
+        elif not isinstance(path, pathlib.Path):
+            path = pathlib.Path(path)
+        with path.joinpath('reports').joinpath('post_route_util.rpt').open() as rf:
             while True:
                 # try:
                 table_name = read_until(rf, r'^\d+\.\s+(\w.*)', max_len=1)
@@ -158,11 +165,15 @@ class Vivado(SynthTool):
 
         return tables
 
-    def lastrun_print_utilization(self):
-        tables = self.lastrun_utilization()
+    def print_utilization(self, path=None):
+        tables = self.report_utilization(path)
+        w = [24, 11]
+        print(f"| {'Resource':<{w[0]}} | {'Utilization':<{w[1]}} |")
+        print(f"|{'-' * (w[0]+2)}|{'-' * (w[1]+2)}|")
         for table_name in ['Slice Logic', 'Memory', 'DSP']:
             for row in tables[table_name].data:
-                print(f"{row[0]:30} {row[1]:10}")
+                if row[1] != "0":
+                    print(f"| {row[0]:<{w[0]}} | {row[1]:<{w[1]}} |")
 
     def run_flow(self, mm, target_frequency, part, **kwargs):
 

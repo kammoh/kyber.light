@@ -26,9 +26,9 @@ ffibuilder.cdef(
     #define KYBER_INDCPA_PUBLICKEYBYTES ...
     #define KYBER_INDCPA_MSGBYTES ...
     #define KYBER_PUBLICKEYBYTES ...
-    #define KYBER_SECRETKEYBYTES ...
     #define KYBER_INDCPA_MSGBYTES ...
     #define KYBER_CIPHERTEXTBYTES ...
+    #define KYBER_INDCPA_SECRETKEYBYTES ...
     
     typedef struct{
         uint16_t coeffs[KYBER_N];
@@ -63,6 +63,14 @@ ffibuilder.cdef(
     void indcpa_enc_nontt(unsigned char *c, const unsigned char *m,
                       const unsigned char *pk_at_bytes,
                       const unsigned char *coins);
+
+    void repack_sk_nontt(unsigned char *rsk, const unsigned char *sk);
+
+
+    void indcpa_dec_nontt(unsigned char *m, const unsigned char *c,
+                      const unsigned char *sk);
+
+
     int crypto_encrypt(unsigned char *c, unsigned long long *clen,
                    const unsigned char *m, unsigned long long mlen,
                    const unsigned char *pk);

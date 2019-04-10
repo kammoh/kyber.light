@@ -79,9 +79,7 @@ entity cpa_enc is
 		rst         : in  std_logic;
 		-- 
 		i_start_enc : in  std_logic;
-		i_start_dec : in  std_logic;
 		i_recv_pk   : in  std_logic;
-		i_recv_sk   : in  std_logic;
 		o_done      : out std_logic;
 		-- random coins input, corresponds to RDI
 		i_rnd_data  : in  T_byte_slv;
@@ -108,9 +106,6 @@ architecture RTL of cpa_enc is
 	---------------------------------------------=( Types )=------------------------------------------------------------
 	type T_state is (S_init,
 	                 S_recv_coins, S_recv_AT_PK,
-	                 S_recv_sk, S_recv_ct,
-	                 S_polymac_neg,
-	                 S_send_m,
 	                 S_polynoise_s, S_polynoise_bv, S_polymac,
 	                 S_send_b, S_send_b_flush, S_send_v,
 	                 S_done
@@ -161,7 +156,7 @@ architecture RTL of cpa_enc is
 	signal deserializer_din_data      : T_byte_slv;
 	signal deserializer_din_valid     : std_logic;
 	signal deserializer_din_ready     : std_logic;
-	signal deserializer_coefout_data  : T_Coef_slv;
+	signal deserializer_coefout_data  : T_Coef_us;
 	signal deserializer_coefout_valid : std_logic;
 	signal deserializer_coefout_ready : std_logic;
 	signal polymac_is_using_divider   : std_logic;
@@ -433,14 +428,6 @@ begin
 							report "state => S_init";
 							state <= S_init;
 						end if;
-					when S_recv_sk =>
-						null;
-					when S_recv_ct =>
-						null;
-					when S_polymac_neg =>
-						null;
-					when S_send_m =>
-						null;
 
 				end case;
 			end if;
@@ -509,7 +496,7 @@ begin
 			when S_recv_AT_PK =>
 				polymac_recv_aa   <= not polymac_done;
 				polymac_din_valid <= deserializer_coefout_valid;
-				polymac_din_data  <= unsigned(deserializer_coefout_data);
+				polymac_din_data  <= deserializer_coefout_data;
 
 				deserializer_din_valid <= i_pk_valid;
 				o_pk_ready             <= deserializer_din_ready;
@@ -564,7 +551,7 @@ begin
 				compressor_dout_ready <= i_ct_ready;
 
 			when S_send_v =>
-				o_msg_ready <= msgadd_msgin_ready;
+				o_msg_ready        <= msgadd_msgin_ready;
 				msgadd_msgin_valid <= i_msg_valid;
 
 				-- ack when "done"
@@ -590,14 +577,6 @@ begin
 
 			when S_done =>
 				o_done <= '1';
-			when S_recv_sk =>
-				null;
-			when S_recv_ct =>
-				null;
-			when S_polymac_neg =>
-				null;
-			when S_send_m =>
-				null;
 
 		end case;
 	end process comb_proc;

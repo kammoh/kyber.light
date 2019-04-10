@@ -76,13 +76,14 @@ entity deserializer is
 		i_din_valid     : in  std_logic;
 		o_din_ready     : out std_logic;
 		--
-		o_coefout_data  : out T_Coef_slv;
+		o_coefout_data  : out T_Coef_us;
 		o_coefout_valid : out std_logic;
 		i_coefout_ready : in  std_logic
 	);
 end entity deserializer;
 
 architecture RTL of deserializer is
+	signal coefout_data : std_logic_vector(T_Coef_slv'length - 1 downto 0);
 
 begin
 	asym_fifo : entity work.asymmetric_fifo
@@ -96,8 +97,10 @@ begin
 			i_din_data   => i_din_data,
 			i_din_valid  => i_din_valid,
 			o_din_ready  => o_din_ready,
-			o_dout_data  => o_coefout_data,
+			o_dout_data  => coefout_data,
 			o_dout_valid => o_coefout_valid,
 			i_dout_ready => i_coefout_ready
 		);
+
+	o_coefout_data <= unsigned(coefout_data);
 end architecture RTL;

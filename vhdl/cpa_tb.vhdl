@@ -204,9 +204,7 @@ begin
 			rst         => rst,
 			--
 			i_start_enc => i_start_enc,
-			i_start_dec => i_start_dec,
 			i_recv_pk   => i_recv_pk,
-			i_recv_sk   => i_recv_sk,
 			o_done      => o_done,
 			--
 			i_rnd_data  => i_coins_data,

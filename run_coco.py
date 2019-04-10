@@ -17,7 +17,7 @@ manifest.parser.add_argument('--debug', dest='debug', action='store_const', cons
 
 manifest.parser.add_argument('bundle_name', action='store',
                              help='target bundle name in Manifest')
-manifest.parser.add_argument('--sim-dump', dest='sim_dump', action='store_const', const=True, default=False, help='dump wave in simulation')
+manifest.parser.add_argument('--dump', dest='sim_dump', action='store_const', const=True, default=False, help='dump wave in simulation')
 
 args = manifest.parser.parse_args()
 
@@ -26,7 +26,7 @@ if args.synth:
     if args.synth == 'vivado':
         vivado = Vivado.from_manifest(manifest)
 
-        frequency = 125  # Mhz
+        frequency = 160  # Mhz
 
         vivado.run_flow(args.bundle_name, target_frequency=frequency,
                         part='xc7a100tcsg324-1', synth_directive='AreaOptimized_high', opt_directive='ExploreWithRemap')
@@ -40,7 +40,7 @@ if args.synth:
                 f"Frequency to try next: {1000.0/(1000.0/frequency - wns ):.3f} Mhz")
         else:
             vivado.log.info(f"Suggested frequency to try: {1000.0/(1000.0/frequency - wns ):.3f} Mhz")
-            vivado.lastrun_print_utilization()
+            vivado.print_utilization()
     elif args.synth == 'dc':
         synth = DesignCompiler.from_manifest(manifest)
 

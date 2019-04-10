@@ -193,12 +193,14 @@ package kyber_pkg is
 	constant KYBER_N : positive := 256;
 
 	-- KYBER_ETA == 5: Kyber512, 4: Kyber768 (recommended), 3: KYBER1024
-	constant KYBER_ETA                 : positive := 7 - KYBER_K;
-	constant KYBER_COEF_BITS           : positive := log2ceilnz(KYBER_Q); -- 13
-	constant KYBER_Q_US                : unsigned := to_unsigned(KYBER_Q, KYBER_COEF_BITS);
-	constant KYBER_Q_S                 : signed   := to_signed(KYBER_Q, KYBER_COEF_BITS);
-	constant KYBER_SYMBYTES            : positive := 32;
-	constant C_DIVIDER_PIPELINE_LEVELS : natural  := 3;
+	constant KYBER_ETA                    : positive := 7 - KYBER_K;
+	constant KYBER_COEF_BITS              : positive := log2ceilnz(KYBER_Q); -- 13
+	constant KYBER_Q_US                   : unsigned := to_unsigned(KYBER_Q, KYBER_COEF_BITS);
+	constant KYBER_Q_S                    : signed   := to_signed(KYBER_Q, KYBER_COEF_BITS);
+	constant KYBER_SYMBYTES               : positive := 32;
+	constant KYBER_POLYVECCOMPRESSEDBYTES : positive := (KYBER_K * 352);
+	constant KYBER_POLYCOMPRESSEDBYTES    : positive := 96;
+	constant C_DIVIDER_PIPELINE_LEVELS    : natural  := 3;
 	--------------------------------------------=( Types (2) )=--------------------------------------------------------
 	subtype T_coef_slv is std_logic_vector(KYBER_COEF_BITS - 1 downto 0);
 	subtype T_coef_us is unsigned(KYBER_COEF_BITS - 1 downto 0);
