@@ -188,10 +188,16 @@ package kyber_pkg is
 	--------------------------------------------=( Synthesis Parameters )=---------------------------------------------
 	constant TECHNOLOGY          : T_TECHNOLOGY := XILINX; -- Synthesis technology
 
+	--------------------------------------------=( Interface )=--------------------------------------------------------	
+	constant C_CPA_CMD_BITS               : positive := 3;
+	constant CMD_RECV_PK                  : positive := 1;
+	constant CMD_START_ENC                : positive := 2;
+	constant CMD_RECV_SK                  : positive := 3;
+	constant CMD_START_DEC                : positive := 4;
 	--------------------------------------------=( Constants )=--------------------------------------------------------	
-	constant KYBER_Q : positive := 7681;
-	constant KYBER_N : positive := 256;
-
+	constant KYBER_Q                      : positive := 7681;
+	constant KYBER_N                      : positive := 256;
+	--
 	-- KYBER_ETA == 5: Kyber512, 4: Kyber768 (recommended), 3: KYBER1024
 	constant KYBER_ETA                    : positive := 7 - KYBER_K;
 	constant KYBER_COEF_BITS              : positive := log2ceilnz(KYBER_Q); -- 13

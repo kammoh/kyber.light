@@ -198,7 +198,7 @@ begin
 		wait;                           -- forever
 	end process;
 
-	cpa_enc_inst : entity work.cpa_enc
+	cpa_enc_inst : entity work.cpa
 		port map(
 			clk         => clk,
 			rst         => rst,
@@ -207,9 +207,9 @@ begin
 			i_recv_pk   => i_recv_pk,
 			o_done      => o_done,
 			--
-			i_rnd_data  => i_coins_data,
-			i_rnd_valid => i_coins_valid,
-			o_rnd_ready => o_coins_ready,
+			i_rdi_data  => i_coins_data,
+			i_rdi_valid => i_coins_valid,
+			o_rdi_ready => o_coins_ready,
 			--
 			i_msg_data   => i_pt_data,
 			i_msg_valid  => i_pt_valid,
@@ -218,9 +218,9 @@ begin
 			i_pk_data   => i_pk_data,
 			i_pk_valid  => i_pk_valid,
 			o_pk_ready  => o_pk_ready,
-			o_ct_data   => o_ct_data,
-			o_ct_valid  => o_ct_valid,
-			i_ct_ready  => i_ct_ready
+			o_pdo_data   => o_ct_data,
+			o_pdo_valid  => o_ct_valid,
+			i_pdo_ready  => i_ct_ready
 		);
 
 end architecture RTL;

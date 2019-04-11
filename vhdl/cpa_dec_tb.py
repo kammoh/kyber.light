@@ -35,7 +35,7 @@ def cpa_enc_tb(dut, debug=True, valid_generator=None, ready_generator=None):
 
     pk, sk = pyber.indcpa_keypair()
 
-    msg = [(i & 0xff) for i in range(KYBER_INDCPA_MSGBYTES)]
+    msg = [tb.rnd.randint(0, 0xff) for i in range(KYBER_INDCPA_MSGBYTES)]
     coins = [tb.rnd.randint(0, 0xff) for i in range(KYBER_SYMBYTES)]
 
     ct = list(pyber.indcpa_enc(msg, pk, coins))

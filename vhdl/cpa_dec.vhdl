@@ -276,7 +276,7 @@ begin
 							report "state => S_recv_sk";
 							state <= S_recv_sk;
 						elsif i_start_dec = '1' then
-							report ">> [command] start_enc";
+							report ">> [command] start_dec";
 							report "state => S_recv_ct_bp";
 							ct_byte_cntr <= (others => '0');
 							state        <= S_recv_ct_bp;
@@ -369,13 +369,13 @@ begin
 		polymac_send_v         <= '0';
 		polymac_do_mac         <= '0';
 		--
-		polymac_din_data       <= deserializer_coefout_data;
-		polymac_din_valid      <= deserializer_coefout_valid;
+		polymac_din_data       <= (others => '0');
+		polymac_din_valid      <= '0';
 
 		deserializer_din_valid <= '0';
 
-		deserializer_coefout_ready <= '0'; -- sk always???
-		decompress_coefout_ready   <= '0'; -- ct always???
+		deserializer_coefout_ready <= '0';
+		decompress_coefout_ready   <= '0';
 
 		decompress_din_valid  <= '0';
 		decompress_is_polyvec <= '0';
@@ -401,6 +401,8 @@ begin
 				deserializer_din_valid     <= i_sk_valid;
 				-- RAM B
 				polymac_recv_bb            <= not polymac_done;
+				polymac_din_data           <= deserializer_coefout_data;
+				polymac_din_valid          <= deserializer_coefout_valid;
 
 			when S_recv_ct_bp =>
 				decompress_coefout_ready <= polymac_din_ready;
