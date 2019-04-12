@@ -76,7 +76,8 @@ use work.kyber_pkg.all;
 
 entity divider is
 	generic(
-		G_IN_WIDTH : positive := 25     -- <= 26 bits, while i_u = <u1,u0> u0,u1 < 2^13 , u1 < KYBER_Q
+		G_IN_WIDTH : positive := 2 * KYBER_COEF_BITS -- <=  2 * KYBER_COEF_BITS bits,
+		-------------- i_u = <u1,u0> u0,u1 < 2^13 , u1 < KYBER_Q
 	);
 	port(
 		clk               : in  std_logic;
@@ -94,9 +95,11 @@ entity divider is
 end entity divider;
 
 architecture RTL of divider is
+	constant RECIPRICAL_OF_Q : positive := ((2** (2*KYBER_COEF_BITS) - 1) / KYBER_Q) - (2 ** KYBER_COEF_BITS);
+	constant RECIPRICAL_OF_Q_BITS : positive := log2ceil(RECIPRICAL_OF_Q);
 	signal u0, u1                         : T_coef_us;
 	signal u1_times_v                     : unsigned(17 downto 0); -- u1 * v,  23 bits >= (G_IN_WIDTH -13) + 10
-	signal q                              : unsigned(25 downto 0); -- q = u1 * v + u , G_IN_WIDTH
+	signal q                              : unsigned(2 * KYBER_COEF_BITS - 1 downto 0); -- q = u1 * v + u , G_IN_WIDTH
 	signal q0, q1, q1_times_d             : T_coef_us;
 	signal r0, r0_minus_d                 : T_coef_us;
 	signal adjust                         : boolean;
@@ -106,25 +109,32 @@ architecture RTL of divider is
 	--
 	-- reg 0: input, reg G_PIPELINE_LEVELS - 1: output
 	signal valid_pipe                     : std_logic_vector(C_DIVIDER_PIPELINE_LEVELS - 1 downto 0);
-	signal q_reg                          : unsigned(25 downto 0);
+	signal q_reg                          : unsigned(2 * KYBER_COEF_BITS - 1 downto 0);
 	-- wires
 	signal stall                          : boolean;
 
 begin
 	-- i_u = <u1,u0>
-	u0 <= i_uin_data(12 downto 0);
-	u1 <= resize(i_uin_data(G_IN_WIDTH - 1 downto 13), 13);
+	u0 <= i_uin_data(KYBER_COEF_BITS - 1 downto 0);
+	u1 <= resize(i_uin_data(G_IN_WIDTH - 1 downto KYBER_COEF_BITS), KYBER_COEF_BITS);
+
+	-- def reciprocal(d, w):
+	--    beta = 2**w
+	--    return (beta**2 - 1) // d - beta
+	--    
+	-- v = reciprocal(7681, 13)
 
 	-- v (reciprocal of 7681) = 544 = 2^9 + 2^5 (10 bit)
-	u1_times_v <= ((17 downto 13 => '0') & u1(12 downto 4) + u1(12 downto 0)) & u1(3 downto 0);
+	u1_times_v <= ((17 downto 13 => '0') & u1(KYBER_COEF_BITS - 1 downto 4) + u1(KYBER_COEF_BITS - 1 downto 0)) & u1(3 downto 0);
 	-- q = u1 * v + u
 	q          <= ((u1 & u0(12 downto 5)) + u1_times_v) & u0(4 downto 0);
 	-- q = <q1, q0>
-	q0         <= q_reg(12 downto 0);
-	q1         <= q_reg(25 downto 13);
+	q0         <= q_reg(KYBER_COEF_BITS - 1 downto 0);
+	q1         <= q_reg(2 * KYBER_COEF_BITS - 1 downto KYBER_COEF_BITS);
 
 	-- d = KYBER_Q = 2^13 - 2^9 + 1 
-	q1_times_d <= (q1(12 downto 9) - q1(3 downto 0)) & q1(8 downto 0);
+	q1_times_d <= (q1(KYBER_COEF_BITS - 1 downto 9) - q1(3 downto 0)) & q1(8 downto 0);
+	--
 
 	-- choice of remainder
 	r0 <= u0_reg - q1_times_d;
@@ -148,10 +158,10 @@ begin
 					u0_reg     <= u0;
 
 					if adjust then
-						remout_reg <= r0_minus_d;
+						remout_reg  <= r0_minus_d;
 						divout_data <= q1_reg + 1;
 					else
-						remout_reg <= r0_reg;
+						remout_reg  <= r0_reg;
 						divout_data <= q1_reg;
 					end if;
 

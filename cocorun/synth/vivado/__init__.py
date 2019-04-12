@@ -215,10 +215,11 @@ class Vivado(SynthTool):
                 opt_options[arg[len(opt_prefix)]:] = value
             elif arg.startswith(phys_opt_prefix):
                 phys_opt_options[arg[len(phys_opt_prefix)]:] = value
-
-        run_dir_name = f'synth.{self.__class__.__name__}.{top_module_name}.{datetime.datetime.now()}'.replace(
+        
+        synth_subdir = f'synth_run'
+        run_dir_name = f'{self.__class__.__name__}.{top_module_name}.{datetime.datetime.now()}'.replace(
             ' ', '.').replace(':', '.')
-        run_path = pathlib.Path(run_dir_name)
+        run_path = pathlib.Path(synth_subdir).joinpath(run_dir_name)
 
         if not run_path.exists():
             run_path.mkdir(parents=True)

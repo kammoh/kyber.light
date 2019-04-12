@@ -9,6 +9,8 @@
 #include "polyvec.h"
 #include "randombytes.h"
 
+#define DEBUG
+
 /*************************************************
  * Name:        pack_pk
  *

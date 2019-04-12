@@ -215,7 +215,8 @@
                 "deserializer",
                 "decompressor"
             ],
-            "language": "vhdl.1993"
+            "language": "vhdl.1993",
+            "frequency" : "128"
         },
         "cpa_dec": {
             "path": "vhdl",

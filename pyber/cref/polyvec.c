@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define DEBUG
+
 #if (KYBER_POLYVECCOMPRESSEDBYTES == (KYBER_K * 352)) // (K x 256) x 13 bits -> (K x 256) x 11 bits -> (k x 352) x 8
 /*************************************************
 * Name:        polyvec_compress
