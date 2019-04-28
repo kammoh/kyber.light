@@ -200,6 +200,8 @@ architecture RTL of cpa is
 	signal decompress_coefout_data    : T_Coef_us;
 	signal decompress_coefout_valid   : std_logic;
 	signal decompress_coefout_ready   : std_logic;
+	--
+	signal DUMMY_NIST_ROUND           : positive := NIST_ROUND;
 
 begin
 
@@ -283,22 +285,22 @@ begin
 			G_DECRYPT => True
 		)
 		port map(
-			clk            => clk,
-			rst            => rst,
-			i_is_msg       => compressor_is_msg,
-			i_is_polyvec   => compressor_is_polyvec,
-			i_din_data     => compressor_din_data,
-			i_din_valid    => compressor_din_valid,
-			o_din_ready    => compressor_din_ready,
-			o_dout_data    => compressor_dout_data,
-			o_dout_valid   => compressor_dout_valid,
-			i_dout_ready   => compressor_dout_ready,
-			o_divin_data   => compressor_divin_data,
-			o_divin_valid  => compressor_divin_valid,
-			i_divin_ready  => compressor_divin_ready,
-			i_divout_data  => compressor_divout_data,
-			i_divout_valid => compressor_divout_valid,
-			o_divout_ready => compressor_divout_ready
+			clk             => clk,
+			rst             => rst,
+			i_is_msg        => compressor_is_msg,
+			i_is_polyvec    => compressor_is_polyvec,
+			i_coeffin_data  => compressor_din_data,
+			i_coeffin_valid => compressor_din_valid,
+			o_coeffin_ready => compressor_din_ready,
+			o_byteout_data  => compressor_dout_data,
+			o_byteout_valid => compressor_dout_valid,
+			i_byteout_ready => compressor_dout_ready,
+			o_divin_data    => compressor_divin_data,
+			o_divin_valid   => compressor_divin_valid,
+			i_divin_ready   => compressor_divin_ready,
+			i_divout_data   => compressor_divout_data,
+			i_divout_valid  => compressor_divout_valid,
+			o_divout_ready  => compressor_divout_ready
 		);
 
 	msgadd_inst : entity work.msg_add
@@ -354,6 +356,7 @@ begin
 	begin
 		if rising_edge(clk) then
 			if rst = '1' then
+				report "NIST_ROUND " & integer'image(DUMMY_NIST_ROUND);
 				report "reset:  state => S_init";
 				state <= S_init;
 			else
@@ -528,59 +531,61 @@ begin
 	decompress_din_ready, i_sdi_valid, i_pdi_data, i_sdo_ready, i_sdi_data, polymac_remin_data --
 	) is
 	begin
-		polymac_recv_aa          <= '0';
-		polymac_recv_bb          <= '0';
-		polymac_recv_v           <= '0';
-		polymac_do_mac           <= '0';
-		polymac_send_v           <= '0';
-		polymac_subtract         <= '0';
-		polymac_din_valid        <= '0';
-		polymac_dout_ready       <= '0';
-		polymac_remout_valid     <= '0';
-		polymac_remin_ready      <= '0';
-		polymac_din_data         <= unsigned(cbd_coeffout_data);
+		polymac_recv_aa            <= '0';
+		polymac_recv_bb            <= '0';
+		polymac_recv_v             <= '0';
+		polymac_do_mac             <= '0';
+		polymac_send_v             <= '0';
+		polymac_subtract           <= '0';
+		polymac_din_valid          <= '0';
+		polymac_dout_ready         <= '0';
+		polymac_remout_valid       <= '0';
+		polymac_remin_ready        <= '0';
+		polymac_din_data           <= unsigned(cbd_coeffout_data);
 		--
-		noisegen_recv_msg        <= '0';
-		noisegen_send_hash       <= '0';
-		noisegen_coinin_valid    <= '0';
-		noisegen_dout_ready      <= '0';
+		noisegen_recv_msg          <= '0';
+		noisegen_send_hash         <= '0';
+		noisegen_coinin_valid      <= '0';
+		noisegen_dout_ready        <= '0';
 		--
-		msgadd_polyin_valid      <= '0';
-		msgadd_polyout_ready     <= '0';
+		msgadd_polyin_valid        <= '0';
+		msgadd_polyout_ready       <= '0';
 		--
-		compressor_din_data      <= (others => '0');
-		compressor_din_valid     <= '0';
-		compressor_divout_valid  <= '0';
-		compressor_divin_ready   <= '0';
-		compressor_is_polyvec    <= '0';
-		compressor_is_msg        <= '0';
+		compressor_din_data        <= (others => '0');
+		compressor_din_valid       <= '0';
+		compressor_divout_valid    <= '0';
+		compressor_divin_ready     <= '0';
+		compressor_is_polyvec      <= '0';
+		compressor_is_msg          <= '0';
 		--
-		o_sdo_data               <= compressor_dout_data;
-		o_sdo_valid              <= '0';
+		o_sdo_data                 <= compressor_dout_data;
+		o_sdo_valid                <= '0';
 		--
-		msgadd_msgin_valid       <= '0';
-		o_sdi_ready              <= '0';
+		msgadd_msgin_valid         <= '0';
+		o_sdi_ready                <= '0';
 		--
-		o_pdo_valid              <= '0';
-		o_pdo_data               <= (others => '0');
-		compressor_dout_ready    <= '0';
+		o_pdo_valid                <= '0';
+		o_pdo_data                 <= (others => '0');
+		compressor_dout_ready      <= '0';
 		--
-		remdivout_ready          <= '0';
-		uin_valid                <= '0';
-		uin_data                 <= polymac_remin_data;
+		remdivout_ready            <= '0';
+		uin_valid                  <= '0';
+		uin_data                   <= polymac_remin_data;
 		--
-		deserializer_din_data    <= i_pdi_data;
-		deserializer_din_valid   <= '0';
+		deserializer_din_data      <= i_pdi_data;
+		deserializer_din_valid     <= '0';
+		deserializer_coefout_ready <= '0';
 		--
-		decompress_coefout_ready <= '0';
-		decompress_din_valid     <= '0';
-		decompress_is_polyvec    <= '0';
+		decompress_coefout_ready   <= '0';
+		decompress_din_valid       <= '0';
+		decompress_is_polyvec      <= '0';
+
 		--
-		o_rdi_ready              <= '0';
-		o_pdi_ready              <= '0';
-		o_sdi_ready              <= '0';
+		o_rdi_ready <= '0';
+		o_pdi_ready <= '0';
+		o_sdi_ready <= '0';
 		--
-		o_done                   <= '0';
+		o_done      <= '0';
 
 		case state is
 			when S_init =>

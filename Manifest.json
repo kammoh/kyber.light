@@ -75,6 +75,8 @@
             "top": "divider",
             "tb_top": "divider_tb",
             "files": [
+                "ConstMult_7681_13_13.vhdl", "ConstMult_3329_12_12.vhdl", 
+                "ConstMult_544_13_22.vhdl", "ConstMult_943_12_22.vhdl", 
                 "divider.vhdl"
             ],
             "tb_files": [
@@ -158,6 +160,7 @@
             "top": "decompressor",
             "files": [
                 "ConstMult_7681_11_24.vhdl",
+                "ConstMult_3329_10_22.vhdl",
                 "decompressor.vhdl"
             ],
             "tb_files": [
@@ -246,7 +249,7 @@
                 "cpa_gen_io.py"
             ],
             "depends": [
-                "cpa_enc"
+                "cpa"
             ],
             "language": "vhdl.1993"
         },

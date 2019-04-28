@@ -173,8 +173,11 @@ architecture RTL of polyvec_mac is
 	signal dp_remout_valid       : std_logic;
 	signal dp_remin_ready        : std_logic;
 	signal dp_remout_ready       : std_logic;
+	--
+	signal DUMMY_NIST_ROUND      : positive := NIST_ROUND; -- @suppress "Unused declaration"
 
 begin
+	
 
 	ploymac_datapath : entity work.polymac_datapath
 		generic map(
@@ -203,7 +206,7 @@ begin
 	gen_internal_divider : if not G_USE_EXTERNAL_DIVIDER generate -- used only for unit test
 		internal_divider : entity work.divider
 			generic map(
-				G_IN_WIDTH => 26
+				G_IN_WIDTH => 2 * KYBER_COEF_BITS
 			)
 			port map(
 				clk               => clk,

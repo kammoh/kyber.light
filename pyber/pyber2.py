@@ -1,8 +1,9 @@
-from _pyber import ffi
-import _pyber.lib as pyber_clib
+import _pyber2 as _pyber
+from _pyber2 import ffi
+import _pyber2.lib as pyber_clib
 import random
 from collections.abc import Iterable
-from typing import List, Tuple, Iterable as IterableType
+from typing import List, Iterable as IterableType
 import shutil
 from math import log2, ceil
 import os
@@ -32,27 +33,27 @@ KYBER_PKBYTES = KYBER_POLYVECBYTES * (KYBER_K + 1)
 def to_hex_str(lst):
     return [hex(e)[2:].zfill(2) for e in lst]
 
-def getnoise_bytes(coins, nonce):
-    coins = list(coins)
-    print(f"getnoise_bytes[PYTHON] coins={[ hex(c) for c in coins]} nonce={nonce}")
-    assert len(coins) == KYBER_SYMBYTES
-    ccoins_buf = ffi.new('const unsigned char []', coins)
-    crbuf = ffi.new(f'unsigned char [{KYBER_ETA * KYBER_N // 4}]')
-    pyber_clib.poly_getnoise_bytes(crbuf, ccoins_buf, nonce)
-    return list(crbuf)
+# def getnoise_bytes(coins, nonce):
+#     coins = list(coins)
+#     print(f"getnoise_bytes[PYTHON] coins={[ hex(c) for c in coins]} nonce={nonce}")
+#     assert len(coins) == KYBER_SYMBYTES
+#     ccoins_buf = ffi.new('const unsigned char []', coins)
+#     crbuf = ffi.new(f'unsigned char [{KYBER_ETA * KYBER_N // 4}]')
+#     pyber_clib.poly_getnoise_bytes(crbuf, ccoins_buf, nonce)
+#     return list(crbuf)
 
 
-def compressed_pk_bytes():
-    return KYBER_POLYVECCOMPRESSEDBYTES + KYBER_SYMBYTES
+PK_BYTES = KYBER_INDCPA_PUBLICKEYBYTES
+
 
 def atpk_bytes(compressed_pk: bytes) -> bytes:
     # assert isinstance(compressed_pk, bytes), "compressed_pk should be of type bytes"
-    assert len(compressed_pk) == compressed_pk_bytes(
-    ), f"length of public key must be {compressed_pk_bytes()} bytes but {len(compressed_pk)} bytes were provided"
+    assert len(
+        compressed_pk) == PK_BYTES, f"length of public key must be {PK_BYTES} bytes but {len(compressed_pk)} bytes were provided"
 
-    print(f"expanding {compressed_pk_bytes()} bytes public-key to {KYBER_POLYVECBYTES * (KYBER_K + 1)} bytes")
+    print(f"expanding {PK_BYTES} bytes public-key to {KYBER_POLYVECBYTES * (KYBER_K + 1)} bytes")
 
-    cpk = ffi.new(f'const unsigned char [{compressed_pk_bytes()}]', compressed_pk)
+    cpk = ffi.new(f'const unsigned char [{PK_BYTES}]', compressed_pk)
 
     c_at_pk_bytes = ffi.new(f'unsigned char [{KYBER_POLYVECBYTES * (KYBER_K + 1)}]')
 
@@ -61,21 +62,21 @@ def atpk_bytes(compressed_pk: bytes) -> bytes:
     return bytes(c_at_pk_bytes)
 
 
-def indcpa_dec_nontt(ct, sk) -> bytes:
-    assert len(ct) == KYBER_CIPHERTEXTBYTES
-    assert len(sk) == KYBER_INDCPA_SECRETKEYBYTES
-    
-    cct = ffi.new('const unsigned char []', ct)
-    csk = ffi.new('const unsigned char []', sk)
-    cmsg = ffi.new(f'unsigned char [{KYBER_INDCPA_MSGBYTES}]')
-    pyber_clib.indcpa_dec_nontt(cmsg, cct, csk)
+# def indcpa_dec_nontt(ct, sk) -> bytes:
+#     assert len(ct) == KYBER_CIPHERTEXTBYTES
+#     assert len(sk) == KYBER_INDCPA_SECRETKEYBYTES
 
-    return bytes(cmsg)
+#     cct = ffi.new('const unsigned char []', ct)
+#     csk = ffi.new('const unsigned char []', sk)
+#     cmsg = ffi.new(f'unsigned char [{KYBER_INDCPA_MSGBYTES}]')
+#     pyber_clib.indcpa_dec_nontt(cmsg, cct, csk)
+
+#     return bytes(cmsg)
 
 def indcpa_dec(ct, sk) -> bytes:
     assert len(ct) == KYBER_CIPHERTEXTBYTES
     assert len(sk) == KYBER_INDCPA_SECRETKEYBYTES
-    
+
     cct = ffi.new('const unsigned char []', ct)
     csk = ffi.new('const unsigned char []', sk)
     cmsg = ffi.new(f'unsigned char [{KYBER_INDCPA_MSGBYTES}]')
@@ -98,6 +99,7 @@ def indcpa_enc_nontt(msg, pkat, coins) -> bytes:
 
     return bytes(cct)
 
+
 def indcpa_enc(msg, pk, coins) -> bytes:
     assert len(msg) == KYBER_INDCPA_MSGBYTES
     assert len(pk) == KYBER_PUBLICKEYBYTES
@@ -115,8 +117,9 @@ def indcpa_enc(msg, pk, coins) -> bytes:
 
 class Polynomial():
     def __init__(self, coeffs: List[int]):
-        assert isinstance(coeffs, Iterable) and all(isinstance(c, int) for c in coeffs) and len(coeffs) == KYBER_N, "wrong argument type"
-        self.coeffs = list(coeffs) # need to make a copy!!!
+        assert isinstance(coeffs, Iterable) and all(isinstance(c, int)
+                                                    for c in coeffs) and len(coeffs) == KYBER_N, "wrong argument type"
+        self.coeffs = list(coeffs)  # need to make a copy!!!
 
     @classmethod
     def cbd(cls, buf):
@@ -143,14 +146,14 @@ class Polynomial():
         if not rnd:
             rnd = random.Random()
             rnd.seed(1)
-        
+
         def random_word(min, max):
             return (rnd.randint(min, max))
 
         return cls(coeffs=[random_word(0, KYBER_Q - 1) for _ in range(KYBER_N)])
-    
+
     @classmethod
-    def from_cpoly(cls,cpoly):
+    def from_cpoly(cls, cpoly):
         return cls(cpoly.coeffs)
 
     @classmethod
@@ -179,7 +182,7 @@ class Polynomial():
 
     def to_cpoly(self):
         return [list(self)]
-    
+
     def __add__(self, other):
         """ add two Polynomials and return result """
         cpoly_a = ffi.new('poly *', self.to_cpoly())
@@ -204,10 +207,12 @@ class Polynomial():
 
     def __eq__(self, other):
         return self.coeffs == other.coeffs
-        
+
+
 class PolynomialVector():
     def __init__(self, polys: List[Polynomial]):
-        assert isinstance(polys, Iterable) and all(isinstance(p, Polynomial) for p in polys) and len(polys) == KYBER_K, "wrong argument type"
+        assert isinstance(polys, Iterable) and all(isinstance(p, Polynomial)
+                                                   for p in polys) and len(polys) == KYBER_K, "wrong argument type"
         self.polys = polys
 
     @classmethod
@@ -224,7 +229,7 @@ class PolynomialVector():
 
     def __iter__(self):
         for p in self.polys:
-            yield from list(p) # flatten
+            yield from list(p)  # flatten
 
     def dump(self):
         for i, p in enumerate(self.polys):
@@ -247,7 +252,6 @@ class PolynomialVector():
         return Polynomial.from_cpoly(cpoly_r)
 
 
-
 def polyvec_nega_mac(p_r: Polynomial, pv_a: PolynomialVector, pv_b: PolynomialVector, subtract=False) -> Polynomial:
     """ 
 
@@ -262,7 +266,7 @@ def polyvec_nega_mac(p_r: Polynomial, pv_a: PolynomialVector, pv_b: PolynomialVe
 
     pyber_clib.polyvec_nega_mac(cpoly_r, cpolyvec_a, cpolyvec_b, 1 if subtract else 0)
 
-    return Polynomial(cpoly_r.coeffs) # need to copy!!!
+    return Polynomial(cpoly_r.coeffs)  # need to copy!!!
 
 
 def poly_decompress(ct_bytes) -> Polynomial:
@@ -273,6 +277,7 @@ def poly_decompress(ct_bytes) -> Polynomial:
     pyber_clib.poly_decompress(cpoly, ca)
     return Polynomial.from_cpoly(cpoly)
 
+
 def polyvec_decompress(ct_bytes) -> PolynomialVector:
     l = len(ct_bytes)
     assert l == KYBER_POLYVECCOMPRESSEDBYTES, f"polyvec_decompress: argument was {l} bytes but should be {KYBER_POLYVECCOMPRESSEDBYTES} bytes"
@@ -282,8 +287,24 @@ def polyvec_decompress(ct_bytes) -> PolynomialVector:
     pyber_clib.polyvec_decompress(cpolyvec, ca)
     return PolynomialVector.from_cpolyvec(cpolyvec)
 
+# def polyvec_compress(ct_bytes) -> bytes:
+#     l = len(ct_bytes)
+#     assert l == KYBER_POLYVECCOMPRESSEDBYTES, f"polyvec_decompress: argument was {l} bytes but should be {KYBER_POLYVECCOMPRESSEDBYTES} bytes"
 
-def indcpa_keypair() -> Tuple[(bytes, bytes)]:
+#     ca = ffi.new(f'const unsigned char [{l}]', ct_bytes)
+#     cpolyvec = ffi.new('polyvec *')
+#     pyber_clib.polyvec_compress(cpolyvec, ca)
+#     return 
+
+
+def poly_tomsg(poly: Polynomial) -> bytes:
+    cpoly = poly.to_cpoly()
+    cmsg = ffi.new(f'unsigned char [{KYBER_SYMBYTES}]')
+    pyber_clib.poly_tomsg(cmsg, cpoly)
+
+    return bytes(cmsg)
+
+def indcpa_keypair():
     cpk = ffi.new(f'unsigned char[{KYBER_INDCPA_PUBLICKEYBYTES}]')
     csk = ffi.new(f'unsigned char[{KYBER_INDCPA_SECRETKEYBYTES}]')
     pyber_clib.indcpa_keypair(cpk, csk)
@@ -291,7 +312,7 @@ def indcpa_keypair() -> Tuple[(bytes, bytes)]:
     return bytes(cpk), bytes(csk)
 
 
-def repack_sk_nontt(sk) -> bytes:
+def repack_sk_nontt(sk):
     assert len(sk) == KYBER_INDCPA_SECRETKEYBYTES
     csk = ffi.new(f'const unsigned char[]', sk)
     cresk = ffi.new(f'unsigned char[{KYBER_INDCPA_SECRETKEYBYTES}]')
@@ -302,79 +323,77 @@ def repack_sk_nontt(sk) -> bytes:
         resk) == KYBER_INDCPA_SECRETKEYBYTES, f"result is {len(resk)} bytes but should be {KYBER_INDCPA_SECRETKEYBYTES} bytes "
     return resk
 
-def test_poly_decompress():
-    print("testing poly_decompress")
-    ct_bytes = bytes([i & 0xff for i in range(KYBER_POLYCOMPRESSEDBYTES)])
-    poly = poly_decompress(ct_bytes)
-    poly.dump()
+# def test_poly_decompress():
+#     print("testing poly_decompress")
+#     ct_bytes = bytes([i & 0xff for i in range(KYBER_POLYCOMPRESSEDBYTES)])
+#     poly = poly_decompress(ct_bytes)
+#     poly.dump()
 
-def test_polyvec_decompress():
-    print("testing poly_decompress")
-    ct_bytes = bytes([i & 0xff for i in range(KYBER_POLYVECCOMPRESSEDBYTES)])
-    polyvec = polyvec_decompress(ct_bytes)
-    polyvec.dump()
+# def test_polyvec_decompress():
+#     print("testing poly_decompress")
+#     ct_bytes = bytes([i & 0xff for i in range(KYBER_POLYVECCOMPRESSEDBYTES)])
+#     polyvec = polyvec_decompress(ct_bytes)
+#     polyvec.dump()
 
-def test_cpa_enc():
-    coins = [i & 0xff for i in range(KYBER_SYMBYTES)]
-    pk = [i & 0xff for i in range(compressed_pk_bytes())]
-    msg = [i & 0xff for i in range(KYBER_INDCPA_MSGBYTES)]
+# def test_cpa_enc():
+#     coins = [i & 0xff for i in range(KYBER_SYMBYTES)]
+#     pk = [i & 0xff for i in range(PK_BYTES)]
+#     msg = [i & 0xff for i in range(KYBER_INDCPA_MSGBYTES)]
 
-    atpk = list(atpk_bytes(bytes(pk)))
-    exp = list(indcpa_enc_nontt(msg, atpk, coins))
+#     atpk = list(atpk_bytes(bytes(pk)))
+#     exp = list(indcpa_enc_nontt(msg, atpk, coins))
 
-    print(f"exp: {to_hex_str(exp)}")
-
+#     print(f"exp: {to_hex_str(exp)}")
 
 
 __all__ = ['pyber_clib', 'polyvec_nega_mac', 'KYBER_N', 'poly_decompress', 'polyvec_decompress',
-           'indcpa_enc_nontt', 'indcpa_dec_nontt', 'to_hex_str',
-           'KYBER_K', 'KYBER_Q', 'KYBER_ETA', 
+           'poly_tomsg',
+           'to_hex_str', 'KYBER_K', 'KYBER_Q', 'KYBER_ETA',
            'KYBER_POLYBYTES', 'KYBER_POLYVECBYTES', 'KYBER_INDCPA_SECRETKEYBYTES',
-           'KYBER_CIPHERTEXTBYTES', 'KYBER_INDCPA_MSGBYTES',
-            'Polynomial', 'PolynomialVector', "getnoise_bytes"]
+           'KYBER_CIPHERTEXTBYTES', 'KYBER_INDCPA_MSGBYTES', 'Polynomial', 'PolynomialVector']
 
 
-if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print("need 1 arg")
-        exit (1)
-    test_func = globals()['test_' + sys.argv[1]]
-    test_func()
-    exit(0)
-    test_polyvec_decompress()
-    # r2 = Polynomial.cbd(range(KYBER_ETA * KYBER_N // 4))
-    # r2.dump()
+# if __name__ == '__main__':
+#     if len(sys.argv) < 2:
+#         print("need 1 arg")
+#         exit (1)
+#     test_func = globals()['test_' + sys.argv[1]]
+#     test_func()
+#     exit(0)
+#     test_polyvec_decompress()
+#     # r2 = Polynomial.cbd(range(KYBER_ETA * KYBER_N // 4))
+#     # r2.dump()
 
-    coins = [0 for _ in range(KYBER_SYMBYTES)]
-    nonce = 0
-    # r3 = Polynomial.getnoise(coins, 0)
-    # r3.dump()
-    l1 = getnoise_bytes(coins, nonce)
-    print(l1)
+#     coins = [0 for _ in range(KYBER_SYMBYTES)]
+#     nonce = 0
+#     # r3 = Polynomial.getnoise(coins, 0)
+#     # r3.dump()
+#     l1 = getnoise_bytes(coins, nonce)
+#     print(l1)
 
-    exit(0)
+#     exit(0)
 
-    a = PolynomialVector.random()
-    # print("a--------")
-    # a.dump()
-    b = PolynomialVector.random()
-    # print("\nb--------")
-    # b.dump()
-    r = Polynomial.random()
-    # print("r--------")
-    # r.dump()
+#     a = PolynomialVector.random()
+#     # print("a--------")
+#     # a.dump()
+#     b = PolynomialVector.random()
+#     # print("\nb--------")
+#     # b.dump()
+#     r = Polynomial.random()
+#     # print("r--------")
+#     # r.dump()
 
-    exp = polyvec_nega_mac(r, a, b)
-    print("a*b + r --------")
-    # exp.dump()
+#     exp = polyvec_nega_mac(r, a, b)
+#     print("a*b + r --------")
+#     # exp.dump()
 
-    # e2 = (a * b) + r
-    # e2.dump()
-    # assert exp == e2
+#     # e2 = (a * b) + r
+#     # e2.dump()
+#     # assert exp == e2
 
-    exp = polyvec_nega_mac(r, a, b, subtract=True)
-    e2 = r - (a * b)
+#     exp = polyvec_nega_mac(r, a, b, subtract=True)
+#     e2 = r - (a * b)
 
-    exp.dump()
-    e2.dump()
-    assert exp == e2
+#     exp.dump()
+#     e2.dump()
+#     assert exp == e2

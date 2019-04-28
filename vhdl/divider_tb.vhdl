@@ -39,7 +39,7 @@
 --
 --! @version   <v0.1>
 --
---! @details   blah blah
+--! @details   
 --!
 --
 --
@@ -68,6 +68,7 @@ use work.kyber_pkg.all;
 
 library vunit_lib;
 context vunit_lib.vunit_context;
+
 --context vunit_lib.vc_context;
 
 library osvvm;
@@ -77,8 +78,8 @@ use osvvm.CoveragePkg.all;
 entity divider_tb is
 	generic(
 		runner_cfg       : string;
-		G_EXMAX          : positive := 2**22 - 1;
-		G_IN_WIDTH       : positive := 25;
+		G_EXMAX          : positive := 2**19 - 1;
+		G_IN_WIDTH       : positive := 26; -- FIXME only works for 26 now :(
 		G_CLK_PERIOD     : time     := 1 ns;
 		G_EXTRA_RND_SEED : string   := "a0W7"
 	);
@@ -86,13 +87,17 @@ entity divider_tb is
 end entity divider_tb;
 
 architecture TB of divider_tb is
-	signal clk       : std_logic := '0';
-	signal rst       : std_logic;
-	signal a         : std_logic_vector(G_IN_WIDTH - 1 downto 0);
-	signal remainder : std_logic_vector(12 downto 0);
-	signal div       : std_logic_vector(12 downto 0);
+	signal clk : std_logic := '0';
+	signal rst : std_logic;
 
-	constant exmax : positive := minimum(G_EXMAX, 2**G_IN_WIDTH - 1);
+	constant exmax           : positive := minimum(G_EXMAX, 2**G_IN_WIDTH - 1);
+	signal i_uin_data        : unsigned(G_IN_WIDTH - 1 downto 0);
+	signal i_uin_valid       : std_logic;
+	signal o_uin_ready       : std_logic;
+	signal o_remout_data     : T_coef_us;
+	signal o_divout_data     : unsigned(G_IN_WIDTH - KYBER_COEF_BITS - 1 downto 0);
+	signal o_remdivout_valid : std_logic;
+	signal i_remdivout_ready : std_logic;
 
 begin
 	clk <= not clk after G_CLK_PERIOD / 2;
@@ -111,9 +116,15 @@ begin
 			G_IN_WIDTH => G_IN_WIDTH
 		)
 		port map(
-			i_u   => a,
-			o_rem => remainder,
-			o_div => div
+			clk               => clk,
+			rst               => rst,
+			i_uin_data        => i_uin_data,
+			i_uin_valid       => i_uin_valid,
+			o_uin_ready       => o_uin_ready,
+			o_remout_data     => o_remout_data,
+			o_divout_data     => o_divout_data,
+			o_remdivout_valid => o_remdivout_valid,
+			i_remdivout_ready => i_remdivout_ready
 		);
 
 	tb : process
@@ -143,42 +154,89 @@ begin
 
 			if run("small_exhaustive") then
 				for_i_loop : for i in 0 to exmax loop
+					i_uin_valid       <= '0';
+					i_remdivout_ready <= '0';
 					wait until falling_edge(clk);
-					a <= std_logic_vector(to_unsigned(i, a'length));
 					wait until falling_edge(clk);
+					i_uin_data        <= to_unsigned(i, i_uin_data);
+					i_uin_valid       <= '1';
+					i_remdivout_ready <= '1';
+					while i_remdivout_ready /= '1' or o_remdivout_valid /= '1' loop
+						wait until rising_edge(clk);
+						i_uin_valid <= '0';
+					end loop;
 
-					check_equal(to_integer(unsigned(remainder)), i mod KYBER_Q, "Failed with a=" & to_string(i));
-					check_equal(to_integer(unsigned(div)), i / KYBER_Q, "Failed with a=" & to_string(i));
+					check_equal(to_integer(unsigned(o_remout_data)), i mod KYBER_Q, "Failed with a=" & to_string(i));
+					check_equal(to_integer(unsigned(o_divout_data)), i / KYBER_Q, "Failed with a=" & to_string(i));
+
+					while o_remdivout_valid = '1' loop
+						wait until rising_edge(clk);
+					end loop;
 				end loop for_i_loop;
 
 			elsif run("random_big") then
-				for cnt in 0 to exmax / 4 loop
-					i := RndR.FavorBig(minimum(exmax, max_rand - 1), max_rand);
+				for cnt in 0 to exmax / 2 loop
+					i                 := RndR.FavorBig(minimum(exmax, max_rand - 1), max_rand);
+					i_uin_valid       <= '0';
+					i_remdivout_ready <= '0';
 					wait until falling_edge(clk);
-					a <= std_logic_vector(to_unsigned(i, a'length));
 					wait until falling_edge(clk);
+					i_uin_data        <= to_unsigned(i, i_uin_data);
+					i_uin_valid       <= '1';
+					i_remdivout_ready <= '1';
+					while i_remdivout_ready /= '1' or o_remdivout_valid /= '1' loop
+						wait until rising_edge(clk);
+						i_uin_valid <= '0';
+					end loop;
 
-					check_equal(to_integer(unsigned(remainder)), i mod KYBER_Q, "Failed with a=" & to_string(i));
-					check_equal(to_integer(unsigned(div)), i / KYBER_Q, "Failed with a=" & to_string(i));
+					check_equal(to_integer(unsigned(o_remout_data)), i mod KYBER_Q, "Failed with a=" & to_string(i));
+					check_equal(to_integer(unsigned(o_divout_data)), i / KYBER_Q, "Failed with a=" & to_string(i));
+
+					while o_remdivout_valid = '1' loop
+						wait until rising_edge(clk);
+					end loop;
+
 				end loop;
 			elsif run("random_small") then
-				for cnt in 0 to exmax / 4 loop
-					i := RndR.FavorSmall(minimum(exmax, max_rand - 1), max_rand);
+				for cnt in 0 to exmax / 2 loop
+					i                 := RndR.FavorSmall(minimum(exmax, max_rand - 1), max_rand);
+					i_remdivout_ready <= '0';
 					wait until falling_edge(clk);
-					a <= std_logic_vector(to_unsigned(i, a'length));
 					wait until falling_edge(clk);
+					i_uin_data        <= to_unsigned(i, i_uin_data);
+					i_uin_valid       <= '1';
+					i_remdivout_ready <= '1';
+					while i_remdivout_ready /= '1' or o_remdivout_valid /= '1' loop
+						wait until rising_edge(clk);
+						i_uin_valid <= '0';
+					end loop;
 
-					check_equal(to_integer(unsigned(remainder)), i mod KYBER_Q, "Failed with a=" & to_string(i));
-					check_equal(to_integer(unsigned(div)), i / KYBER_Q, "Failed with a=" & to_string(i));
+					check_equal(to_integer(unsigned(o_remout_data)), i mod KYBER_Q, "Failed with a=" & to_string(i));
+					check_equal(to_integer(unsigned(o_divout_data)), i / KYBER_Q, "Failed with a=" & to_string(i));
+
+					while o_remdivout_valid = '1' loop
+						wait until rising_edge(clk);
+					end loop;
 				end loop;
 			elsif run("max_value") then
-				i := max_rand;
+				i                 := max_rand;
+				i_remdivout_ready <= '0';
 				wait until falling_edge(clk);
-				a <= std_logic_vector(to_unsigned(i, a'length));
 				wait until falling_edge(clk);
+				i_uin_data        <= to_unsigned(i, i_uin_data);
+				i_uin_valid       <= '1';
+				i_remdivout_ready <= '1';
+				while i_remdivout_ready /= '1' or o_remdivout_valid /= '1' loop
+					wait until rising_edge(clk);
+					i_uin_valid <= '0';
+				end loop;
 
-				check_equal(to_integer(unsigned(remainder)), i mod KYBER_Q, "Failed with a=" & to_string(i));
-				check_equal(to_integer(unsigned(div)), i / KYBER_Q, "Failed with a=" & to_string(i));
+				check_equal(to_integer(unsigned(o_remout_data)), i mod KYBER_Q, "Failed with a=" & to_string(i));
+				check_equal(to_integer(unsigned(o_divout_data)), i / KYBER_Q, "Failed with a=" & to_string(i));
+
+				while o_remdivout_valid = '1' loop
+					wait until rising_edge(clk);
+				end loop;
 			end if;
 
 		end loop while_test_suite_loop;
@@ -187,6 +245,6 @@ begin
 		wait;
 	end process;
 
---	test_runner_watchdog(runner, 1000 ms);
+	--	test_runner_watchdog(runner, 1000 ms);
 
 end architecture TB;

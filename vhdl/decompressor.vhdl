@@ -85,25 +85,28 @@ entity decompressor is
 end entity decompressor;
 
 architecture RTL of decompressor is
-	signal mutliplier_din_data   : unsigned(11 - 1 downto 0);
+
+	signal mutliplier_din_data   : unsigned(POLYVEC_SHIFT - 1 downto 0);
 	signal mutliplier_din_valid  : std_logic;
 	signal mutliplier_din_ready  : std_logic;
-	signal mutliplier_dout_data  : unsigned(KYBER_COEF_BITS + 11 - 1 downto 0);
+	signal mutliplier_dout_data  : unsigned(KYBER_COEF_BITS + POLYVEC_SHIFT - 1 downto 0);
 	signal mutliplier_dout_valid : std_logic;
 	signal mutliplier_dout_ready : std_logic;
-	signal a11_din_data          : std_logic_vector(T_byte_slv'length - 1 downto 0);
-	signal a11_din_valid         : std_logic;
-	signal a11_din_ready         : std_logic;
-	signal a11_dout_data         : std_logic_vector(11 - 1 downto 0);
-	signal a11_dout_valid        : std_logic;
-	signal a11_dout_ready        : std_logic;
-	signal a3_din_data           : std_logic_vector(T_byte_slv'length - 1 downto 0);
-	signal a3_din_valid          : std_logic;
-	signal a3_din_ready          : std_logic;
-	signal a3_dout_data          : std_logic_vector(3 - 1 downto 0);
-	signal a3_dout_valid         : std_logic;
-	signal a3_dout_ready         : std_logic;
-	signal addition              : unsigned(KYBER_COEF_BITS + 11 - 1 - 1 downto 0);
+	signal asym_pv_din_data      : std_logic_vector(T_byte_slv'length - 1 downto 0);
+	signal asym_pv_din_valid     : std_logic;
+	signal asym_pv_din_ready     : std_logic;
+	signal asym_pv_dout_data     : std_logic_vector(POLYVEC_SHIFT - 1 downto 0);
+	signal asym_pv_dout_valid    : std_logic;
+	signal asym_pv_dout_ready    : std_logic;
+	signal asym_poly_din_data    : std_logic_vector(T_byte_slv'length - 1 downto 0);
+	signal asym_poly_din_valid   : std_logic;
+	signal asym_poly_din_ready   : std_logic;
+	signal asym_poly_dout_data   : std_logic_vector(POLY_SHIFT - 1 downto 0);
+	signal asym_poly_dout_valid  : std_logic;
+	signal asym_poly_dout_ready  : std_logic;
+	signal addition              : unsigned(KYBER_COEF_BITS + POLYVEC_SHIFT - 1 - 1 downto 0);
+	--
+	signal DUMMY_NIST_ROUND      : positive := NIST_ROUND; -- @suppress "Unused declaration"
 
 begin
 
@@ -111,82 +114,102 @@ begin
 	--	mutliplier_dout_valid <= mutliplier_din_valid;
 	--	mutliplier_din_ready  <= mutliplier_dout_ready;
 
-	ConstMult_7681_11_24_inst : entity work.ConstMult_7681_11_24
-		port map(
-			clk       => clk,
-			rst       => rst,
-			i_X_data  => mutliplier_din_data,
-			i_X_valid => mutliplier_din_valid,
-			o_X_ready => mutliplier_din_ready,
-			o_R_data  => mutliplier_dout_data,
-			o_R_valid => mutliplier_dout_valid,
-			i_R_ready => mutliplier_dout_ready
-		);
+	gen_mult_7681 : if KYBER_Q = 7681 generate
 
-	asym_fifo_8to11 : entity work.asymmetric_fifo
+		ConstMult_7681_11_24_inst : entity work.ConstMult_7681_11_24
+			port map(
+				clk       => clk,
+				rst       => rst,
+				i_X_data  => mutliplier_din_data,
+				i_X_valid => mutliplier_din_valid,
+				o_X_ready => mutliplier_din_ready,
+				o_R_data  => mutliplier_dout_data,
+				o_R_valid => mutliplier_dout_valid,
+				i_R_ready => mutliplier_dout_ready
+			);
+
+	end generate gen_mult_7681;
+
+	gen_mult_3329 : if KYBER_Q = 3329 generate
+
+		ConstMult_3329_10_22 : entity work.ConstMult_3329_10_22
+			port map(
+				clk       => clk,
+				rst       => rst,
+				i_X_data  => mutliplier_din_data,
+				i_X_valid => mutliplier_din_valid,
+				o_X_ready => mutliplier_din_ready,
+				o_R_data  => mutliplier_dout_data,
+				o_R_valid => mutliplier_dout_valid,
+				i_R_ready => mutliplier_dout_ready
+			);
+
+	end generate gen_mult_3329;
+
+	asym_fifo_polyvec : entity work.asymmetric_fifo
 		generic map(
 			G_IN_WIDTH  => T_byte_slv'length,
-			G_OUT_WIDTH => 11
+			G_OUT_WIDTH => POLYVEC_SHIFT
 		)
 		port map(
 			clk          => clk,
 			rst          => rst,
-			i_din_data   => a11_din_data,
-			i_din_valid  => a11_din_valid,
-			o_din_ready  => a11_din_ready,
-			o_dout_data  => a11_dout_data,
-			o_dout_valid => a11_dout_valid,
-			i_dout_ready => a11_dout_ready
+			i_din_data   => asym_pv_din_data,
+			i_din_valid  => asym_pv_din_valid,
+			o_din_ready  => asym_pv_din_ready,
+			o_dout_data  => asym_pv_dout_data,
+			o_dout_valid => asym_pv_dout_valid,
+			i_dout_ready => asym_pv_dout_ready
 		);
 
-	asym_fifo_8to3 : entity work.asymmetric_fifo
+	asym_fifo_poly : entity work.asymmetric_fifo
 		generic map(
 			G_IN_WIDTH  => T_byte_slv'length,
-			G_OUT_WIDTH => 3
+			G_OUT_WIDTH => POLY_SHIFT
 		)
 		port map(
 			clk          => clk,
 			rst          => rst,
-			i_din_data   => a3_din_data,
-			i_din_valid  => a3_din_valid,
-			o_din_ready  => a3_din_ready,
-			o_dout_data  => a3_dout_data,
-			o_dout_valid => a3_dout_valid,
-			i_dout_ready => a3_dout_ready
+			i_din_data   => asym_poly_din_data,
+			i_din_valid  => asym_poly_din_valid,
+			o_din_ready  => asym_poly_din_ready,
+			o_dout_data  => asym_poly_dout_data,
+			o_dout_valid => asym_poly_dout_valid,
+			i_dout_ready => asym_poly_dout_ready
 		);
 
-	a3_din_data  <= i_bytein_data;
-	a3_din_valid <= i_bytein_valid and not i_is_polyvec;
+	asym_poly_din_data  <= i_bytein_data;
+	asym_poly_din_valid <= i_bytein_valid and not i_is_polyvec;
 
-	a11_din_data  <= i_bytein_data;
-	a11_din_valid <= i_bytein_valid and i_is_polyvec;
+	asym_pv_din_data  <= i_bytein_data;
+	asym_pv_din_valid <= i_bytein_valid and i_is_polyvec;
 
-	addition <= resize(shift_right(mutliplier_dout_data, 2), addition'length) + (i_is_polyvec & "0000000" & not i_is_polyvec);
+	addition <= resize(shift_right(mutliplier_dout_data, POLY_SHIFT - 1), addition'length) + (i_is_polyvec & to_unsigned(0, POLYVEC_SHIFT - POLY_SHIFT - 1) & not i_is_polyvec);
 
 	mux_proc : process(                 --
-	i_is_polyvec, a11_din_ready, a3_din_ready, addition, a11_dout_data, --
-	a11_dout_valid, a3_dout_data, a3_dout_valid --
+	i_is_polyvec, asym_pv_din_ready, asym_poly_din_ready, addition, asym_pv_dout_data, --
+	asym_pv_dout_valid, asym_poly_dout_data, asym_poly_dout_valid --
 	) is
 	begin
 		if i_is_polyvec = '1' then
-			o_bytein_ready <= a11_din_ready;
+			o_bytein_ready <= asym_pv_din_ready;
 
-			mutliplier_din_data  <= unsigned(a11_dout_data);
-			mutliplier_din_valid <= a11_dout_valid;
+			mutliplier_din_data  <= unsigned(asym_pv_dout_data);
+			mutliplier_din_valid <= asym_pv_dout_valid;
 
-			o_coefout_data <= resize(shift_right(addition, 9), 13);
+			o_coefout_data <= resize(shift_right(addition, POLYVEC_SHIFT - POLY_SHIFT + 1), o_coefout_data'length);
 		else
-			o_bytein_ready <= a3_din_ready;
+			o_bytein_ready <= asym_poly_din_ready;
 
-			mutliplier_din_data  <= resize(unsigned(a3_dout_data), mutliplier_din_data'length);
-			mutliplier_din_valid <= a3_dout_valid;
+			mutliplier_din_data  <= resize(unsigned(asym_poly_dout_data), mutliplier_din_data'length);
+			mutliplier_din_valid <= asym_poly_dout_valid;
 
-			o_coefout_data <= resize(shift_right(addition, 1), 13);
+			o_coefout_data <= resize(shift_right(addition, 1), o_coefout_data'length);
 		end if;
 	end process mux_proc;
 
-	a3_dout_ready  <= mutliplier_din_ready;
-	a11_dout_ready <= mutliplier_din_ready;
+	asym_poly_dout_ready <= mutliplier_din_ready;
+	asym_pv_dout_ready   <= mutliplier_din_ready;
 
 	-- multiplier -> add -> shift -> out
 

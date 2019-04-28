@@ -11,13 +11,10 @@
 
 import cocotb
 from cocotb.triggers import RisingEdge
-from cocotb.regression import TestFactory
+from cocotb.regression import TestFactory, TestSuccess, TestError
 from cocotb.generators.bit import wave, intermittent_single_cycles, random_50_percent
 from cmd_tester import CmdDoneTester, to_hex_str
-import pyber
-from pyber import atpk_bytes, compressed_pk_bytes
-from pyber import (KYBER_CIPHERTEXTBYTES, KYBER_INDCPA_SECRETKEYBYTES, KYBER_POLYVECCOMPRESSEDBYTES,
-                   KYBER_POLYCOMPRESSEDBYTES, KYBER_INDCPA_MSGBYTES, KYBER_SYMBYTES)
+
 
 CMD_RECV_PK = 1
 CMD_START_ENC = 2
@@ -34,6 +31,18 @@ def cpa_enc_tb(dut, debug=True, enc_dec=(True, True), valid_generator=None, read
 
     yield tb.reset()  # important!
 
+
+    ###
+    if tb.dut.DUMMY_NIST_ROUND == 1:
+        import pyber
+        from pyber import (atpk_bytes, KYBER_INDCPA_PUBLICKEYBYTES, KYBER_Q, KYBER_CIPHERTEXTBYTES, KYBER_INDCPA_SECRETKEYBYTES, KYBER_POLYVECCOMPRESSEDBYTES,
+                        KYBER_POLYCOMPRESSEDBYTES, KYBER_INDCPA_MSGBYTES, KYBER_SYMBYTES)
+
+    else:
+        import pyber2 as pyber
+        from pyber2 import (atpk_bytes, KYBER_INDCPA_PUBLICKEYBYTES, KYBER_Q, KYBER_CIPHERTEXTBYTES, KYBER_INDCPA_SECRETKEYBYTES, KYBER_POLYVECCOMPRESSEDBYTES,
+                            KYBER_POLYCOMPRESSEDBYTES, KYBER_INDCPA_MSGBYTES, KYBER_SYMBYTES)
+    ###
     clkedge = RisingEdge(dut.clk)
 
     dut.i_command <= 0
@@ -91,8 +100,12 @@ def cpa_enc_tb(dut, debug=True, enc_dec=(True, True), valid_generator=None, read
         dut.i_command <= 0
 
         yield clkedge  # optional
-        yield clkedge  # optional
-        yield clkedge  # optional
+        try:
+            raise tb.scoreboard.result
+        except TestSuccess:
+            tb.log.info("Enc PASSED!")
+            pass
+
     
     if dec:
         # This should come first!
@@ -126,10 +139,16 @@ def cpa_enc_tb(dut, debug=True, enc_dec=(True, True), valid_generator=None, read
         dut.i_command <= 0
 
         yield clkedge  # optional
+        
+        try:
+            raise tb.scoreboard.result
+        except TestSuccess:
+            tb.log.info("Dec PASSED!")
+            pass
+        
         yield clkedge  # optional
         yield clkedge  # optional
 
-    raise tb.scoreboard.result
 
 
 # Tests

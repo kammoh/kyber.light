@@ -77,128 +77,130 @@ entity compressor is
 		G_DECRYPT : boolean := False
 	);
 	port(
-		clk            : in  std_logic;
-		rst            : in  std_logic;
+		clk             : in  std_logic;
+		rst             : in  std_logic;
 		-- Control
-		i_is_msg       : in  std_logic;
-		i_is_polyvec   : in  std_logic;
+		i_is_msg        : in  std_logic;
+		i_is_polyvec    : in  std_logic;
 		--
-		i_din_data     : in  T_coef_us;
-		i_din_valid    : in  std_logic;
-		o_din_ready    : out std_logic;
+		i_coeffin_data  : in  T_coef_us;
+		i_coeffin_valid : in  std_logic;
+		o_coeffin_ready : out std_logic;
 		--
-		o_dout_data    : out T_byte_slv;
-		o_dout_valid   : out std_logic;
-		i_dout_ready   : in  std_logic;
+		o_byteout_data  : out T_byte_slv;
+		o_byteout_valid : out std_logic;
+		i_byteout_ready : in  std_logic;
 		-- divider
-		o_divin_data   : out unsigned(2 * KYBER_COEF_BITS - 1 downto 0);
-		o_divin_valid  : out std_logic;
-		i_divin_ready  : in  std_logic;
+		o_divin_data    : out unsigned(2 * KYBER_COEF_BITS - 1 downto 0);
+		o_divin_valid   : out std_logic;
+		i_divin_ready   : in  std_logic;
 		--
-		i_divout_data  : in  T_coef_us;
-		i_divout_valid : in  std_logic;
-		o_divout_ready : out std_logic
+		i_divout_data   : in  T_coef_us;
+		i_divout_valid  : in  std_logic;
+		o_divout_ready  : out std_logic
 	);
 end entity compressor;
 
 architecture RTL of compressor is
-	signal a11_din_data   : std_logic_vector(11 - 1 downto 0);
-	signal a11_din_valid  : std_logic;
-	signal a11_din_ready  : std_logic;
-	signal a11_dout_data  : std_logic_vector(T_byte_slv'length - 1 downto 0);
-	signal a11_dout_valid : std_logic;
-	signal a11_dout_ready : std_logic;
-	signal a3_din_data    : std_logic_vector(3 - 1 downto 0);
-	signal a3_din_valid   : std_logic;
-	signal a3_din_ready   : std_logic;
-	signal a3_dout_data   : std_logic_vector(T_byte_slv'length - 1 downto 0);
-	signal a3_dout_valid  : std_logic;
-	signal a3_dout_ready  : std_logic;
-	signal shifted        : unsigned(2 * T_coef_us'length - 1 downto 0);
-	signal sel            : std_logic_vector(1 downto 0);
-	signal a1_din_data    : std_logic_vector(1 - 1 downto 0);
-	signal a1_din_valid   : std_logic;
-	signal a1_din_ready   : std_logic;
-	signal a1_dout_data   : std_logic_vector(T_byte_slv'length - 1 downto 0);
-	signal a1_dout_valid  : std_logic;
-	signal a1_dout_ready  : std_logic;
+	signal a_pv_din_data     : std_logic_vector(POLYVEC_SHIFT - 1 downto 0);
+	signal a_pv_din_valid    : std_logic;
+	signal a_pv_din_ready    : std_logic;
+	signal a_pv_dout_data    : std_logic_vector(T_byte_slv'length - 1 downto 0);
+	signal a_pv_dout_valid   : std_logic;
+	signal a_pv_dout_ready   : std_logic;
+	signal a_poly_din_data   : std_logic_vector(POLY_SHIFT - 1 downto 0);
+	signal a_poly_din_valid  : std_logic;
+	signal a_poly_din_ready  : std_logic;
+	signal a_poly_dout_data  : std_logic_vector(T_byte_slv'length - 1 downto 0);
+	signal a_poly_dout_valid : std_logic;
+	signal a_poly_dout_ready : std_logic;
+	signal shifted           : unsigned(T_coef_us'length + POLYVEC_SHIFT - 1 downto 0);
+	signal sel               : std_logic_vector(1 downto 0);
+	signal a1_din_data       : std_logic_vector(1 - 1 downto 0);
+	signal a1_din_valid      : std_logic;
+	signal a1_din_ready      : std_logic;
+	signal a1_dout_data      : std_logic_vector(T_byte_slv'length - 1 downto 0);
+	signal a1_dout_valid     : std_logic;
+	signal a1_dout_ready     : std_logic;
+
+	constant Q_halfed : unsigned(log2ceil(KYBER_Q / 2) - 1 downto 0) := to_unsigned(KYBER_Q / 2, log2ceil(KYBER_Q / 2));
 
 begin
 
 	--================================================================================================
 	gen_encrypt : if G_ENCRYPT generate -- with or without decrypt
 
-		asym_fifo_11_to_8 : entity work.asymmetric_fifo
+		asym_fifo_pv_to_8 : entity work.asymmetric_fifo
 			generic map(
-				G_IN_WIDTH  => 11,
+				G_IN_WIDTH  => POLYVEC_SHIFT,
 				G_OUT_WIDTH => T_byte_slv'length
 			)
 			port map(
 				clk          => clk,
 				rst          => rst,
-				i_din_data   => a11_din_data,
-				i_din_valid  => a11_din_valid,
-				o_din_ready  => a11_din_ready,
-				o_dout_data  => a11_dout_data,
-				o_dout_valid => a11_dout_valid,
-				i_dout_ready => a11_dout_ready
+				i_din_data   => a_pv_din_data,
+				i_din_valid  => a_pv_din_valid,
+				o_din_ready  => a_pv_din_ready,
+				o_dout_data  => a_pv_dout_data,
+				o_dout_valid => a_pv_dout_valid,
+				i_dout_ready => a_pv_dout_ready
 			);
 
-		asym_fifo_3_to_8 : entity work.asymmetric_fifo
+		asym_fifo_poly_to_8 : entity work.asymmetric_fifo
 			generic map(
-				G_IN_WIDTH  => 3,
+				G_IN_WIDTH  => POLY_SHIFT,
 				G_OUT_WIDTH => T_byte_slv'length
 			)
 			port map(
 				clk          => clk,
 				rst          => rst,
-				i_din_data   => a3_din_data,
-				i_din_valid  => a3_din_valid,
-				o_din_ready  => a3_din_ready,
-				o_dout_data  => a3_dout_data,
-				o_dout_valid => a3_dout_valid,
-				i_dout_ready => a3_dout_ready
+				i_din_data   => a_poly_din_data,
+				i_din_valid  => a_poly_din_valid,
+				o_din_ready  => a_poly_din_ready,
+				o_dout_data  => a_poly_dout_data,
+				o_dout_valid => a_poly_dout_valid,
+				i_dout_ready => a_poly_dout_ready
 			);
 
 		sel <= i_is_msg & i_is_polyvec;
 
 		with sel select shifted <=
-			shift_left(resize(i_din_data, shifted'length), 11) when "01",
-			shift_left(resize(i_din_data, shifted'length), 3) when "00",
-				shift_left(resize(i_din_data, shifted'length), 1) when others; -- i_is_msg
+			shift_left(resize(i_coeffin_data, shifted'length), POLYVEC_SHIFT) when "01",
+			shift_left(resize(i_coeffin_data, shifted'length), POLY_SHIFT) when "00",
+				resize(i_coeffin_data & "0", shifted'length) when others; -- i_is_msg
 
 		-- divider -> a3, a11
 
 		--
 		with sel select o_divout_ready <=
-			a11_din_ready when "01",
-			a3_din_ready when "00",
+			a_pv_din_ready when "01",
+			a_poly_din_ready when "00",
 			a1_din_ready when others;
 
 		--  a3, a11 -> out
 
-		with sel select o_dout_data <=
-			a11_dout_data when "01",
-			a3_dout_data when "00",
+		with sel select o_byteout_data <=
+			a_pv_dout_data when "01",
+			a_poly_dout_data when "00",
 		  a1_dout_data when others;
 
-		with sel select o_dout_valid <=
-			a11_dout_valid when "01",
-			a3_dout_valid when "00",
+		with sel select o_byteout_valid <=
+			a_pv_dout_valid when "01",
+			a_poly_dout_valid when "00",
 		  a1_dout_valid when others;
 
-		a3_din_data   <= std_logic_vector(i_divout_data(3 - 1 downto 0));
-		a3_din_valid  <= i_divout_valid and not i_is_polyvec and not i_is_msg;
+		a_poly_din_data  <= std_logic_vector(i_divout_data(POLY_SHIFT - 1 downto 0));
+		a_poly_din_valid <= i_divout_valid and not i_is_polyvec and not i_is_msg;
 		--
-		a11_din_data  <= std_logic_vector(i_divout_data(11 - 1 downto 0));
-		a11_din_valid <= i_divout_valid and i_is_polyvec and not i_is_msg;
+		a_pv_din_data    <= std_logic_vector(i_divout_data(POLYVEC_SHIFT - 1 downto 0));
+		a_pv_din_valid   <= i_divout_valid and i_is_polyvec and not i_is_msg;
 		--
-		a1_din_data   <= std_logic_vector(i_divout_data(0 downto 0));
-		a1_din_valid  <= i_divout_valid and i_is_msg;
+		a1_din_data      <= std_logic_vector(i_divout_data(0 downto 0));
+		a1_din_valid     <= i_divout_valid and i_is_msg;
 
-		a3_dout_ready  <= i_dout_ready and not i_is_polyvec and not i_is_msg;
-		a11_dout_ready <= i_dout_ready and i_is_polyvec and not i_is_msg;
-		a1_dout_ready  <= i_dout_ready and i_is_msg;
+		a_poly_dout_ready <= i_byteout_ready and not i_is_polyvec and not i_is_msg;
+		a_pv_dout_ready   <= i_byteout_ready and i_is_polyvec and not i_is_msg;
+		a1_dout_ready     <= i_byteout_ready and i_is_msg;
 
 	end generate gen_encrypt;
 	--================================================================================================
@@ -238,22 +240,25 @@ begin
 	-- ONLY decrypt:
 	--------------------------------------------------------------------------------------------------
 	generate_dec_noenc : if G_DECRYPT and not G_ENCRYPT generate
-		shifted <= shift_left(resize(i_din_data, shifted'length), 1); -- i_is_msg
+		shifted <= shift_left(resize(i_coeffin_data, shifted'length), 1); -- i_is_msg
 
 		-- divider -> a1
-		o_divout_ready <= a1_din_ready;
-		a1_din_data    <= std_logic_vector(i_divout_data(0 downto 0));
-		a1_din_valid   <= i_divout_valid;
+		o_divout_ready  <= a1_din_ready;
+		a1_din_data     <= std_logic_vector(i_divout_data(0 downto 0));
+		a1_din_valid    <= i_divout_valid;
 		--  a1 -> out
-		o_dout_data    <= a1_dout_data;
-		o_dout_valid   <= a1_dout_valid;
-		a1_dout_ready  <= i_dout_ready;
+		o_byteout_data  <= a1_dout_data;
+		o_byteout_valid <= a1_dout_valid;
+		a1_dout_ready   <= i_byteout_ready;
 
 	end generate generate_dec_noenc;
 	--================================================================================================
 
-	o_divin_data  <= shifted + (KYBER_Q / 2);
-	o_divin_valid <= i_din_valid;
-	o_din_ready   <= i_divin_ready;
+	-- TODO is there a more efficient implementation?
+	--	o_divin_data  <= (shifted(shifted'length - 1 downto POLY_SHIFT) + Q_halfed(Q_halfed'length - 1 downto POLY_SHIFT)) & Q_halfed(POLY_SHIFT - 1 downto 0); 
+
+	o_divin_data    <= resize(shifted + Q_halfed, o_divin_data'length);
+	o_divin_valid   <= i_coeffin_valid;
+	o_coeffin_ready <= i_divin_ready;
 
 end architecture RTL;

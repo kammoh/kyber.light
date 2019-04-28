@@ -21,24 +21,35 @@ from cocotb.regression import TestFactory
 from cocotb.scoreboard import Scoreboard
 from cocotb.generators.bit import wave, intermittent_single_cycles, random_50_percent
 from cmd_tester import CmdDoneTester
-import pyber
-from pyber import Polynomial, PolynomialVector, KYBER_N
+
 
 @cocotb.coroutine
-def run_test(dut, valid_gen=None, ready_gen=None, subtract=True):
+def run_test(dut, subtract=True, valid_generator=None, ready_generator=None):
 
-    commands_dict = {'recv_aa': dut.i_recv_aa, 'recv_bb': dut.i_recv_bb,
-                     'recv_v': dut.i_recv_v, 'do_mac': dut.i_do_mac, 'send_v': dut.i_send_v}
-    tb = CmdDoneTester(dut, dut.clk, input_name="din",
-                       output_name="dout", num_out_words=KYBER_N, valid_gen=valid_gen, commands_dict=commands_dict)
+    tb = CmdDoneTester(dut, dut.clk, valid_generator=valid_generator, ready_generator=ready_generator)
+
     
     yield tb.reset()
     clkedge = RisingEdge(dut.clk)
 
-    if subtract:
-        dut.i_subtract <= 1
+    ###
+    if tb.dut.DUMMY_NIST_ROUND == 1:
+        import pyber
+        from pyber import (Polynomial, PolynomialVector, KYBER_N, KYBER_Q)
     else:
-        dut.i_subtract <= 0
+        import pyber2 as pyber
+        from pyber2 import (Polynomial, PolynomialVector, KYBER_N, KYBER_Q)
+    ###
+
+    dut.i_rama_blk <= 0
+
+    tb.dut.i_recv_aa <= 0
+    tb.dut.i_recv_bb <= 0
+    tb.dut.i_recv_v <= 0
+    tb.dut.i_do_mac <= 0
+    tb.dut.i_send_v <= 0
+
+    dut.i_subtract <= subtract
 
     yield clkedge
 
@@ -76,27 +87,49 @@ def run_test(dut, valid_gen=None, ready_gen=None, subtract=True):
     print("Expected Output: --------")
     exp.dump()
 
-    tb.set_expected(list(exp))
+    tb.expect_output('dout', list(exp))
 
-    dut.i_rama_blk <= 0
-    yield tb.command('recv_aa', list(a))
-    yield tb.command('recv_bb', list(b))
-    yield tb.command('recv_v', list(v))
-    yield tb.command('do_mac')
-    yield tb.command('send_v')
+    
+    
+    tb.dut.i_recv_aa <= 1
+    yield tb.drive_input('din', list(a))
+    yield tb.wait_for_done()
+    tb.dut.i_recv_aa <= 0
+    yield clkedge
+    
+    tb.dut.i_recv_bb <= 1
+    yield tb.drive_input('din', list(b))
+    yield tb.wait_for_done()
+    tb.dut.i_recv_bb <= 0
+    yield clkedge
+
+    tb.dut.i_recv_v <= 1
+    yield tb.drive_input('din', list(v))
+    yield tb.wait_for_done()
+    tb.dut.i_recv_v <= 0
+    yield clkedge
+
+    tb.dut.i_do_mac <= 1
+    yield clkedge
+    yield tb.wait_for_done()
+    tb.dut.i_do_mac <= 0
+    yield clkedge
+
+    tb.dut.i_send_v <= 1
+    yield tb.wait_for_done()
+    tb.dut.i_send_v <= 0
+    yield clkedge
 
     for _ in range(3):
         yield clkedge
 
     raise tb.scoreboard.result
 
-
 # Tests
 factory = TestFactory(run_test)
 
-factory.add_option("valid_gen", [None, intermittent_single_cycles, random_50_percent])
-# factory.add_option("valid_gen", [None])
-factory.add_option("subtract", [True, False])
-# factory.add_option("subtract", [False])
+# factory.add_option("valid_generator", [None, intermittent_single_cycles, random_50_percent])
+# factory.add_option("ready_generator", [None, intermittent_single_cycles, random_50_percent])
+# factory.add_option("subtract", [True, False])
 
 factory.generate_tests()

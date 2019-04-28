@@ -50,6 +50,8 @@ begin
 			end if;
 		end if;
 	end process;
+	
+	
 	M1X <= (11 downto 0 => '0') - i_X_data;
 
 	-- M511X <-  M1X<<9  + X

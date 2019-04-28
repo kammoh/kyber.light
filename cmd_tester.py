@@ -509,6 +509,7 @@ class CmdDoneTester(ValidReadyTester):
 
     @cocotb.coroutine
     def wait_for_done(self, value=1):
+        yield RisingEdge(self.dut.clk)
         done = self.done_signal
         while done.value != value:
             yield Edge(done)

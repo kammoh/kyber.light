@@ -104,6 +104,7 @@ route_design
 #write_checkpoint -force $CHECKPOINTS_DIR/post_route
 report_timing_summary -file $REPORTS_DIR/post_route_timing_summary.rpt
 report_timing  -sort_by group -max_paths 100 -path_type summary -file $REPORTS_DIR/post_route_timing.rpt
+reportCriticalPaths $REPORTS_DIR/post_route_critpath_report.csv
 report_clock_utilization -file $REPORTS_DIR/clock_util.rpt
 report_utilization -file $REPORTS_DIR/post_route_util.rpt
 report_utilization -hierarchical  -file   $REPORTS_DIR/post_route_util_hierarchical.rpt

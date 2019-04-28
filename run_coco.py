@@ -12,6 +12,7 @@ manifest = Manifest.load_from_file()
 
 manifest.parser.add_argument('--synth', dest='synth', action='store',
                              help='Run synthesis flow <synth>')
+manifest.parser.add_argument('--report', dest='report_path', action='store', help='report path')
 manifest.parser.add_argument('--debug', dest='debug', action='store_const', const=True, default=False,
                              help='turn debug on')
 
@@ -21,7 +22,11 @@ manifest.parser.add_argument('--dump', dest='sim_dump', action='store_const', co
 
 args = manifest.parser.parse_args()
 
-
+if args.report_path:
+        vivado = Vivado.from_manifest(manifest)
+        vivado.print_utilization(path=args.report_path)
+        exit(0)
+    
 if args.synth:
     if args.synth == 'vivado':
         vivado = Vivado.from_manifest(manifest)
@@ -40,7 +45,7 @@ if args.synth:
                 f"Frequency to try next: {1000.0/(1000.0/frequency - wns ):.3f} Mhz")
         else:
             vivado.log.info(f"Suggested frequency to try: {1000.0/(1000.0/frequency - wns ):.3f} Mhz")
-            vivado.print_utilization()
+        vivado.print_utilization()
     elif args.synth == 'dc':
         synth = DesignCompiler.from_manifest(manifest)
 

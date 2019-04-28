@@ -174,6 +174,14 @@ package kyber_pkg is
 	--
 	function msb(arg : signed) return std_logic;
 	--
+	function KYBER_Q return positive;
+	--
+	function KYBER_ETA return positive;
+	--
+	function KYBER_POLYVECCOMPRESSEDBYTES return positive;
+	--
+	function KYBER_POLYCOMPRESSEDBYTES return positive;
+	--
 	--------------------------------------------=( Synthesis )=--------------------------------------------------------
 	--
 	type T_TECHNOLOGY is (XILINX, SAED32);
@@ -182,31 +190,33 @@ package kyber_pkg is
 	attribute DONT_TOUCH         : boolean;
 	--
 	--------------------------------------------=( Parameters )=-------------------------------------------------------	
-	constant KYBER_K             : positive     := 3; -- 2: Kyber512, 3: Kyber768 (recommended), 4: KYBER1024
-	--
+	constant NIST_ROUND          : positive := 1;
+	constant KYBER_K             : positive := 3; -- 2: Kyber512, 3: Kyber768 (recommended), 4: KYBER1024
+
 	--
 	--------------------------------------------=( Synthesis Parameters )=---------------------------------------------
-	constant TECHNOLOGY          : T_TECHNOLOGY := XILINX; -- Synthesis technology
+	constant TECHNOLOGY : T_TECHNOLOGY := XILINX; -- Synthesis technology
 
 	--------------------------------------------=( Interface )=--------------------------------------------------------	
-	constant C_CPA_CMD_BITS               : positive := 3;
-	constant CMD_RECV_PK                  : positive := 1;
-	constant CMD_START_ENC                : positive := 2;
-	constant CMD_RECV_SK                  : positive := 3;
-	constant CMD_START_DEC                : positive := 4;
+	constant C_CPA_CMD_BITS : positive := 3;
+	constant CMD_RECV_PK    : positive := 1;
+	constant CMD_START_ENC  : positive := 2;
+	constant CMD_RECV_SK    : positive := 3;
+	constant CMD_START_DEC  : positive := 4;
 	--------------------------------------------=( Constants )=--------------------------------------------------------	
-	constant KYBER_Q                      : positive := 7681;
-	constant KYBER_N                      : positive := 256;
+	constant KYBER_N        : positive := 256;
+
 	--
-	-- KYBER_ETA == 5: Kyber512, 4: Kyber768 (recommended), 3: KYBER1024
-	constant KYBER_ETA                    : positive := 7 - KYBER_K;
-	constant KYBER_COEF_BITS              : positive := log2ceilnz(KYBER_Q); -- 13
-	constant KYBER_Q_US                   : unsigned := to_unsigned(KYBER_Q, KYBER_COEF_BITS);
-	constant KYBER_Q_S                    : signed   := to_signed(KYBER_Q, KYBER_COEF_BITS);
-	constant KYBER_SYMBYTES               : positive := 32;
-	constant KYBER_POLYVECCOMPRESSEDBYTES : positive := (KYBER_K * 352);
-	constant KYBER_POLYCOMPRESSEDBYTES    : positive := 96;
-	constant C_DIVIDER_PIPELINE_LEVELS    : natural  := 3;
+	constant KYBER_COEF_BITS : positive := log2ceilnz(KYBER_Q);
+	constant KYBER_Q_US      : unsigned := to_unsigned(KYBER_Q, KYBER_COEF_BITS);
+	constant KYBER_Q_S       : signed   := to_signed(KYBER_Q, KYBER_COEF_BITS);
+	constant KYBER_SYMBYTES  : positive := 32;
+
+	constant C_DIVIDER_PIPELINE_LEVELS : natural := 3;
+
+	function POLYVEC_SHIFT return positive;
+	function POLY_SHIFT return positive;
+
 	--------------------------------------------=( Types (2) )=--------------------------------------------------------
 	subtype T_coef_slv is std_logic_vector(KYBER_COEF_BITS - 1 downto 0);
 	subtype T_coef_us is unsigned(KYBER_COEF_BITS - 1 downto 0);
@@ -216,6 +226,60 @@ package kyber_pkg is
 end package kyber_pkg;
 
 package body kyber_pkg is
+
+	function KYBER_Q return positive is
+	begin
+		if NIST_ROUND = 1 then
+			return 7681;
+		else
+			return 3329;
+		end if;
+	end function;
+
+	function KYBER_ETA return positive is
+	begin
+		if NIST_ROUND = 1 then
+			return 7 - KYBER_K;
+		else
+			return 2;
+		end if;
+	end function;
+
+	function KYBER_POLYCOMPRESSEDBYTES return positive is
+	begin
+		if NIST_ROUND = 1 then
+			return 96;
+		else
+			return 128;
+		end if;
+	end function;
+
+	function KYBER_POLYVECCOMPRESSEDBYTES return positive is
+	begin
+		if NIST_ROUND = 1 then
+			return KYBER_K * 352;
+		else
+			return KYBER_K * 320;
+		end if;
+	end function;
+
+	function POLYVEC_SHIFT return positive is
+	begin
+		if KYBER_Q = 7681 then
+			return 11;
+		else
+			return 10;
+		end if;
+	end function;
+
+	function POLY_SHIFT return positive is
+	begin
+		if KYBER_Q = 7681 then
+			return 3;
+		else
+			return 4;
+		end if;
+	end function;
 
 	function half_adder(a, b : std_logic) return unsigned is
 		variable ret : unsigned(1 downto 0);
@@ -239,7 +303,7 @@ package body kyber_pkg is
 		end if;
 	end function;
 
-	-------- IEEE proposed (additions)
+	-------- IEEE 2008 (additions)
 	--============================================================================
 	-- Id: C.43
 

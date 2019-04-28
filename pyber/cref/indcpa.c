@@ -476,7 +476,6 @@ void indcpa_dec(unsigned char *m, const unsigned char *c,
   unpack_sk(&skpv, sk);
 
   polyvec_ntt(&bp);
-
   polyvec_pointwise_acc(&mp, &skpv, &bp);
   poly_invntt(&mp);
 

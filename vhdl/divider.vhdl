@@ -88,52 +88,81 @@ entity divider is
 		o_uin_ready       : out std_logic;
 		--
 		o_remout_data     : out T_coef_us;
-		o_divout_data     : out T_coef_us;
+		o_divout_data     : out unsigned(G_IN_WIDTH - KYBER_COEF_BITS - 1 downto 0);
 		o_remdivout_valid : out std_logic;
 		i_remdivout_ready : in  std_logic
 	);
 end entity divider;
 
 architecture RTL of divider is
-	constant RECIPRICAL_OF_Q : positive := ((2** (2*KYBER_COEF_BITS) - 1) / KYBER_Q) - (2 ** KYBER_COEF_BITS);
-	constant RECIPRICAL_OF_Q_BITS : positive := log2ceil(RECIPRICAL_OF_Q);
-	signal u0, u1                         : T_coef_us;
-	signal u1_times_v                     : unsigned(17 downto 0); -- u1 * v,  23 bits >= (G_IN_WIDTH -13) + 10
-	signal q                              : unsigned(2 * KYBER_COEF_BITS - 1 downto 0); -- q = u1 * v + u , G_IN_WIDTH
-	signal q0, q1, q1_times_d             : T_coef_us;
-	signal r0, r0_minus_d                 : T_coef_us;
-	signal adjust                         : boolean;
+	constant RECIPRICAL_OF_Q      : positive := ((2 ** (2 * KYBER_COEF_BITS) - 1) / KYBER_Q) - (2 ** KYBER_COEF_BITS);
+	signal u0, u1                 : T_coef_us;
+	signal u1_times_v             : unsigned(log2ceil(KYBER_Q * RECIPRICAL_OF_Q) - 1 downto 0);
+	signal q                      : unsigned(G_IN_WIDTH - 1 downto 0); -- q = u1 * v + u , G_IN_WIDTH
+	signal q0, q1, q1_times_d     : T_coef_us;
+	signal r0, r0_minus_d         : T_coef_us;
+	signal adjust                 : boolean;
 	-- pipeline registers
-	signal r0_reg, q0_reg, q1_reg, u0_reg : T_coef_us;
-	signal divout_data, remout_reg        : T_coef_us;
+	signal r0_reg, q0_reg, u0_reg : T_coef_us;
+	signal q1_reg, divout_data    : unsigned(G_IN_WIDTH - KYBER_COEF_BITS - 1 downto 0);
+	signal remout_reg             : T_coef_us;
 	--
 	-- reg 0: input, reg G_PIPELINE_LEVELS - 1: output
-	signal valid_pipe                     : std_logic_vector(C_DIVIDER_PIPELINE_LEVELS - 1 downto 0);
-	signal q_reg                          : unsigned(2 * KYBER_COEF_BITS - 1 downto 0);
+	signal valid_pipe             : std_logic_vector(C_DIVIDER_PIPELINE_LEVELS - 1 downto 0);
+	signal q_reg                  : unsigned(G_IN_WIDTH - 1 downto 0);
 	-- wires
-	signal stall                          : boolean;
+	signal stall                  : boolean;
 
 begin
 	-- i_u = <u1,u0>
 	u0 <= i_uin_data(KYBER_COEF_BITS - 1 downto 0);
 	u1 <= resize(i_uin_data(G_IN_WIDTH - 1 downto KYBER_COEF_BITS), KYBER_COEF_BITS);
 
-	-- def reciprocal(d, w):
-	--    beta = 2**w
-	--    return (beta**2 - 1) // d - beta
-	--    
-	-- v = reciprocal(7681, 13)
-
-	-- v (reciprocal of 7681) = 544 = 2^9 + 2^5 (10 bit)
-	u1_times_v <= ((17 downto 13 => '0') & u1(KYBER_COEF_BITS - 1 downto 4) + u1(KYBER_COEF_BITS - 1 downto 0)) & u1(3 downto 0);
+	-- v (reciprocal of 7681) = 544 = 2^9 + 2^5 = 2^5 * (2^4 + 1) (10 bits)
+	--	u1_times_v <= (u1 + shift_right(u1, 4)) & u1(3 downto 0);
 	-- q = u1 * v + u
-	q          <= ((u1 & u0(12 downto 5)) + u1_times_v) & u0(4 downto 0);
+	--	q          <= ((u1 & u0(12 downto 5)) + ("0" & u1_times_v) ) & u0(4 downto 0);
+	q  <= resize(u1_times_v, q'length) + i_uin_data;
 	-- q = <q1, q0>
-	q0         <= q_reg(KYBER_COEF_BITS - 1 downto 0);
-	q1         <= q_reg(2 * KYBER_COEF_BITS - 1 downto KYBER_COEF_BITS);
+	q0 <= q_reg(KYBER_COEF_BITS - 1 downto 0);
+	q1 <= resize(q_reg(G_IN_WIDTH - 1 downto KYBER_COEF_BITS), q1'length);
 
 	-- d = KYBER_Q = 2^13 - 2^9 + 1 
-	q1_times_d <= (q1(KYBER_COEF_BITS - 1 downto 9) - q1(3 downto 0)) & q1(8 downto 0);
+	--	q1_times_d <= (q1(KYBER_COEF_BITS - 1 downto 9) - q1(3 downto 0)) & q1(8 downto 0);
+
+	gen_7681 : if KYBER_Q = 7681 generate
+		ConstMult_7681_13_13_inst : entity work.ConstMult_7681_13_13
+			port map(
+				i_x    => q1,
+				o_mult => q1_times_d
+			);
+
+		ConstMult_544_13_13_inst : entity work.ConstMult_544_13_22
+			port map(
+				i_x    => u1,
+				o_mult => u1_times_v
+			);
+
+	end generate gen_7681;
+
+	gen_3329 : if KYBER_Q = 3329 generate
+		ConstMult_3329_12_12_inst : entity work.ConstMult_3329_12_12
+			port map(
+				i_x    => q1,
+				o_mult => q1_times_d
+			);
+
+		ConstMult_943_12_12_inst : entity work.ConstMult_943_12_22
+			port map(
+				i_x    => u1,
+				o_mult => u1_times_v
+			);
+
+	end generate gen_3329;
+
+	gen_fail : if KYBER_Q /= 3329 and KYBER_Q /= 7681 generate
+		assert False report "KYBER_Q /= 3329 and KYBER_Q /= 7681" severity failure;
+	end generate;
 	--
 
 	-- choice of remainder
@@ -153,7 +182,7 @@ begin
 					valid_pipe <= shift_in_left(valid_pipe, i_uin_valid);
 					r0_reg     <= r0;
 					q0_reg     <= q0;
-					q1_reg     <= q1;
+					q1_reg     <= resize(q1, q1_reg'length);
 					q_reg      <= q;
 					u0_reg     <= u0;
 
