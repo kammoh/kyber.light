@@ -42,4 +42,6 @@ void poly_freeze(poly *r);
 
 void poly_tomsg_nocsubq(unsigned char msg[KYBER_SYMBYTES], poly *a);
 
+void poly_montgomery_reduce(poly *r);
+
 #endif

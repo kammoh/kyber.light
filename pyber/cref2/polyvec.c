@@ -225,6 +225,12 @@ void polyvec_reduce(polyvec *r)
   for(i=0;i<KYBER_K;i++)
     poly_reduce(&r->vec[i]);
 }
+void polyvec_montgomery_reduce(polyvec *r)
+{
+  int i;
+  for(i=0;i<KYBER_K;i++)
+    poly_montgomery_reduce(&r->vec[i]);
+}
 
 /*************************************************
 * Name:        polyvec_csubq

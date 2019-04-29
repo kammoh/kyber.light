@@ -190,7 +190,7 @@ package kyber_pkg is
 	attribute DONT_TOUCH         : boolean;
 	--
 	--------------------------------------------=( Parameters )=-------------------------------------------------------	
-	constant NIST_ROUND          : positive := 1;
+	constant NIST_ROUND          : positive := 2;
 	constant KYBER_K             : positive := 3; -- 2: Kyber512, 3: Kyber768 (recommended), 4: KYBER1024
 
 	--
@@ -198,13 +198,15 @@ package kyber_pkg is
 	constant TECHNOLOGY : T_TECHNOLOGY := XILINX; -- Synthesis technology
 
 	--------------------------------------------=( Interface )=--------------------------------------------------------	
-	constant C_CPA_CMD_BITS : positive := 3;
-	constant CMD_RECV_PK    : positive := 1;
-	constant CMD_START_ENC  : positive := 2;
-	constant CMD_RECV_SK    : positive := 3;
-	constant CMD_START_DEC  : positive := 4;
+	constant C_CPA_CMD_BITS   : positive := 3;
+	constant CMD_RECV_PK      : positive := 1;
+	constant CMD_START_ENC    : positive := 2;
+	constant CMD_RECV_SK      : positive := 3;
+	constant CMD_RECV_SK_US   : unsigned := to_unsigned(CMD_RECV_SK, C_CPA_CMD_BITS);
+	constant CMD_START_DEC    : positive := 4;
+	constant CMD_START_DEC_US : unsigned := to_unsigned(CMD_START_DEC, C_CPA_CMD_BITS);
 	--------------------------------------------=( Constants )=--------------------------------------------------------	
-	constant KYBER_N        : positive := 256;
+	constant KYBER_N          : positive := 256;
 
 	--
 	constant KYBER_COEF_BITS : positive := log2ceilnz(KYBER_Q);

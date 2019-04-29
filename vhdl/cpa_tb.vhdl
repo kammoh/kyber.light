@@ -10,36 +10,36 @@ entity cpa_tb is
 end entity cpa_tb;
 
 architecture RTL of cpa_tb is
-	constant PK_IN_FILENAME    : string := "pk.in.txt";
-	constant PT_IN_FILENAME    : string := "pt.in.txt";
-	constant COINS_IN_FILENAME : string := "coins.in.txt";
-	constant CT_OUT_FILENAME   : string := "ct.out.txt";
-	constant CLOCK_PERIOD      : time   := 10 ns;
+	constant PDI_FILENAME : string := "pdi.in.txt";
+	constant SDI_FILENAME : string := "sdi.in.txt";
+	constant SDO_FILENAME : string := "sdo.out.txt";
+	constant CLOCK_PERIOD : time   := 10 ns;
 
-	signal i_start_enc   : std_logic;
-	signal o_done        : std_logic;
-	signal i_coins_data  : T_byte_slv;
-	signal i_coins_valid : std_logic;
-	signal o_coins_ready : std_logic;
-	signal i_pk_data     : T_byte_slv;
-	signal i_pk_valid    : std_logic;
-	signal o_pk_ready    : std_logic;
-	signal o_ct_data     : T_byte_slv;
-	signal o_ct_valid    : std_logic;
-	signal i_ct_ready    : std_logic;
-	signal clk           : std_logic;
-	signal rst           : std_logic;
-	signal i_start_dec   : std_logic;
-	signal i_recv_pk     : std_logic;
-	signal i_recv_sk     : std_logic;
-	signal i_pt_data     : T_byte_slv;
-	signal i_pt_valid    : std_logic;
-	signal o_pt_ready    : std_logic;
+	signal o_done : std_logic;
 
-	type T_state is (init, send_pk, send_pk_done, encrypt, encrypt_done);
+	signal clk : std_logic;
+	signal rst : std_logic;
+
+	type T_state is (init, send_sk, send_sk_done, decrypt, encrypt_done);
 	signal state : T_state;
 
-	signal reseted : boolean := False;
+	signal reseted     : boolean := False;
+	signal i_command   : unsigned(C_CPA_CMD_BITS - 1 downto 0);
+	signal i_rdi_data  : T_byte_slv;
+	signal i_rdi_valid : std_logic;
+	signal o_rdi_ready : std_logic;
+	signal i_pdi_data  : T_byte_slv;
+	signal i_pdi_valid : std_logic;
+	signal o_pdi_ready : std_logic;
+	signal i_sdi_data  : T_byte_slv;
+	signal i_sdi_valid : std_logic;
+	signal o_sdi_ready : std_logic;
+	signal o_pdo_data  : T_byte_slv;
+	signal o_pdo_valid : std_logic;
+	signal i_pdo_ready : std_logic;
+	signal o_sdo_data  : T_byte_slv;
+	signal o_sdo_valid : std_logic;
+	signal i_sdo_ready : std_logic;
 begin
 
 	clkgen_proc : process
@@ -71,12 +71,12 @@ begin
 		variable line_in : line;
 		variable temp    : std_logic_vector(7 downto 0);
 	begin
-		file_open(filein, PK_IN_FILENAME, read_mode);
+		file_open(filein, PDI_FILENAME, read_mode);
 		while not endfile(filein) loop
 			readline(filein, line_in);
 			hread(line_in, temp);
-			i_pk_data <= temp;
-			wait until rising_edge(clk) and i_pk_valid = '1' and o_pk_ready = '1';
+			i_pdi_data <= temp;
+			wait until rising_edge(clk) and i_pdi_valid = '1' and o_pdi_ready = '1';
 		end loop;
 		file_close(filein);
 		wait;                           -- forever
@@ -87,33 +87,33 @@ begin
 		variable line_in : line;
 		variable temp    : std_logic_vector(7 downto 0);
 	begin
-		file_open(filein, PT_IN_FILENAME, read_mode);
+		file_open(filein, SDI_FILENAME, read_mode);
 		while not endfile(filein) loop
 			readline(filein, line_in);
 			hread(line_in, temp);
-			i_pt_data <= temp;
-			wait until rising_edge(clk) and i_pt_valid = '1' and o_pt_ready = '1';
+			i_sdi_data <= temp;
+			wait until rising_edge(clk) and i_sdi_valid = '1' and o_sdi_ready = '1';
 		end loop;
 		file_close(filein);
 		wait;                           -- forever
 	end process;
 
-	coins_input : process
-		file filein      : text;
-		variable line_in : line;
-		variable temp    : std_logic_vector(7 downto 0);
-	begin
-		file_open(filein, COINS_IN_FILENAME, read_mode);
-
-		while not endfile(filein) loop
-			readline(filein, line_in);
-			hread(line_in, temp);
-			i_coins_data <= temp;
-			wait until rising_edge(clk) and i_coins_valid = '1' and o_coins_ready = '1';
-		end loop;
-		file_close(filein);
-		wait;                           -- forever
-	end process;
+	--	coins_input : process
+	--		file filein      : text;
+	--		variable line_in : line;
+	--		variable temp    : std_logic_vector(7 downto 0);
+	--	begin
+	--		file_open(filein, COINS_IN_FILENAME, read_mode);
+	--
+	--		while not endfile(filein) loop
+	--			readline(filein, line_in);
+	--			hread(line_in, temp);
+	--			i_coins_data <= temp;
+	--			wait until rising_edge(clk) and i_coins_valid = '1' and o_coins_ready = '1';
+	--		end loop;
+	--		file_close(filein);
+	--		wait;                           -- forever
+	--	end process;
 
 	fsm_proc : process(clk)
 	begin
@@ -125,17 +125,17 @@ begin
 				case state is
 					when init =>
 						if reseted then
-							state <= send_pk;
+							state <= send_sk;
 						end if;
-					when send_pk =>
+					when send_sk =>
 						if o_done = '1' then
-							state <= send_pk_done;
+							state <= send_sk_done;
 						end if;
 
-					when send_pk_done =>
-						state <= encrypt;
+					when send_sk_done =>
+						state <= decrypt;
 
-					when encrypt =>
+					when decrypt =>
 						if o_done = '1' then
 							state <= encrypt_done;
 						end if;
@@ -149,31 +149,26 @@ begin
 
 	comb_proc : process(state)
 	begin
-		i_start_enc   <= '0';
-		i_start_dec   <= '0';
-		i_recv_pk     <= '0';
-		i_recv_sk     <= '0';
-		i_ct_ready    <= '0';
-		i_pk_valid    <= '0';
-		i_pt_valid    <= '0';
-		i_coins_valid <= '0';
+		i_sdo_ready <= '0';
+		i_pdi_valid <= '0';
+		i_sdi_valid <= '0';
+		i_command   <= (others => '0');
 
 		case state is
 			when init =>
 				null;
 
-			when send_pk =>
-				i_recv_pk  <= '1';
-				i_pk_valid <= '1';
+			when send_sk =>
+				i_command   <= CMD_RECV_SK_US;
+				i_sdi_valid <= '1';
 
-			when send_pk_done =>
+			when send_sk_done =>
 				null;
 
-			when encrypt =>
-				i_start_enc   <= '1';
-				i_coins_valid <= '1';
-				i_pt_valid    <= '1';
-				i_ct_ready    <= '1';
+			when decrypt =>
+				i_command   <= CMD_START_DEC_US;
+				i_pdi_valid <= '1';
+				i_sdo_ready <= '1';
 
 			when encrypt_done =>
 				null;
@@ -186,11 +181,11 @@ begin
 		variable line_out : line;
 		variable temp     : std_logic_vector(7 downto 0);
 	begin
-		file_open(fileout, CT_OUT_FILENAME, write_mode);
+		file_open(fileout, SDO_FILENAME, write_mode);
 		while state /= encrypt_done loop
-			wait until rising_edge(clk) and i_ct_ready = '1' and o_ct_valid = '1';
-			temp := o_ct_data;
---			report "received " & to_hstring(temp) severity note;
+			wait until rising_edge(clk) and i_sdo_ready = '1' and o_sdo_valid = '1';
+			temp := o_sdo_data;
+			--			report "received " & to_hstring(temp) severity note;
 			hwrite(line_out, temp);
 			writeline(fileout, line_out);
 		end loop;
@@ -202,25 +197,23 @@ begin
 		port map(
 			clk         => clk,
 			rst         => rst,
-			--
-			i_start_enc => i_start_enc,
-			i_recv_pk   => i_recv_pk,
+			i_command   => i_command,
 			o_done      => o_done,
-			--
-			i_rdi_data  => i_coins_data,
-			i_rdi_valid => i_coins_valid,
-			o_rdi_ready => o_coins_ready,
-			--
-			i_msg_data   => i_pt_data,
-			i_msg_valid  => i_pt_valid,
-			o_msg_ready  => o_pt_ready,
-			--
-			i_pk_data   => i_pk_data,
-			i_pk_valid  => i_pk_valid,
-			o_pk_ready  => o_pk_ready,
-			o_pdo_data   => o_ct_data,
-			o_pdo_valid  => o_ct_valid,
-			i_pdo_ready  => i_ct_ready
+			i_rdi_data  => i_rdi_data,
+			i_rdi_valid => i_rdi_valid,
+			o_rdi_ready => o_rdi_ready,
+			i_pdi_data  => i_pdi_data,
+			i_pdi_valid => i_pdi_valid,
+			o_pdi_ready => o_pdi_ready,
+			i_sdi_data  => i_sdi_data,
+			i_sdi_valid => i_sdi_valid,
+			o_sdi_ready => o_sdi_ready,
+			o_pdo_data  => o_pdo_data,
+			o_pdo_valid => o_pdo_valid,
+			i_pdo_ready => i_pdo_ready,
+			o_sdo_data  => o_sdo_data,
+			o_sdo_valid => o_sdo_valid,
+			i_sdo_ready => i_sdo_ready
 		);
 
 end architecture RTL;

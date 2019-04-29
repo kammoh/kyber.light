@@ -216,7 +216,8 @@ f"""
 """,
     sources=sources,
     #[ str(src_path.joinpath(src)) for src in  ['reduce.c', 'precomp.c', 'ntt.c', 'cbd.c', 'poly.c', 'polyvec.c']],
-    # libraries=['m']
+    libraries=['ssl', 'crypto'],
+    library_dirs=['/usr/local/Cellar/openssl/1.0.2r/lib'],
     )
 
 if __name__ == "__main__":
