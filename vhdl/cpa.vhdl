@@ -74,6 +74,9 @@ use work.ocram_sp;
 use work.kyber_pkg.all;
 
 entity cpa is
+	generic(
+		G_FOBOS : boolean := False
+	);
 	port(
 		clk         : in  std_logic;
 		rst         : in  std_logic;
@@ -365,27 +368,34 @@ begin
 						nonce_reg              <= (others => '0');
 						poly_rama_blk_cntr_reg <= (others => '0');
 
-						case to_integer(i_command) is
-							when CMD_RECV_PK =>
-								report ">> [command] recv_pk";
-								report "state => S_recv_pk";
-								state <= S_recv_AT_PK;
-							when CMD_START_ENC =>
-								report ">> [command] start_enc";
-								report "state => S_recv_coins";
-								state <= S_recv_coins;
-							when CMD_RECV_SK =>
-								report ">> [command] recv_sk";
-								report "state => S_recv_sk";
-								state <= S_recv_sk;
-							when CMD_START_DEC =>
-								report ">> [command] start_dec";
-								report "state => S_recv_ct_bp";
-								ct_byte_cntr <= (others => '0');
-								state        <= S_recv_ct_bp;
-							when others =>
-								null;
-						end case;
+						-- FIXME TESTING
+						--						
+						--						case to_integer(i_command) is
+						--							when CMD_RECV_PK =>
+						--								report ">> [command] recv_pk";
+						--								report "state => S_recv_pk";
+						--								state <= S_recv_AT_PK;
+						--							when CMD_START_ENC =>
+						--								report ">> [command] start_enc";
+						--								report "state => S_recv_coins";
+						--								state <= S_recv_coins;
+						--							when CMD_RECV_SK =>
+						--								report ">> [command] recv_sk";
+						--								report "state => S_recv_sk";
+						--								state <= S_recv_sk;
+						--							when CMD_START_DEC =>
+						--								report ">> [command] start_dec";
+						--								report "state => S_recv_ct_bp";
+						--								ct_byte_cntr <= (others => '0');
+						--								state        <= S_recv_ct_bp;
+						--							when others =>
+						--								null;
+						--						end case;
+
+						-- FIXME TESTING
+						report "state => S_recv_sk";
+						state        <= S_recv_sk;
+						ct_byte_cntr <= (others => '0');
 
 					when S_recv_coins =>
 						if noisegen_done = '1' then
@@ -461,7 +471,9 @@ begin
 						if polymac_done = '1' then
 							report ">> [done] recv_sk";
 							report "state => S_done";
+
 							state <= S_done;
+
 						end if;
 
 					when S_recv_ct_bp =>
@@ -514,6 +526,11 @@ begin
 							report "state => S_init";
 							state <= S_init;
 						end if;
+						-- FIXME TESTING
+						report "state => S_recv_ct_bp";
+						state                  <= S_recv_ct_bp;
+						nonce_reg              <= (others => '0');
+						poly_rama_blk_cntr_reg <= (others => '0');
 
 				end case;
 			end if;

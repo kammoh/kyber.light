@@ -159,14 +159,16 @@ begin
 				null;
 
 			when send_sk =>
-				i_command   <= CMD_RECV_SK_US;
+				-- FIXME TESTING
+--				i_command   <= CMD_RECV_SK_US;
 				i_sdi_valid <= '1';
 
 			when send_sk_done =>
 				null;
 
 			when decrypt =>
-				i_command   <= CMD_START_DEC_US;
+				-- FIXME TESTING
+--				i_command   <= CMD_START_DEC_US;
 				i_pdi_valid <= '1';
 				i_sdo_ready <= '1';
 
@@ -193,7 +195,7 @@ begin
 		wait;                           -- forever
 	end process;
 
-	cpa_enc_inst : entity work.cpa
+	cpa_inst : entity work.cpa
 		port map(
 			clk         => clk,
 			rst         => rst,
