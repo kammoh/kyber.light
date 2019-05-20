@@ -42,31 +42,16 @@
             "tb_top": "tb_barret_reduce",
             "files": [
                 "barret_reduce.vhdl",
-                "ConstMult*.vhdl"
+                "ConstMult_7681_14.vhdl",
+                "ConstMult_8736_14.vhdl",
+                "ConstMult_5039_13.vhdl",
+                "ConstMult_3329_14.vhdl"
             ],
             "tb_files": [
                 "tb_barret_reduce.vhdl"
             ],
             "depends": [
                 "kyber_pkg"
-            ],
-            "tb_configs": [
-                {
-                    "G_IN_WIDTH": 16,
-                    "G_OUT_WIDTH": 13
-                },
-                {
-                    "G_IN_WIDTH": 26,
-                    "G_OUT_WIDTH": 15
-                },
-                {
-                    "G_IN_WIDTH": 26,
-                    "G_OUT_WIDTH": 13
-                },
-                {
-                    "G_IN_WIDTH": 27,
-                    "G_OUT_WIDTH": 13
-                }
             ],
             "language": "vhdl.1993"
         },
@@ -219,7 +204,7 @@
                 "decompressor"
             ],
             "language": "vhdl.1993",
-            "frequency" : "128"
+            "frequency" : 128
         },
         "cpa_dec": {
             "path": "vhdl",
@@ -281,7 +266,8 @@
                 "keccak_datapath.vhdl",
                 "keccak_core.vhdl"
             ],
-            "language": "vhdl.1993"
+            "language": "vhdl.1993",
+            "frequency": 500
         }
     }
 }

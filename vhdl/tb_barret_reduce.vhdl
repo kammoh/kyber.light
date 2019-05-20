@@ -78,8 +78,7 @@ entity tb_barret_reduce is
 	generic(
 		runner_cfg       : string;
 		G_EXMAX          : positive := 2**20 - 1;
-		G_IN_WIDTH       : positive := 26;
-		G_OUT_WIDTH      : positive := 13;
+		G_IN_WIDTH       : positive := 2 * KYBER_COEF_BITS;
 		G_CLK_PERIOD     : time     := 1 ns;
 		G_EXTRA_RND_SEED : string   := "a0W7x9@xq"
 	);
@@ -90,7 +89,7 @@ architecture TB of tb_barret_reduce is
 	signal clk : std_logic := '0';
 	signal rst : std_logic;
 	signal a   : std_logic_vector(G_IN_WIDTH - 1 downto 0);
-	signal r   : std_logic_vector(G_OUT_WIDTH - 1 downto 0);
+	signal r   : std_logic_vector(KYBER_COEF_BITS - 1 downto 0);
 	
 	constant exmax: positive := minimum(G_EXMAX, 2**G_IN_WIDTH - 1);
 
@@ -108,10 +107,11 @@ begin
 
 	br : entity work.barret_reduce
 		generic map(
-			G_IN_WIDTH  => G_IN_WIDTH,
-			G_OUT_WIDTH => G_OUT_WIDTH
+			G_IN_WIDTH  => G_IN_WIDTH
 		)
 		port map(
+            clk => clk,
+            rst => rst,
 			a => a,
 			r => r
 		);

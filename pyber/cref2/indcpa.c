@@ -311,6 +311,8 @@ void indcpa_enc_nontt(unsigned char *c, const unsigned char *m,
   poly_reduce(&v);
 
   pack_ciphertext(c, &b_pv, &v);
+
+
 }
 
 /*************************************************
@@ -376,12 +378,18 @@ void indcpa_enc(unsigned char *c, const unsigned char *m,
 
   pack_ciphertext(c, &bp, &v);
 
-#ifdef DEBUG
-  if (memcmp(c, c_prime, KYBER_CIPHERTEXTBYTES)) {
-    printf("\n [ **** Scheiße! **** ] \n  enc don't match!\n");
-    exit(1);
-  }
-#endif
+//   printf("[C-code] ct=");
+//   for (int i = 0; i < KYBER_CIPHERTEXTBYTES; i++) {
+//     printf("%02X", c[i]);
+//   }
+//   printf("\n");
+
+// #ifdef DEBUG
+//   if (memcmp(c, c_prime, KYBER_CIPHERTEXTBYTES)) {
+//     printf("\n [ **** Scheiße! **** ] \n  enc don't match!\n");
+//     exit(1);
+//   }
+// #endif
 }
 
 #undef DEBUG

@@ -406,20 +406,21 @@ void poly_tomsg(unsigned char msg[KYBER_SYMBYTES], poly *a)
 
   poly_csubq(a);
 
-  printf("poly_tomsg: poly\n");
+//   printf("poly_tomsg: poly\n");
 
-  for(i=0;i<KYBER_SYMBYTES;i++)
-  {
+  unsigned char msg2[KYBER_SYMBYTES];
+
+  for (i = 0; i < KYBER_SYMBYTES; i++) {
     msg[i] = 0;
     for(j=0;j<8;j++)
     {
-        printf("%03X ", a->coeffs[8 * i + j]);
+        // printf("%03X ", a->coeffs[8 * i + j]);
         
         t = (((a->coeffs[8 * i + j] << 1) + KYBER_Q / 2) / KYBER_Q) & 1;
         msg[i] |= t << j;
     }
   }
-    printf("\n");
+    // printf("\n");qw
 }
 
 void poly_tomsg_nocsubq(unsigned char msg[KYBER_SYMBYTES], poly *a) {

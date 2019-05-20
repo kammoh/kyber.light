@@ -2,14 +2,14 @@ from subprocess import *
 import math
 from sys import argv
 
-KYBER_Q=7681
+KYBER_Q=3329
 MOD_BITS=int(math.ceil(math.log(KYBER_Q, 2)))
 
-in_width_list=[26,27]
+in_width_list = [2*MOD_BITS]
 
 if len(argv) > 1:
     in_width_list=[]
-    for arg in arv[1:]:
+    for arg in argv[1:]:
         in_width_list.append(int(arg))
 
 for G_IN_WIDTH in in_width_list:
@@ -23,8 +23,3 @@ for G_IN_WIDTH in in_width_list:
         proc = Popen(cmd)
         if proc.wait() != 0:
             print("Running command failed: cmd=", cmd)
-
-
-
-
-

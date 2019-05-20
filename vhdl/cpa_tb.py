@@ -22,7 +22,7 @@ CMD_RECV_SK = 3
 CMD_START_DEC = 4
 
 @cocotb.test()
-def cpa_enc_tb(dut, debug=True, enc_dec=(True, False), valid_generator=None, ready_generator=None):
+def cpa_enc_tb(dut, debug=True, enc_dec=(False, True), valid_generator=None, ready_generator=None):
     """
         testbench for CPA encrypt top module
     """

@@ -346,7 +346,7 @@ void polyvec_nega_mac(poly *r, const polyvec *a, const polyvec *b, int neg) {
 //   polyvec_print(b);
 //   printf("\n--- r (in): --- \n");
 //   poly_print(r);
-
+  printf("polyvec_nega_mac\n");
   for (int r_idx = 0; r_idx < KYBER_N; r_idx++) {
     int ri = r->coeffs[r_idx];
     for (int k = 0; k < KYBER_K; k++) {

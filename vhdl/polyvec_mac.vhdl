@@ -71,10 +71,11 @@ use work.ocram_sp;
 
 entity polyvec_mac is
 	generic(
-		G_PIPELINE_LEVELS      : positive := 7;
-		G_USE_EXTERNAL_DIVIDER : boolean  := False;
+		G_PIPELINE_LEVELS  : positive := 7;
+		G_INTERNAL_DIVIDER : boolean  := True;
+		G_EXTERNAL_RAM     : boolean  := False;
 		-- {1, KYBER_K + 1}  1: for CPA-Decrypt-Only, KYBER_K + 1: for either CPA-Encrypt-only or Encrypt/Decrypt
-		G_NUM_RAM_A_BLOCKS     : positive := KYBER_K + 1
+		G_NUM_RAM_A_BLOCKS : positive := KYBER_K + 1
 	);
 	port(
 		clk            : in  std_logic;
@@ -167,6 +168,7 @@ architecture RTL of polyvec_mac is
 	signal ramb_we               : std_logic;
 	signal ramb_addr             : unsigned(log2ceil(KYBER_K * KYBER_N) - 1 downto 0);
 	signal ramb_dout             : std_logic_vector(KYBER_COEF_BITS - 1 downto 0);
+	signal ramb_din              : std_logic_vector(KYBER_COEF_BITS - 1 downto 0);
 	signal dp_remin_data         : unsigned(2 * KYBER_COEF_BITS - 1 downto 0);
 	signal dp_remin_valid        : std_logic;
 	signal dp_remout_data        : T_coef_us;
@@ -175,64 +177,44 @@ architecture RTL of polyvec_mac is
 	signal dp_remout_ready       : std_logic;
 	--
 	signal DUMMY_NIST_ROUND      : positive := NIST_ROUND; -- @suppress "Unused declaration"
+	signal dp_divier_empty       : std_logic;
 
 begin
-	
 
 	ploymac_datapath : entity work.polymac_datapath
 		generic map(
-			G_PIPELINE_LEVELS => G_PIPELINE_LEVELS
+			G_INTERNAL_DIVIDER => G_INTERNAL_DIVIDER,
+			G_PIPELINE_LEVELS  => G_PIPELINE_LEVELS
 		)
 		port map(
-			clk            => clk,
-			rst            => rst,
+			clk             => clk,
+			rst             => rst,
 			--
-			i_ld_v         => ld_v,
+			i_ld_v          => ld_v,
 			--
-			i_nega         => nega,
+			i_nega          => nega,
 			--
-			i_abin_valid   => a_b_valid,
-			i_ain_data     => ai,
-			i_bin_data     => bi,
-			i_vin_data     => vin,
-			o_vout_data    => vout,
-			o_remin_data   => dp_remin_data,
-			o_remin_valid  => dp_remin_valid,
-			i_remout_data  => dp_remout_data,
-			i_remout_valid => dp_remout_valid,
-			i_remin_ready  => dp_remin_ready
+			i_abin_valid    => a_b_valid,
+			i_ain_data      => ai,
+			i_bin_data      => bi,
+			i_vin_data      => vin,
+			o_vout_data     => vout,
+			o_remin_data    => dp_remin_data,
+			o_remin_valid   => dp_remin_valid,
+			i_remout_data   => dp_remout_data,
+			i_remout_valid  => dp_remout_valid,
+			o_remout_ready  => dp_remout_ready,
+			i_remin_ready   => dp_remin_ready,
+			o_divider_empty => dp_divier_empty
 		);
 
-	gen_internal_divider : if not G_USE_EXTERNAL_DIVIDER generate -- used only for unit test
-		internal_divider : entity work.divider
-			generic map(
-				G_IN_WIDTH => 2 * KYBER_COEF_BITS
-			)
-			port map(
-				clk               => clk,
-				rst               => rst,
-				i_uin_data        => dp_remin_data,
-				i_uin_valid       => dp_remin_valid,
-				o_uin_ready       => dp_remin_ready,
-				o_remout_data     => dp_remout_data,
-				o_remdivout_valid => dp_remout_valid,
-				i_remdivout_ready => dp_remout_ready
-			);
-
-	end generate;
-
-	gen_external_divider_connect : if G_USE_EXTERNAL_DIVIDER generate
-		o_remin_data    <= dp_remin_data;
-		o_remin_valid   <= dp_remin_valid;
-		dp_remin_ready  <= i_remin_ready;
-		--
-		dp_remout_data  <= i_remout_data;
-		dp_remout_valid <= i_remout_valid;
-		o_remout_ready  <= dp_remout_ready;
-
-	end generate;
-
-	dp_remout_ready <= '1';             -- no back pressure on divider
+	o_remin_data    <= dp_remin_data;
+	o_remin_valid   <= dp_remin_valid;
+	dp_remin_ready  <= i_remin_ready;
+	--
+	dp_remout_data  <= i_remout_data;
+	dp_remout_valid <= i_remout_valid;
+	o_remout_ready  <= dp_remout_ready;
 
 	--===========================--
 	--     RAM-A Block layout    --
@@ -278,19 +260,27 @@ begin
 		rama_addr <= i_rama_blk & rama_blk_addr;
 	end generate;
 
-	ram_B : entity work.ocram_sp
-		generic map(
-			DEPTH     => KYBER_K * KYBER_N,
-			WORD_BITS => KYBER_COEF_BITS
-		)
-		port map(
-			clk      => clk,
-			ce       => ramb_ce,
-			we       => ramb_we,
-			in_addr  => ramb_addr,
-			in_data  => std_logic_vector(i_din_data),
-			out_data => ramb_dout
-		);
+	gen_ramb : if not G_EXTERNAL_RAM generate
+		ram_B : entity work.ocram_sp
+			generic map(
+				DEPTH     => KYBER_K * KYBER_N,
+				WORD_BITS => KYBER_COEF_BITS
+			)
+			port map(
+				clk      => clk,
+				ce       => ramb_ce,
+				we       => ramb_we,
+				in_addr  => ramb_addr,
+				in_data  => ramb_din,
+				out_data => ramb_dout
+			);
+
+		ramb_din <= std_logic_vector(i_din_data);
+	end generate gen_ramb;
+
+	gen_ext_ramb : if G_EXTERNAL_RAM generate
+
+	end generate gen_ext_ramb;
 
 	v_idx_plus_one        <= ("0" & v_idx_reg) + 1;
 	v_idx_reg_next        <= v_idx_plus_one(v_idx_reg'length - 1 downto 0);
@@ -370,7 +360,7 @@ begin
 						end if;
 
 					when s_mac_flush =>
-						if dp_remout_valid = '0' then -- nothing valid left in the divider pipeline
+						if dp_divier_empty = '1' then -- nothing valid left in the divider pipeline
 							state <= s_mac_store_v;
 						end if;
 

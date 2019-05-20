@@ -57,6 +57,7 @@ class Module:
         self.language = d.get('language',  'vhdl.2008')
         self.library = d.get('library',  None)
         self.path = d.get('path', ".")
+        self.frequency = d.get('frequency', None)
         self.tb_files = get_as_list('tb_files', optional=True)
         self.sim_files = get_as_list('files.sim')
         files = get_as_list('files')

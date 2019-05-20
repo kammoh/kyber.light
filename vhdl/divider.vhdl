@@ -68,6 +68,7 @@
 --
 -----------------------------------------------------------------------------------------------------------------------
 --===================================================================================================================--
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -96,15 +97,15 @@ end entity divider;
 
 architecture RTL of divider is
 	constant RECIPRICAL_OF_Q      : positive := ((2 ** (2 * KYBER_COEF_BITS) - 1) / KYBER_Q) - (2 ** KYBER_COEF_BITS);
-	signal u0, u1                 : T_coef_us;
-	signal u1_times_v             : unsigned(log2ceil(KYBER_Q * RECIPRICAL_OF_Q) - 1 downto 0);
+	signal ul, uh                 : T_coef_us;
+	signal uh_times_v             : unsigned(log2ceil(KYBER_Q * RECIPRICAL_OF_Q) - 1 downto 0);
 	signal q                      : unsigned(G_IN_WIDTH - 1 downto 0); -- q = u1 * v + u , G_IN_WIDTH
-	signal q0, q1, q1_times_d     : T_coef_us;
+	signal ql, qh, qh_times_d     : T_coef_us;
 	signal r0, r0_minus_d         : T_coef_us;
 	signal adjust                 : boolean;
 	-- pipeline registers
-	signal r0_reg, q0_reg, u0_reg : T_coef_us;
-	signal q1_reg, divout_data    : unsigned(G_IN_WIDTH - KYBER_COEF_BITS - 1 downto 0);
+	signal r0_reg, ql_reg, ul_reg : T_coef_us;
+	signal qh_reg, divout_data    : unsigned(G_IN_WIDTH - KYBER_COEF_BITS - 1 downto 0);
 	signal remout_reg             : T_coef_us;
 	--
 	-- reg 0: input, reg G_PIPELINE_LEVELS - 1: output
@@ -115,32 +116,32 @@ architecture RTL of divider is
 
 begin
 	-- i_u = <u1,u0>
-	u0 <= i_uin_data(KYBER_COEF_BITS - 1 downto 0);
-	u1 <= resize(i_uin_data(G_IN_WIDTH - 1 downto KYBER_COEF_BITS), KYBER_COEF_BITS);
+	ul <= i_uin_data(KYBER_COEF_BITS - 1 downto 0);
+	uh <= resize(i_uin_data(G_IN_WIDTH - 1 downto KYBER_COEF_BITS), KYBER_COEF_BITS);
 
 	-- v (reciprocal of 7681) = 544 = 2^9 + 2^5 = 2^5 * (2^4 + 1) (10 bits)
-	--	u1_times_v <= (u1 + shift_right(u1, 4)) & u1(3 downto 0);
+	--	uh_times_v <= (u1 + shift_right(u1, 4)) & u1(3 downto 0);
 	-- q = u1 * v + u
-	--	q          <= ((u1 & u0(12 downto 5)) + ("0" & u1_times_v) ) & u0(4 downto 0);
-	q  <= resize(u1_times_v, q'length) + i_uin_data;
+	--	q          <= ((u1 & u0(12 downto 5)) + ("0" & uh_times_v) ) & u0(4 downto 0);
+	q  <= resize(uh_times_v, q'length) + i_uin_data;
 	-- q = <q1, q0>
-	q0 <= q_reg(KYBER_COEF_BITS - 1 downto 0);
-	q1 <= resize(q_reg(G_IN_WIDTH - 1 downto KYBER_COEF_BITS), q1'length);
+	ql <= q_reg(KYBER_COEF_BITS - 1 downto 0);
+	qh <= resize(q_reg(G_IN_WIDTH - 1 downto KYBER_COEF_BITS), qh'length);
 
 	-- d = KYBER_Q = 2^13 - 2^9 + 1 
-	--	q1_times_d <= (q1(KYBER_COEF_BITS - 1 downto 9) - q1(3 downto 0)) & q1(8 downto 0);
+	--	qh_times_d <= (q1(KYBER_COEF_BITS - 1 downto 9) - q1(3 downto 0)) & q1(8 downto 0);
 
 	gen_7681 : if KYBER_Q = 7681 generate
 		ConstMult_7681_13_13_inst : entity work.ConstMult_7681_13_13
 			port map(
-				i_x    => q1,
-				o_mult => q1_times_d
+				i_x    => qh,
+				o_mult => qh_times_d
 			);
 
 		ConstMult_544_13_13_inst : entity work.ConstMult_544_13_22
 			port map(
-				i_x    => u1,
-				o_mult => u1_times_v
+				i_x    => uh,
+				o_mult => uh_times_v
 			);
 
 	end generate gen_7681;
@@ -148,14 +149,14 @@ begin
 	gen_3329 : if KYBER_Q = 3329 generate
 		ConstMult_3329_12_12_inst : entity work.ConstMult_3329_12_12
 			port map(
-				i_x    => q1,
-				o_mult => q1_times_d
+				i_x    => qh,
+				o_mult => qh_times_d
 			);
 
 		ConstMult_943_12_12_inst : entity work.ConstMult_943_12_22
 			port map(
-				i_x    => u1,
-				o_mult => u1_times_v
+				i_x    => uh,
+				o_mult => uh_times_v
 			);
 
 	end generate gen_3329;
@@ -166,11 +167,11 @@ begin
 	--
 
 	-- choice of remainder
-	r0 <= u0_reg - q1_times_d;
+	r0 <= ul_reg - qh_times_d;
 
 	-- correction
-	r0_minus_d <= r0_reg - KYBER_Q;
-	adjust     <= (r0_minus_d <= q0_reg);
+	
+	adjust     <= (r0_minus_d <= ql_reg);
 
 	pipe_reg_proc : process(clk) is
 	begin
@@ -181,17 +182,19 @@ begin
 				if not stall then
 					valid_pipe <= shift_in_left(valid_pipe, i_uin_valid);
 					r0_reg     <= r0;
-					q0_reg     <= q0;
-					q1_reg     <= resize(q1, q1_reg'length);
+					ql_reg     <= ql;
+					qh_reg     <= resize(qh, qh_reg'length);
 					q_reg      <= q;
-					u0_reg     <= u0;
+					ul_reg     <= ul;
+					--
+					r0_minus_d <= r0 - KYBER_Q;
 
 					if adjust then
 						remout_reg  <= r0_minus_d;
-						divout_data <= q1_reg + 1;
+						divout_data <= qh_reg + 1;
 					else
 						remout_reg  <= r0_reg;
-						divout_data <= q1_reg;
+						divout_data <= qh_reg;
 					end if;
 
 				end if;

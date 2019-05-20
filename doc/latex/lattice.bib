@@ -747,18 +747,14 @@ Under consideration are:},
   doi = {10.1007/978-3-662-48324-4_34}
 }
 
-@article{alkim,
+@inproceedings{oder17,
   langid = {english},
-  title = {Algorithm {{Specifcations}} and {{Supporting Documentation}}},
-  pages = {45},
-  author = {Alkim, Erdem and Avanzi, Roberto and Bos, Joppe and Ducas, Léo},
-  file = {/Users/kamyar/Zotero/storage/F2Z5FUSU/Alkim et al. - Algorithm Specifcations and Supporting Documentati.pdf}
-}
-
-@article{oder,
-  langid = {english},
+  location = {{Cuba}},
   title = {Implementing the {{NewHope}}-{{Simple Key Exchange}} on {{Low}}-{{Cost FPGAs}}},
   abstract = {Lattice-based cryptography is one of the most promising candidates being considered to replace current public-key systems in the era of quantum computing. In 2016 Alkim, Ducas, P¨oppelmann, and Schwabe proposed the lattice-based key exchange scheme NewHope. The scheme has gained some popularity in the research community as it is believed to withstand attacks by quantum computers with a comfortable security margin and provides decent eﬃciency and low communication cost. In this work, we evaluate the eﬃciency of NewHope on reconﬁgurable hardware. We provide the up to our knowledge ﬁrst ﬁeldprogrammable gate array (FPGA) implementation of NewHope-Simple that is a slight modiﬁcation of NewHope proposed by the authors themselves in 2016. NewHope-Simple is basically NewHope with diﬀerent error correction mechanism. Our implementation of the client-side scheme requires 1,483 slices, 4,498 look-up tables (LUTs), and 4,635 ﬂip-ﬂops (FFs) on low-cost Xilinx Artix-7 FPGAs. The implementation of the server-side scheme takes 1,708 slices, 5,142 LUTs, and 4,452 FFs. Both cores use only two digital signal processors (DSPs) and four 18-kb block memories (BRAMs). The implementation has a constant execution time to prevent timing attacks. The server-side operations take 1.4 milliseconds and the client-side operations take 1.5 milliseconds.},
+  eventtitle = {Latincrypt 2017},
+  booktitle = {6th {{International Conferenceon Cryptology}} and {{Information Security}} in {{Latin America}}},
+  date = {2017-09-20/2017-09-22},
   pages = {16},
   author = {Oder, Tobias and Guneysu, Tim},
   file = {/Users/kamyar/Zotero/storage/GN7MZYMM/Oder and Guneysu - Implementing the NewHope-Simple Key Exchange on Lo.pdf}
@@ -1170,20 +1166,6 @@ We present a new modular reduction technique that is tailored for the special mo
   doi = {10.1007/978-3-642-14518-6_3}
 }
 
-@inproceedings{bos18a,
-  title = {{{CRYSTALS}} - {{Kyber}}: {{A CCA}}-{{Secure Module}}-{{Lattice}}-{{Based KEM}}},
-  doi = {10.1109/EuroSP.2018.00032},
-  shorttitle = {{{CRYSTALS}} - {{Kyber}}},
-  abstract = {Rapid advances in quantum computing, together with the announcement by the National Institute of Standards and Technology (NIST) to define new standards for digitalsignature, encryption, and key-establishment protocols, have created significant interest in post-quantum cryptographic schemes. This paper introduces Kyber (part of CRYSTALS - Cryptographic Suite for Algebraic Lattices - a package submitted to NIST post-quantum standardization effort in November 2017), a portfolio of post-quantum cryptographic primitives built around a key-encapsulation mechanism (KEM), based on hardness assumptions over module lattices. Our KEM is most naturally seen as a successor to the NEWHOPE KEM (Usenix 2016). In particular, the key and ciphertext sizes of our new construction are about half the size, the KEM offers CCA instead of only passive security, the security is based on a more general (and flexible) lattice problem, and our optimized implementation results in essentially the same running time as the aforementioned scheme. We first introduce a CPA-secure public-key encryption scheme, apply a variant of the Fujisaki-Okamoto transform to create a CCA-secure KEM, and eventually construct, in a black-box manner, CCA-secure encryption, key exchange, and authenticated-key-exchange schemes. The security of our primitives is based on the hardness of Module-LWE in the classical and quantum random oracle models, and our concrete parameters conservatively target more than 128 bits of postquantum security.},
-  eventtitle = {2018 {{IEEE European Symposium}} on {{Security}} and {{Privacy}} ({{EuroS P}})},
-  booktitle = {2018 {{IEEE European Symposium}} on {{Security}} and {{Privacy}} ({{EuroS P}})},
-  date = {2018-04},
-  pages = {353-367},
-  keywords = {Protocols,Encryption,Lattices,quantum cryptography,public key cryptography,quantum computing,cryptographic protocols,Public key,learning with errors,post quantum cryptography,authenticated-key-exchange schemes,CCA-secure KEM,CCA-secure module-lattice-based KEM,ciphertext sizes,CPA-secure public-key encryption scheme,CRYSTALS - Kyber,digital signature,Electronic mail,encryption,key encapsulation,key sizes,key-encapsulation mechanism,key-establishment protocols,module lattices,post-quantum cryptographic primitives,post-quantum cryptographic schemes,postquantum security,quantum random oracle models},
-  author = {Bos, J. and Ducas, L. and Kiltz, E. and Lepoint, T. and Lyubashevsky, V. and Schanck, J. M. and Schwabe, P. and Seiler, G. and Stehle, D.},
-  file = {/Users/kamyar/Zotero/storage/35F544V5/Bos et al_2018_CRYSTALS - Kyber.pdf;/Users/kamyar/Zotero/storage/ZDLXRYQE/8406610.html}
-}
-
 @report{karma18,
   title = {Saber on {{ARM CCA}}-Secure Module Lattice-Based Key Encapsulation on {{ARM}}},
   url = {https://eprint.iacr.org/2018/682},
@@ -1217,14 +1199,6 @@ We present a new modular reduction technique that is tailored for the special mo
   url = {https://www.youtube.com/watch?v=zAfPwuBKixk},
   urldate = {2019-02-13},
   director = {{TheIACR}}
-}
-
-@unpublished{howe18a,
-  langid = {english},
-  title = {Standard {{Lattice}}-{{Based Key Encapsulation}} on {{Embedded Devices}}},
-  date = {2018},
-  author = {Howe, James and Oder, Tobias and Krausz, Markus and Güneysu, Tim},
-  file = {/Users/kamyar/Zotero/storage/9XBZCEGS/Howe et al. - 2018 - Standard Lattice-Based Key Encapsulation on Embedd.pdf}
 }
 
 @article{karma18a,
@@ -1277,7 +1251,7 @@ In this work we revisit their instantiation and stand-alone implementation. Spec
 
 @report{alkim18,
   langid = {english},
-  title = {{{NewHope NIST Submission}}: {{Algorithm Speciﬁcations}} and {{Supporting Documentation}}},
+  title = {{{NewHope NIST Submission}}: {{Algorithm Specifications}} and {{Supporting Documentation}}},
   date = {2018-02-12},
   pages = {45},
   author = {Alkim, Erdem and Avanzi, Roberto and Bos, Joppe and Ducas, Léo},
@@ -1441,6 +1415,326 @@ In this work we revisit their instantiation and stand-alone implementation. Spec
   pages = {22},
   author = {Basu, Kanad and Soni, Deepraj and Nabeel, Mohammed and Karri, Ramesh},
   file = {/Users/kamyar/Zotero/storage/I7BWVWC3/Basu et al. - NIST Post-Quantum Cryptography-  A Hardware Evalua.pdf}
+}
+
+@article{avanz,
+  langid = {english},
+  title = {Algorithm {{Speciﬁcations And Supporting Documentation}}},
+  pages = {37},
+  author = {Avanzi, Roberto and Bos, Joppe and Ducas, Léo and Kiltz, Eike and Lepoint, Tancrède and Lyubashevsky, Vadim and Schanck, John M and Schwabe, Peter and Seiler, Gregor and Stehlé, Damien},
+  file = {/Users/kamyar/Zotero/storage/RV97D7DB/Avanzi et al. - Algorithm Speciﬁcations And Supporting Documentati.pdf}
+}
+
+@report{avanz19,
+  langid = {english},
+  title = {{{KYBER}}: {{Algorithm Specications And Supporting Documentation}}, {{Version}} 2.0, {{NIST PQC Round}} 2},
+  date = {2019-04-01},
+  pages = {37},
+  author = {Avanzi, Roberto and Bos, Joppe and Ducas, Léo and Kiltz, Eike and Lepoint, Tancrède and Lyubashevsky, Vadim and Schanck, John M and Schwabe, Peter and Seiler, Gregor and Stehlé, Damien},
+  file = {/Users/kamyar/Zotero/storage/UYRUXB5J/Avanzi et al. - Algorithm Specications And Supporting Documentati.pdf}
+}
+
+@online{compu17,
+  langid = {american},
+  title = {Post-{{Quantum Cryptography}} | {{CSRC}}},
+  url = {https://csrc.nist.gov/Projects/Post-Quantum-Cryptography},
+  abstract = {NIST has initiated a process to solicit, evaluate, and standardize one or more quantum-resistant public-key cryptographic algorithms.~~Full details can be found in the Post-Quantum Cryptography Standardization page.~~  The~Round 2 candidates~were announced January 30, 2019.~ NISTIR 8240, Status Report on the First Round of the NIST Post-Quantum Cryptography Standardization Process is now available.  Background  In recent years, there has been a substantial amount of research on quantum computers – machines that exploit quantum mechanical phenomena to solve mathematical problems that are difficult or intractable for conventional computers. If large-scale quantum computers are ever built, they will be able to break many of the public-key cryptosystems currently in use. This would seriously compromise the confidentiality and integrity of digital communications on the Internet and elsewhere.~ The goal of post-quantum cryptography (also called quantum-resistant cryptography) is to develop cryptographic systems...},
+  journaltitle = {CSRC | NIST},
+  urldate = {2019-05-15},
+  date = {2017-01-03},
+  author = {Computer Security Division, Information Technology Laboratory},
+  file = {/Users/kamyar/Zotero/storage/SKCTFZ4W/Post-Quantum-Cryptography.html}
+}
+
+@report{alkim19,
+  langid = {english},
+  title = {{{FrodoKEM}}: {{Learning With Errors Key Encapsulation}}, {{Algorithm Specifications And Supporting Documentation}}, {{NIST PQC Round}} 2 Submission},
+  date = {2019-03-30},
+  pages = {49},
+  author = {Alkim, Erdem and Bos, Joppe W and Ducas, Leo and Longa, Patrick and Mironov, Ilya and Naehrig, Michael and Nikolaenko, Valeria and Peikert, Chris and Raghunathan, Ananth and Stebila, Douglas},
+  file = {/Users/kamyar/Zotero/storage/2LWESDJ9/Alkim et al. - Learning With Errors Key Encapsulation.pdf}
+}
+
+@inproceedings{bos16,
+  langid = {english},
+  location = {{Vienna, Austria}},
+  title = {Frodo: {{Take}} off the {{Ring}}! {{Practical}}, {{Quantum}}-{{Secure Key Exchange}} from {{LWE}}},
+  isbn = {978-1-4503-4139-4},
+  url = {http://dl.acm.org/citation.cfm?doid=2976749.2978425},
+  doi = {10.1145/2976749.2978425},
+  shorttitle = {Frodo},
+  abstract = {Lattice-based cryptography oﬀers some of the most attractive primitives believed to be resistant to quantum computers. Following increasing interest from both companies and government agencies in building quantum computers, a number of works have proposed instantiations of practical post-quantum key exchange protocols based on hard problems in ideal lattices, mainly based on the Ring Learning With Errors (R-LWE) problem. While ideal lattices facilitate major eﬃciency and storage beneﬁts over their non-ideal counterparts, the additional ring structure that enables these advantages also raises concerns about the assumed diﬃculty of the underlying problems. Thus, a question of signiﬁcant interest to cryptographers, and especially to those currently placing bets on primitives that will withstand quantum adversaries, is how much of an advantage the additional ring structure actually gives in practice.},
+  eventtitle = {The 2016 {{ACM SIGSAC Conference}}},
+  booktitle = {Proceedings of the 2016 {{ACM SIGSAC Conference}} on {{Computer}} and {{Communications Security}} - {{CCS}}'16},
+  publisher = {{ACM Press}},
+  urldate = {2019-05-17},
+  date = {2016},
+  pages = {1006-1018},
+  author = {Bos, Joppe and Costello, Craig and Ducas, Leo and Mironov, Ilya and Naehrig, Michael and Nikolaenko, Valeria and Raghunathan, Ananth and Stebila, Douglas},
+  file = {/Users/kamyar/Zotero/storage/CRFJG2F7/Bos et al. - 2016 - Frodo Take off the Ring! Practical, Quantum-Secur.pdf}
+}
+
+@report{howe18b,
+  title = {Standard {{Lattice}}-{{Based Key Encapsulation}} on {{Embedded Devices}}},
+  url = {https://eprint.iacr.org/2018/686},
+  abstract = {Lattice-based cryptography is one of the most promising candidates being considered to replace current public-key systems in the era of quantum computing. In 2016, Bos et al. proposed the key exchange scheme FrodoCCS, that is also a submission to the NIST post-quantum standardization process, modified as a key encapsulation mechanism (FrodoKEM). The security of the scheme is based on standard lattices and the learning with errors problem. Due to the large parameters, standard lattice-based schemes have long been considered impractical on embedded devices. The FrodoKEM proposal actually comes with parameters that bring standard lattice-based cryptography within reach of being feasible on constrained devices. In this work, we take the final step of efficiently implementing the scheme on a low-cost FPGA and microcontroller devices and thus making conservative post-quantum cryptography practical on small devices. Our FPGA implementation of the decapsulation (the computationally most expensive operation) needs 7,220 look-up tables (LUTs), 3,549 flip-flops (FFs), a single DSP, and only 16 block RAM modules. The maximum clock frequency is 162 MHz and it takes 20.7 ms for the execution of the decapsulation. Our microcontroller implementation has a 66\% reduced peak stack usage in comparison to the reference implementation and needs 266 ms for key pair generation, 284 ms for encapsulation, and 286 ms for encapsulation. Our results contribute to the practical evaluation of a post-quantum standardization candidate.},
+  number = {686},
+  urldate = {2019-05-17},
+  date = {2018},
+  keywords = {embedded security,FPGA,Frodo,hardware security,implementation,KEM,microcontroller,Post-quantum cryptography,standard lattices},
+  author = {Howe, James and Oder, Tobias and Krausz, Markus and Güneysu, Tim},
+  file = {/Users/kamyar/Zotero/storage/9XBZCEGS/Slides Howe et al. - 2018 - Standard Lattice-Based Key Encapsulation on Embedd.pdf;/Users/kamyar/Zotero/storage/NBTFCAWH/Howe et al_2018_Standard Lattice-Based Key Encapsulation on Embedded Devices.pdf;/Users/kamyar/Zotero/storage/QZ3HMU3A/686.html}
+}
+
+@report{kuo17,
+  title = {High {{Performance Post}}-{{Quantum Key Exchange}} on {{FPGAs}}},
+  url = {https://eprint.iacr.org/2017/690},
+  abstract = {Lattice-based cryptography is a highly potential candidate that protects against the threat of quantum attack. At Usenix Security 2016, Alkim, Ducas, Pöpplemann, and Schwabe proposed a post-quantum key exchange scheme called NewHope, based on a variant of lattice problem, the ring-learning-with-errors (RLWE) problem. In this work, we propose a high performance hardware architecture for NewHope. Our implementation requires 6,680 slices, 9,412 FFs, 18,756 LUTs, 8 DSPs and 14 BRAMs on Xilinx Zynq-7000 equipped with 28mm Artix-7 7020 FPGA. In our hardware design of NewHope key exchange, the three phases of key exchange costs 51.9, 78.6 and 21.1 microseconds, respectively. It achieves more than 4.8 times better in terms of area-time product comparing to previous results of hardware implementation of NewHope-Simple from Oder and Güneysu at Latincrypt 2017.},
+  number = {690},
+  urldate = {2019-05-17},
+  date = {2017},
+  keywords = {FPGA implementation,key exchange,lattice-based cryptography,LWE,Post-quantum cryptography,RLWE},
+  author = {Kuo, Po-Chun and Li, Wen-Ding and Chen, Yu-Wei and Hsu, Yuan-Che and Peng, Bo-Yuan and Cheng, Chen-Mou and Yang, Bo-Yin},
+  file = {/Users/kamyar/Zotero/storage/V536F8KB/Kuo et al_2017_High Performance Post-Quantum Key Exchange on FPGAs.pdf;/Users/kamyar/Zotero/storage/SLZ7NFHK/690.html}
+}
+
+@report{langl12,
+  title = {Worst-{{Case}} to {{Average}}-{{Case Reductions}} for {{Module Lattices}}},
+  url = {https://eprint.iacr.org/2012/090},
+  abstract = {Most lattice-based cryptographic schemes are built upon the assumed hardness of the Short Integer Solution (SIS) and Learning With Errors (LWE) problems. Their efficiencies can be drastically improved by switching the hardness assumptions to the more compact Ring-SIS and Ring-LWE problems. However, this change of hardness assumptions comes along with a possible security weakening: SIS and LWE are known to be at least as hard as standard (worst-case) problems on euclidean lattices, whereas Ring-SIS and Ring-LWE are only known to be as hard as their restrictions to special classes of ideal lattices, corresponding to ideals of some polynomial rings. In this work, we define the Module-SIS and Module-LWE problems, which bridge SIS with Ring-SIS, and LWE with Ring-LWE, respectively. We prove that these average-case problems are at least as hard as standard lattice problems restricted to module lattices (which themselves generalize arbitrary and ideal lattices). As these new problems enlarge the toolbox of the lattice-based cryptographer, they could prove useful for designing new schemes. Importantly, the worst-case to average-case reductions for the module problems are (qualitatively) sharp, in the sense that there exist converse reductions. This property is not known to hold in the context of Ring-SIS/Ring-LWE: Ideal lattice problems could reveal easy without impacting the hardness of Ring-SIS/Ring-LWE.},
+  number = {090},
+  urldate = {2019-05-17},
+  date = {2012},
+  keywords = {public-key cryptography},
+  author = {Langlois, Adeline and Stehle, Damien},
+  file = {/Users/kamyar/Zotero/storage/LF7GXDFW/Langlois_Stehle_2012_Worst-Case to Average-Case Reductions for Module Lattices.pdf;/Users/kamyar/Zotero/storage/H3UW93JG/090.html}
+}
+
+@inproceedings{regev10a,
+  title = {The {{Learning}} with {{Errors Problem}} ({{Invited Survey}})},
+  doi = {10.1109/CCC.2010.26},
+  abstract = {In this survey we describe the Learning with Errors (LWE) problem, discuss its properties, its hardness, and its cryptographic applications.},
+  eventtitle = {2010 {{IEEE}} 25th {{Annual Conference}} on {{Computational Complexity}}},
+  booktitle = {2010 {{IEEE}} 25th {{Annual Conference}} on {{Computational Complexity}}},
+  date = {2010-06},
+  pages = {191-204},
+  keywords = {Application software,Computational complexity,Computer errors,Computer science,cryptographic applications,cryptography,Cryptography,Decoding,Equations,errors problem,invited survey,lattice-based cryptography,Lattices,learning with errors,LWE,Polynomials,Zinc},
+  author = {Regev, O.},
+  file = {/Users/kamyar/Zotero/storage/YGELCP32/Regev_2010_The Learning with Errors Problem (Invited Survey).pdf;/Users/kamyar/Zotero/storage/JQ5STD3I/5497885.html}
+}
+
+@report{alkim19a,
+  langid = {english},
+  title = {{{NewHope}}: {{Algorithm Speciﬁcations}} and {{Supporting Documentation}}, {{NIST PQC Round}} 2},
+  date = {2019-03-15},
+  pages = {46},
+  author = {Alkim, Erdem and Avanzi, Roberto and Bos, Joppe and Ducas, Léo and Albrecht, Martin R and Orsini, Emmanuela and Osheter, Valery and Paterson, Kenneth G and Peer, Guy and Smart, Nigel P},
+  file = {/Users/kamyar/Zotero/storage/G8MQ38SG/Alkim et al. - Algorithm Speciﬁcations and Supporting Documentati.pdf}
+}
+
+@inreference{18,
+  langid = {english},
+  title = {Circular Convolution},
+  url = {https://en.wikipedia.org/w/index.php?title=Circular_convolution&oldid=871215962},
+  abstract = {The circular convolution, also known as cyclic convolution,  of two aperiodic functions (i.e. Schwartz functions) occurs when one of them is convolved in the normal way with a periodic summation of the other function. That situation arises in the context of the circular convolution theorem. The identical operation can also be expressed in terms of the periodic summations of both functions, if the infinite integration interval is reduced to just one period.  That situation arises in the context of the discrete-time Fourier transform (DTFT) and is also called periodic convolution.  In particular, the DTFT of the product of two discrete sequences is the periodic convolution of the DTFTs of the individual sequences.Let x be a function with a well-defined periodic summation, xT, where:
+
+  
+    
+      
+        
+          x
+          
+            T
+          
+        
+        (
+        t
+        )
+         
+        ≜
+         
+        
+          ∑
+          
+            k
+            =
+            −
+            ∞
+          
+          
+            ∞
+          
+        
+        x
+        (
+        t
+        −
+        k
+        T
+        )
+        =
+        
+          ∑
+          
+            k
+            =
+            −
+            ∞
+          
+          
+            ∞
+          
+        
+        x
+        (
+        t
+        +
+        k
+        T
+        )
+        .
+      
+    
+    \{\textbackslash{}displaystyle x\_\{T\}(t)\textbackslash{} \textbackslash{}triangleq \textbackslash{} \textbackslash{}sum \_\{k=-\textbackslash{}infty \}\^\{\textbackslash{}infty \}x(t-kT)=\textbackslash{}sum \_\{k=-\textbackslash{}infty \}\^\{\textbackslash{}infty \}x(t+kT).\}
+  If h is any other function for which the convolution xT ∗ h exists, then the convolution xT ∗ h  is periodic and identical to:
+
+  
+    
+      
+        
+          
+            
+              
+                (
+                
+                  x
+                  
+                    T
+                  
+                
+                ∗
+                h
+                )
+                (
+                t
+                )
+                
+              
+              
+                
+                ≜
+                 
+                
+                  ∫
+                  
+                    −
+                    ∞
+                  
+                  
+                    ∞
+                  
+                
+                h
+                (
+                τ
+                )
+                ⋅
+                
+                  x
+                  
+                    T
+                  
+                
+                (
+                t
+                −
+                τ
+                )
+                
+                d
+                τ
+              
+            
+            
+              
+              
+                
+                ≡
+                
+                  ∫
+                  
+                    
+                      t
+                      
+                        o
+                      
+                    
+                  
+                  
+                    
+                      t
+                      
+                        o
+                      
+                    
+                    +
+                    T
+                  
+                
+                
+                  h
+                  
+                    T
+                  
+                
+                (
+                τ
+                )
+                ⋅
+                
+                  x
+                  
+                    T
+                  
+                
+                (
+                t
+                −
+                τ
+                )
+                
+                d
+                τ
+                ,
+              
+            
+          
+        
+      
+    
+    \{\textbackslash{}displaystyle \{\textbackslash{}begin\{aligned\}(x\_\{T\}*h)(t)\textbackslash{}quad \&\textbackslash{}triangleq \textbackslash{} \textbackslash{}int \_\{-\textbackslash{}infty \}\^\{\textbackslash{}infty \}h(\textbackslash{}tau )\textbackslash{}cdot x\_\{T\}(t-\textbackslash{}tau )\textbackslash,d\textbackslash{}tau \textbackslash\textbackslash\&\textbackslash{}equiv \textbackslash{}int \_\{t\_\{o\}\}\^\{t\_\{o\}+T\}h\_\{T\}(\textbackslash{}tau )\textbackslash{}cdot x\_\{T\}(t-\textbackslash{}tau )\textbackslash,d\textbackslash{}tau ,\textbackslash{}end\{aligned\}\}\}
+  where to is an arbitrary parameter and hT is a periodic summation of h.
+The second integral is called the periodic convolution of functions xT and hT and is sometimes normalized by 1/T. When xT is expressed as the periodic summation of another function, x, the same operation may also be referred to as a circular convolution of functions h and x.},
+  booktitle = {Wikipedia},
+  urldate = {2019-05-18},
+  date = {2018-11-29T17:38:11Z},
+  file = {/Users/kamyar/Zotero/storage/SA993K4Y/index.html},
+  note = {Page Version ID: 871215962}
+}
+
+@article{liu19,
+  title = {A {{Resource}}-{{Efficient}} and {{Side}}-{{Channel Secure Hardware Implementation}} of {{Ring}}-{{LWE Cryptographic Processor}}},
+  volume = {66},
+  issn = {1549-8328},
+  doi = {10.1109/TCSI.2018.2883966},
+  abstract = {Lattice-based cryptography has shown great potential due to its resistance against quantum attacks. With the security requirements for high-precision Gaussian sampling and complex polynomial multiplication over rings, as well as storage of large public-keys, it is extremely challengeable but important to implement lattice-based schemes on resources constrained devices. In this paper, a resource-efficient and side-channel secure Ring-LWE cryptographic processor is presented. A discrete Gaussian sampler with constant response time, high precision, and large distribution tails is designed. The proposed Gaussian sampler is proven to be secure against side-channel timing attack according to the timing analysis attack results on a FPGA-based testing platform. A universal module MPE (Modular Processing Element) is designed to carry out all basic modular operations for Ring-LWE cryptography with high speed. The prototype verification is performed on the Xilinx Spartan-6 FPGA platform. The processor can execute an encryption/decryption operation on a 256-bit message in 4.5/0.9 ms whilst it consumes only 1307 LUTs, 889 FFs, 4 BRAMs, and none DSP module. Compared with other related hardware implementations, the Ring-LWE processor is advantageous not only in hardware efficiency but also in secure protection against side-channel attacks.},
+  number = {4},
+  journaltitle = {IEEE Transactions on Circuits and Systems I: Regular Papers},
+  date = {2019-04},
+  pages = {1474-1483},
+  keywords = {constrained devices,discrete Gaussian sampler,efficiency,Elliptic curve cryptography,field programmable gate arrays,Field programmable gate arrays,Gaussian processes,Hardware,lattice-based cryptography,Lattice-based cryptography,Modular Processing Element,polynomial multiplication,polynomials,prototype verification,public key cryptography,public-key cryptosystems,quantum attacks,resource-efficient secure hardware implementation,resources constrained devices,Ring-LWE,Ring-LWE cryptographic processor,Ring-LWE cryptography,Ring-LWE processor,side-channel attack,side-channel attacks,side-channel secure hardware implementation,side-channel timing attack,Timing,Xilinx Spartan-6 FPGA platform},
+  author = {Liu, D. and Zhang, C. and Lin, H. and Chen, Y. and Zhang, M.},
+  file = {/Users/kamyar/Zotero/storage/I53LDKXY/Liu et al_2019_A Resource-Efficient and Side-Channel Secure Hardware Implementation of.pdf;/Users/kamyar/Zotero/storage/QBTADCGR/8579168.html}
 }
 
 

@@ -182,6 +182,8 @@ package kyber_pkg is
 	--
 	function KYBER_POLYCOMPRESSEDBYTES return positive;
 	--
+
+	procedure carry_save_adder(x : in unsigned; y : in unsigned; z : in unsigned; signal s : out unsigned; signal cout : out std_logic);
 	--------------------------------------------=( Synthesis )=--------------------------------------------------------
 	--
 	type T_TECHNOLOGY is (XILINX, SAED32);
@@ -304,6 +306,41 @@ package body kyber_pkg is
 			return ("0" & popcount(a_copy(n - 1 downto h))) + popcount(a_copy(h - 1 downto 0));
 		end if;
 	end function;
+
+	procedure full_adder(a : in std_logic; b : in std_logic; Cin : in std_logic; s : out std_logic; cout : out std_logic) is
+
+	begin
+		S    := A XOR B XOR Cin;
+		cout := (A AND B) OR (Cin AND A) OR (Cin AND B);
+	end procedure full_adder;
+
+	procedure carry_save_adder(x : in unsigned; y : in unsigned; z : in unsigned; signal s : out unsigned; signal cout : out std_logic) is
+		constant w          : positive := x'length;
+		variable c1         : unsigned(w - 1 downto 0);
+		variable c2, s1, sx : unsigned(w downto 0);
+	begin
+
+		s1(w) := '0';
+		for i in 0 to w - 1 loop
+			--			full_adder(x(i), y(i), z(i), s1(i), c1(i));
+			s1(i) := x(i) XOR y(i) XOR z(i);
+			c1(i) := (x(i) AND y(i)) OR (z(i) AND x(i)) OR (z(i) AND y(i));
+
+			--			full_adder(s1(i + 1), c1(i), c2(i), sx, c2(i + 1));
+			--			s(i + 1) <= sx;
+		end loop;
+
+		c2(0) := '0';
+
+		for i in 0 to w - 1 loop
+			c2(i + 1) := (s1(i + 1) AND c1(i)) OR (c2(i) AND s1(i + 1)) OR (c2(i) AND c1(i));
+			sx(i + 1) := s1(i + 1) XOR c1(i) XOR c2(i);
+		end loop;
+
+		sx(0) := s1(0);
+		s     <= sx(s'length - 1 downto 0);
+		cout  <= c2(w);
+	end procedure carry_save_adder;
 
 	-------- IEEE 2008 (additions)
 	--============================================================================

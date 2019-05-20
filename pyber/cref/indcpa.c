@@ -492,7 +492,7 @@ void indcpa_dec(unsigned char *m, const unsigned char *c,
     fprintf(stderr, "decrypted messages DO NOT MATCH!\n");
     exit(1);
   } else {
-    //   printf("DEC MATCH\n");
+    printf("indcpa_dec_nontt MATCHED\n");
   }
 }
 
@@ -510,7 +510,7 @@ void repack_sk_nontt(unsigned char *rsk, const unsigned char *sk) {
 
 void indcpa_dec_nontt(unsigned char *m, const unsigned char *c,
                   const unsigned char *rsk) {
-  polyvec bp, skpv;
+  polyvec bp, skpv, mask;
   poly v;
 
   unpack_ciphertext(&bp, &v, c); // bp+v first bp then v
@@ -518,15 +518,24 @@ void indcpa_dec_nontt(unsigned char *m, const unsigned char *c,
   unpack_sk(&skpv, rsk);
 
 #ifdef DEBUG
-  printf("input v: \n");
+  printf("indcpa_dec_nontt: input v: \n");
   poly_dump(&v);
-  printf("input bp: \n");
+  printf("indcpa_dec_nontt: input bp: \n");
   polyvec_dump(&bp);
-  printf("input skpv: \n");
+  printf("indcpa_dec_nontt: input skpv: \n");
   polyvec_dump(&skpv);
 #endif
+  
+  for(int p = 0; p < KYBER_K; p++){
+      for (int c = 0; c < KYBER_N; c++){
+        int x = rand() % (1 << 13);
+        mask.vec[p].coeffs[c] = x;
+        skpv.vec[p].coeffs[c] = (skpv.vec[p].coeffs[c] + x);
+      }
+  }
 
   polyvec_nega_mac(&v, &bp, &skpv, 1); // v <- skpv*bp - v
+  polyvec_nega_mac(&v, &bp, &mask, 0); // v <- skpv*bp - v
 
 #ifdef DEBUG
   printf("output v: \n");

@@ -78,9 +78,9 @@ use osvvm.CoveragePkg.all;
 entity polymac_dp_tb is
 	generic(
 		runner_cfg        : string;
-		G_CLK_PERIOD      : time     := 1 ns;
-		G_EXTRA_RND_SEED  : string   := "3.14159265";
-		G_TEST_ITERATIONS : integer  := 2 ** 14
+		G_CLK_PERIOD      : time    := 1 ns;
+		G_EXTRA_RND_SEED  : string  := "3.14159265";
+		G_TEST_ITERATIONS : integer := 2 ** 14
 	);
 end entity polymac_dp_tb;
 
@@ -93,11 +93,12 @@ architecture TB of polymac_dp_tb is
 	signal a              : T_coef_us;
 	signal b              : T_coef_us;
 	signal rin            : T_coef_us;
-	signal rout           : T_coef_us;
 	signal o_vout_data    : T_coef_us;
 	signal o_remin_data   : unsigned(2 * KYBER_COEF_BITS - 1 downto 0);
 	signal o_remin_valid  : std_logic;
 	signal i_remout_valid : std_logic;
+	signal i_remin_ready  : std_logic;
+	signal i_remout_data : T_coef_us;
 begin
 	clk <= not clk after G_CLK_PERIOD / 2;
 
@@ -111,10 +112,10 @@ begin
 	end process reset_proc;
 
 	tb_proc : process
-		variable RndR      : RandomPType;
-		variable rin_v     : T_coef_us;
-		variable a_v       : T_coef_us;
-		variable b_v       : T_coef_us;
+		variable RndR  : RandomPType;
+		variable rin_v : T_coef_us;
+		variable a_v   : T_coef_us;
+		variable b_v   : T_coef_us;
 	begin
 		test_runner_setup(runner, runner_cfg);
 
@@ -134,39 +135,41 @@ begin
 			if run("Add  r <= r + a.b") then
 				for i in 0 to G_TEST_ITERATIONS loop
 					wait until falling_edge(clk);
+					nega     <= '0';
 					in_valid <= '0';
 					r_load   <= '1';
 					rin_v    := RndR.RandUnsigned(KYBER_Q - 1, rin'length);
 					rin      <= rin_v;
+					wait until rising_edge(clk);
 					wait until falling_edge(clk);
-					r_load   <= '0';
 					in_valid <= '1';
-					nega     <= '0';
+					r_load   <= '0';
 					a_v      := RndR.RandUnsigned(KYBER_Q - 1, a'length);
 					a        <= a_v;
 					b_v      := RndR.RandUnsigned(KYBER_Q - 1, b'length);
 					b        <= b_v;
-					in_valid <= '0';
 					wait until falling_edge(clk);
-
-					for p in 0 to G_PIPELINE_LEVELS loop
+					in_valid <= '0';
+					
+					for p in 0 to 6 loop
 						wait until falling_edge(clk);
 					end loop;
 
-					check_equal(unsigned(rout), resize((rin_v + (a_v * b_v)) mod KYBER_Q, rout'length));
+					check_equal(unsigned(o_vout_data), resize((rin_v + (a_v * b_v)) mod KYBER_Q, o_vout_data'length));
 
 				end loop;
 			elsif run("Subtract r <= r - a.b") then
 				for i in 0 to G_TEST_ITERATIONS loop
 					wait until falling_edge(clk);
+					nega     <= '1';
 					in_valid <= '0';
 					r_load   <= '1';
 					rin_v    := RndR.RandUnsigned(KYBER_Q - 1, rin'length);
 					rin      <= rin_v;
+					wait until rising_edge(clk);
 					wait until falling_edge(clk);
-					r_load   <= '0';
-					nega     <= '1';
 					in_valid <= '1';
+					r_load   <= '0';
 					a_v      := RndR.RandUnsigned(KYBER_Q - 1, a'length);
 					a        <= a_v;
 					b_v      := RndR.RandUnsigned(KYBER_Q - 1, b'length);
@@ -174,13 +177,14 @@ begin
 					wait until falling_edge(clk);
 					in_valid <= '0';
 					
---					wait until i_remout_valid = '1';
-
+					for p in 0 to 6 loop
+						wait until falling_edge(clk);
+					end loop;
 					
-
-					check_equal(unsigned(rout), resize((("00" & rin) + KYBER_Q - ((a * b) mod KYBER_Q)) mod KYBER_Q, rout'length), " for a=" & to_string(to_integer(a)) & " b=" & to_String(to_integer(b)) & " r0=" & to_string(to_integer(rin))
+					check_equal(unsigned(o_vout_data), resize((("00" & rin) + KYBER_Q - ((a * b) mod KYBER_Q)) mod KYBER_Q, o_vout_data'length), " for a=" & to_string(to_integer(a)) & " b=" & to_String(to_integer(b)) & " r0=" & to_string(to_integer(rin))
 					);
 				end loop;
+				nega     <= '0';
 
 			end if;
 		end loop while_test_suite_loop;
@@ -188,7 +192,6 @@ begin
 		test_runner_cleanup(runner);
 		wait;
 	end process;
-
 
 	dut : entity work.polymac_datapath
 		port map(
@@ -203,7 +206,8 @@ begin
 			o_vout_data    => o_vout_data,
 			o_remin_data   => o_remin_data,
 			o_remin_valid  => o_remin_valid,
-			i_remout_data  => rout,
+			i_remin_ready  => i_remin_ready,
+			i_remout_data  => i_remout_data,
 			i_remout_valid => i_remout_valid
 		);
 end architecture TB;

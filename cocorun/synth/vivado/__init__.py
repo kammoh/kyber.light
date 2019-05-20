@@ -8,7 +8,7 @@ from ...conf import *
 from logging import log
 import datetime
 import shutil
-from collections import Iterable
+from collections.abc import Iterable
 import re
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -180,6 +180,8 @@ class Vivado(SynthTool):
         hdl_sources, mod = self.manifest.hdl_sources(mm)
 
         top_module_name = mod.top
+        if not target_frequency:
+            target_frequency = mod.frequency
 
         synth_options = {
             'top': top_module_name,
@@ -217,7 +219,7 @@ class Vivado(SynthTool):
                 phys_opt_options[arg[len(phys_opt_prefix)]:] = value
         
         synth_subdir = f'synth_run'
-        run_dir_name = f'{self.__class__.__name__}.{top_module_name}.{datetime.datetime.now()}'.replace(
+        run_dir_name = f'{self.__class__.__name__}.{top_module_name}_{datetime.datetime.now()}'.replace(
             ' ', '.').replace(':', '.')
         run_path = pathlib.Path(synth_subdir).joinpath(run_dir_name)
 

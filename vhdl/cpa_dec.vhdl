@@ -185,7 +185,7 @@ begin
 	polyvec_mac_inst : entity work.polyvec_mac
 		generic map(
 			G_NUM_RAM_A_BLOCKS     => 1,
-			G_USE_EXTERNAL_DIVIDER => True
+			G_EXTERNAL_DIVIDER => True
 		)
 		port map(
 			clk            => clk,
