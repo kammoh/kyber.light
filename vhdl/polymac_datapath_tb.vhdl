@@ -151,7 +151,7 @@ begin
 					wait until falling_edge(clk);
 					in_valid <= '0';
 					
-					for p in 0 to 6 loop
+					for p in 0 to P_DIVIDER_PIPELINE_LEVELS + 3 loop
 						wait until falling_edge(clk);
 					end loop;
 
@@ -177,7 +177,7 @@ begin
 					wait until falling_edge(clk);
 					in_valid <= '0';
 					
-					for p in 0 to 6 loop
+					for p in 0 to P_DIVIDER_PIPELINE_LEVELS + 3 loop
 						wait until falling_edge(clk);
 					end loop;
 					

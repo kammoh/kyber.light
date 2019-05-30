@@ -1,7 +1,7 @@
 #ifndef PARAMS_H
 #define PARAMS_H
 
-#define DEBUG
+// #define DEBUG
 
 #ifndef KYBER_K
 #define KYBER_K 3 /* Change this for different security strengths */

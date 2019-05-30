@@ -233,6 +233,11 @@ void poly_ntt(poly *r)
   ntt(r->coeffs);
   poly_reduce(r);
 }
+void poly_nttx(poly *r)
+{
+  nttx(r->coeffs);
+//   poly_reduce(r);
+}
 
 /*************************************************
 * Name:        poly_invntt

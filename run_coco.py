@@ -31,7 +31,7 @@ if args.synth:
     if args.synth == 'vivado':
         vivado = Vivado.from_manifest(manifest)
 
-        frequency = 100  # Mhz
+        frequency = 200  # Mhz
 
         vivado.run_flow(args.bundle_name, target_frequency=frequency,
                         part='xc7a100tcsg324-1', synth_directive='AreaOptimized_high', opt_directive='ExploreWithRemap')
@@ -39,11 +39,11 @@ if args.synth:
         summary = vivado.lastrun_timing_summary()
         pprint(summary)
         wns = summary['WNS(ns)']
-        if isinstance(wns, int):
+        if isinstance(wns, float):
             if wns <= 0:
                 vivado.log.error("Timing not met!")
                 vivado.log.error(
-                    f"Frequency to try next: {1000.0/(1000.0/frequency - wns ):.3f} Mhz")
+                    f"Frequency to try next: {1000.0/(1000.0/frequency - wns):.3f} Mhz")
             else:
                 vivado.log.info(f"Suggested frequency to try: {1000.0/(1000.0/frequency - wns ):.3f} Mhz")
                 print(f"Suggested frequency to try: {1000.0/(1000.0/frequency - wns ):.3f} Mhz")

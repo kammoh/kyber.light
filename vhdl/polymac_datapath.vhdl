@@ -82,29 +82,29 @@ entity polymac_datapath is
 		G_INTERNAL_DIVIDER : boolean := True
 	);
 	port(
-		clk            : in  std_logic;
-		rst            : in  std_logic;
+		clk             : in  std_logic;
+		rst             : in  std_logic;
 		--- Control
-		i_nega         : in  std_logic;
-		i_ld_v         : in  std_logic; -- enable and load now
+		i_nega          : in  std_logic;
+		i_ld_v          : in  std_logic; -- enable and load now
 		--- Data
 		--
-		i_abin_valid   : in  std_logic;
-		o_abin_ready   : out std_logic;
-		i_ain_data     : in  T_coef_us;
-		i_bin_data     : in  T_coef_us;
+		i_abin_valid    : in  std_logic;
+		o_abin_ready    : out std_logic;
+		i_ain_data      : in  T_coef_us;
+		i_bin_data      : in  T_coef_us;
 		--
-		i_vin_data     : in  T_coef_us;
+		i_vin_data      : in  T_coef_us;
 		--
-		o_vout_data    : out T_coef_us;
+		o_vout_data     : out T_coef_us;
 		-- to divider
-		o_remin_data   : out unsigned(2 * KYBER_COEF_BITS - 1 downto 0);
-		o_remin_valid  : out std_logic;
-		i_remin_ready  : in  std_logic;
+		o_remin_data    : out unsigned(2 * KYBER_COEF_BITS - 1 downto 0);
+		o_remin_valid   : out std_logic;
+		i_remin_ready   : in  std_logic;
 		-- from divider
-		i_remout_data  : in  T_coef_us;
-		i_remout_valid : in  std_logic;
-		o_remout_ready : out std_logic;
+		i_remout_data   : in  T_coef_us;
+		i_remout_valid  : in  std_logic;
+		o_remout_ready  : out std_logic;
 		--
 		o_divider_empty : out std_logic
 	);
@@ -124,11 +124,11 @@ architecture RTL of polymac_datapath is
 	--	signal add_sub                          : unsigned(r_reg'length + 1 downto 0);
 	--	signal add_sub_minus_q                  : unsigned(r_reg'length downto 0);
 	signal rc                               : unsigned(KYBER_COEF_BITS - 1 downto 0);
-	signal mc, qc                           : unsigned(KYBER_COEF_BITS downto 0);
-	signal sc0                              : unsigned(KYBER_COEF_BITS + 1 downto 0);
---	signal ss1                              : unsigned(KYBER_COEF_BITS downto 0);
-	signal ssc1                             : unsigned(KYBER_COEF_BITS + 1 downto 0);
-	signal neg, c0, c1,c22                      : std_logic;
+	signal mc, qc, r_signed                 : unsigned(KYBER_COEF_BITS downto 0);
+	signal sc0, s1                          : unsigned(KYBER_COEF_BITS + 1 downto 0);
+	--	signal ss1                              : unsigned(KYBER_COEF_BITS downto 0);
+	signal sc1                              : unsigned(KYBER_COEF_BITS + 1 downto 0);
+	signal neg, c0, c1                      : std_logic;
 	--
 	signal remin_data                       : unsigned(2 * KYBER_COEF_BITS - 1 downto 0);
 	signal remin_valid                      : std_logic;
@@ -154,8 +154,8 @@ begin
 				o_remdivout_valid => remout_valid,
 				i_remdivout_ready => remout_ready
 			);
-			
-			o_divider_empty <= not remout_valid; 
+
+		o_divider_empty <= not remout_valid;
 
 	end generate;
 
@@ -167,23 +167,29 @@ begin
 		remout_data    <= i_remout_data;
 		remout_valid   <= i_remout_valid;
 		o_remout_ready <= remout_ready;
-		
+
 		o_divider_empty <= not i_remout_valid;
 
 	end generate;
+
+	r_signed <= "0" & r_reg;
 
 	neg <= msb(nega_delayed);
 	mc  <= ("0" & a_times_b_reduced) xor (mc'length - 1 downto 0 => neg);
 	qc  <= to_unsigned(KYBER_Q + 1, qc'length) when neg = '1' else unsigned(to_signed(0 - KYBER_Q, qc'length));
 
-	sc0 <= ("00" & r_reg) + (mc(mc'length - 1) & mc) + neg;
+	sc0 <= ("00" & r_reg) + (mc(mc'length - 1) & mc) + ("0" & neg);
 	c0  <= sc0(sc0'length - 1);
 
---	carry_save_adder("00" & r_reg, mc(mc'length - 1) & mc,  qc(qc'length - 1) & qc, ssc1, c22);
-	ssc1 <= "00" & r_reg + (mc(mc'length - 1) & mc) + (qc(qc'length - 1) & qc);
-	c1 <= ssc1(rc'length);
+	-- 1:
+	--	carry_save_adder(r_signed, mc, qc, s1);
+	-- 2:
+	sc1 <= "0" & r_signed + (mc(mc'length - 1) & mc) + (qc(qc'length - 1) & qc);
+	s1  <= sc1(s1'length - 1 downto 0);
+	-- /
 
-	rc <= ssc1(rc'length - 1 downto 0) when ((not neg and not c1) or (neg and c0)) = '1' else sc0(r_reg'length - 1 downto 0);
+	c1 <= s1(rc'length);
+	rc <= s1(rc'length - 1 downto 0) when ((not neg and not c1) or (neg and c0)) = '1' else sc0(r_reg'length - 1 downto 0);
 
 	--	add_sub <= ("00" & r_reg) - a_times_b_reduced when msb(nega_delayed) = '1' else ("00" & r_reg) + a_times_b_reduced;
 	--

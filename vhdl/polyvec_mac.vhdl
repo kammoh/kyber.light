@@ -71,7 +71,7 @@ use work.ocram_sp;
 
 entity polyvec_mac is
 	generic(
-		G_PIPELINE_LEVELS  : positive := 7;
+		G_PIPELINE_LEVELS  : positive := 4 + P_DIVIDER_PIPELINE_LEVELS;
 		G_INTERNAL_DIVIDER : boolean  := True;
 		G_EXTERNAL_RAM     : boolean  := False;
 		-- {1, KYBER_K + 1}  1: for CPA-Decrypt-Only, KYBER_K + 1: for either CPA-Encrypt-only or Encrypt/Decrypt
@@ -176,7 +176,7 @@ architecture RTL of polyvec_mac is
 	signal dp_remin_ready        : std_logic;
 	signal dp_remout_ready       : std_logic;
 	--
-	signal DUMMY_NIST_ROUND      : positive := NIST_ROUND; -- @suppress "Unused declaration"
+	signal DUMMY_NIST_ROUND      : positive := P_NIST_ROUND; -- @suppress "Unused declaration"
 	signal dp_divier_empty       : std_logic;
 
 begin

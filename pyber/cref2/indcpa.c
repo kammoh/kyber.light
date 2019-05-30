@@ -266,31 +266,38 @@ void indcpa_enc_nontt(unsigned char *c, const unsigned char *m,
   }
   polyvec_reduce(&s_pv);
 
+#ifdef DEBUG
   printf("\n\n-- s:\n");
   polyvec_dump(&s_pv);
+#endif
 
   for (int i = 0; i < KYBER_K; i++)
     poly_getnoise(b_pv.vec + i, coins, nonce++);
 
   polyvec_reduce(&b_pv);
 
+#ifdef DEBUG
   printf("\n\n-- b:\n");
   polyvec_dump(&b_pv);
+#endif
 
   poly_getnoise(&v, coins, nonce++);
 
   poly_reduce(&v);
 
+#ifdef DEBUG
   printf("-- v:\n");
   poly_dump(&v);
+#endif
   //-----------------------------------------
 
 
   for (int i = 0; i < KYBER_K; i++)
     polyvec_nega_mac(&b_pv.vec[i], at + i, &s_pv, 0);
-
+#ifdef DEBUG
   printf("\n\n-- b after MAC:\n");
   polyvec_dump(&b_pv);
+#endif
 
   polyvec_nega_mac(&v, &pkpv, &s_pv, 0);
 
@@ -304,15 +311,14 @@ void indcpa_enc_nontt(unsigned char *c, const unsigned char *m,
 
   poly_add(&v, &v, &msg_poly);
 
+#ifdef DEBUG
   printf("indcpa_enc_nontt: V after msgadd:\n");
   poly_dump(&v);
-
+#endif
   polyvec_reduce(&b_pv);
   poly_reduce(&v);
 
   pack_ciphertext(c, &b_pv, &v);
-
-
 }
 
 /*************************************************
@@ -343,12 +349,12 @@ void indcpa_enc(unsigned char *c, const unsigned char *m,
   poly_frommsg(&k, m);
   gen_at(at, seed);
 
-#ifdef DEBUG
+// #ifdef DEBUG
   unsigned char c_prime[KYBER_CIPHERTEXTBYTES];
   unsigned char pk_at_bytes[KYBER_POLYVECBYTES * (KYBER_K + 1)];
   repack_at_pk(pk_at_bytes, pk);
   indcpa_enc_nontt(c_prime, m, pk_at_bytes, coins);
-#endif
+// #endif
 
   for (i = 0; i < KYBER_K; i++)
     poly_getnoise(sp.vec + i, coins, nonce++);
@@ -356,7 +362,7 @@ void indcpa_enc(unsigned char *c, const unsigned char *m,
     poly_getnoise(ep.vec + i, coins, nonce++);
   poly_getnoise(&epp, coins, nonce++);
 
-  polyvec_ntt(&sp);
+  polyvec_nttx(&sp);
 
   // matrix-vector multiplication
   for (i = 0; i < KYBER_K; i++)
@@ -373,8 +379,10 @@ void indcpa_enc(unsigned char *c, const unsigned char *m,
   polyvec_reduce(&bp);
   poly_reduce(&v);
 
+#ifdef DEBUG
   printf("indcpa_enc: final v\n");
   poly_dump(&v);
+#endif
 
   pack_ciphertext(c, &bp, &v);
 
@@ -385,10 +393,10 @@ void indcpa_enc(unsigned char *c, const unsigned char *m,
 //   printf("\n");
 
 // #ifdef DEBUG
-//   if (memcmp(c, c_prime, KYBER_CIPHERTEXTBYTES)) {
-//     printf("\n [ **** Scheiße! **** ] \n  enc don't match!\n");
-//     exit(1);
-//   }
+  if (memcmp(c, c_prime, KYBER_CIPHERTEXTBYTES)) {
+    printf("\n [ **** Scheiße! **** ] \n  enc don't match!\n");
+    exit(1);
+  }
 // #endif
 }
 
@@ -445,7 +453,7 @@ void indcpa_dec(unsigned char *m, const unsigned char *c,
   poly_dump(&v);
 #endif
 
-  polyvec_ntt(&bp);
+  polyvec_nttx(&bp);
   polyvec_pointwise_acc(&mp, &skpv, &bp);
   poly_invntt(&mp);
 
@@ -552,7 +560,7 @@ void unpack_pk_at_nontt(polyvec *pkpv_p, polyvec *at, const unsigned char *pk) {
   }
 }
 
-#define DEBUG_PK
+// #define DEBUG_PK
 
 void repack_at_pk(unsigned char *pk_at_bytes, const unsigned char *pk) {
   polyvec pkpv, at[KYBER_K];
@@ -564,10 +572,10 @@ void repack_at_pk(unsigned char *pk_at_bytes, const unsigned char *pk) {
     printf("repack_at_pk: repacked at[%d]:\n", i);
     polyvec_dump(&at[i]);
   }
-#endif
 
   printf("repack_at_pk: repacked PK:\n");
   polyvec_dump(&pkpv);
+#endif
 
   for (int i = 0; i < KYBER_K; i++) {
     polyvec_tobytes(pk_at_bytes + i * KYBER_POLYVECBYTES, &at[i]);

@@ -29,8 +29,6 @@ begin
 	-- P15X <-  X<<4  + M1X
 	P15X_High_L       <= i_x(11 downto 0);
 	P15X_High_R       <= (15 downto 13 => M1X(12)) & M1X(12 downto 4);
-	P15X(15 downto 4) <= P15X_High_R + P15X_High_L; -- sum of higher bits
-	P15X(3 downto 0)  <= M1X(3 downto 0); -- lower bits untouched
 
 	-- M17X <-  M1X<<4  + M1X
 	M17X_High_L       <= (17 downto 17 => M1X(12)) & M1X(12 downto 0);
@@ -39,11 +37,10 @@ begin
 	M17X(3 downto 0)  <= M1X(3 downto 0); -- lower bits untouched
 
 	-- P943X <-  P15X<<6  + M17X
-	P943X_High_L       <= P15X(15 downto 0);
 	P943X_High_R       <= (21 downto 18 => M17X(17)) & M17X(17 downto 6);
-	P943X(21 downto 6) <= P943X_High_R + P943X_High_L; -- sum of higher bits
+	P943X(21 downto 6) <= P943X_High_R + ((P15X_High_R + P15X_High_L) & M1X(3 downto 0) ); -- sum of higher bits
 	P943X(5 downto 0)  <= M17X(5 downto 0); -- lower bits untouched
 
-	o_mult <= P943X(21 downto 0);
+	o_mult <= P943X;
 end architecture;
 

@@ -106,7 +106,7 @@ architecture RTL of decompressor is
 	signal asym_poly_dout_ready  : std_logic;
 	signal addition              : unsigned(KYBER_COEF_BITS + POLYVEC_SHIFT - 1 - 1 downto 0);
 	--
-	signal DUMMY_NIST_ROUND      : positive := NIST_ROUND; -- @suppress "Unused declaration"
+	signal DUMMY_NIST_ROUND      : positive := P_NIST_ROUND; -- @suppress "Unused declaration"
 
 begin
 

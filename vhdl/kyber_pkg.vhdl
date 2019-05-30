@@ -183,40 +183,40 @@ package kyber_pkg is
 	function KYBER_POLYCOMPRESSEDBYTES return positive;
 	--
 
-	procedure carry_save_adder(x : in unsigned; y : in unsigned; z : in unsigned; signal s : out unsigned; signal cout : out std_logic);
+	procedure carry_save_adder(x : in unsigned; y : in unsigned; z : in unsigned; signal sum : out unsigned; signal cout : out std_logic);
+	--
+	procedure carry_save_adder(x : in unsigned; y : in unsigned; z : in unsigned; signal sum : out unsigned);
 	--------------------------------------------=( Synthesis )=--------------------------------------------------------
 	--
 	type T_TECHNOLOGY is (XILINX, SAED32);
-	attribute DONT_TOUCH_NETWORK : boolean;
+	attribute DONT_TOUCH_NETWORK       : boolean;
 	--
-	attribute DONT_TOUCH         : boolean;
+	attribute DONT_TOUCH               : boolean;
 	--
 	--------------------------------------------=( Parameters )=-------------------------------------------------------	
-	constant NIST_ROUND          : positive := 2;
-	constant KYBER_K             : positive := 3; -- 2: Kyber512, 3: Kyber768 (recommended), 4: KYBER1024
-
+	constant P_NIST_ROUND              : positive     := 2;
+	constant P_KYBER_K                 : positive     := 3; -- 2: Kyber512, 3: Kyber768 (recommended), 4: KYBER1024
+	constant P_DIVIDER_PIPELINE_LEVELS : natural      := 4;
 	--
 	--------------------------------------------=( Synthesis Parameters )=---------------------------------------------
-	constant TECHNOLOGY : T_TECHNOLOGY := XILINX; -- Synthesis technology
-
+	constant P_TECHNOLOGY              : T_TECHNOLOGY := XILINX; -- Synthesis technology
 	--------------------------------------------=( Interface )=--------------------------------------------------------	
-	constant C_CPA_CMD_BITS   : positive := 3;
-	constant CMD_RECV_PK      : positive := 1;
-	constant CMD_START_ENC    : positive := 2;
-	constant CMD_RECV_SK      : positive := 3;
-	constant CMD_RECV_SK_US   : unsigned := to_unsigned(CMD_RECV_SK, C_CPA_CMD_BITS);
-	constant CMD_START_DEC    : positive := 4;
-	constant CMD_START_DEC_US : unsigned := to_unsigned(CMD_START_DEC, C_CPA_CMD_BITS);
+	constant C_CPA_CMD_BITS            : positive     := 3;
+	constant CMD_RECV_PK               : positive     := 1;
+	constant CMD_START_ENC             : positive     := 2;
+	constant CMD_RECV_SK               : positive     := 3;
+	constant CMD_RECV_SK_US            : unsigned     := to_unsigned(CMD_RECV_SK, C_CPA_CMD_BITS);
+	constant CMD_START_DEC             : positive     := 4;
+	constant CMD_START_DEC_US          : unsigned     := to_unsigned(CMD_START_DEC, C_CPA_CMD_BITS);
 	--------------------------------------------=( Constants )=--------------------------------------------------------	
-	constant KYBER_N          : positive := 256;
+	constant KYBER_N                   : positive     := 256;
 
 	--
 	constant KYBER_COEF_BITS : positive := log2ceilnz(KYBER_Q);
 	constant KYBER_Q_US      : unsigned := to_unsigned(KYBER_Q, KYBER_COEF_BITS);
 	constant KYBER_Q_S       : signed   := to_signed(KYBER_Q, KYBER_COEF_BITS);
 	constant KYBER_SYMBYTES  : positive := 32;
-
-	constant C_DIVIDER_PIPELINE_LEVELS : natural := 3;
+	constant KYBER_K         : positive := P_KYBER_K;
 
 	function POLYVEC_SHIFT return positive;
 	function POLY_SHIFT return positive;
@@ -233,7 +233,7 @@ package body kyber_pkg is
 
 	function KYBER_Q return positive is
 	begin
-		if NIST_ROUND = 1 then
+		if P_NIST_ROUND = 1 then
 			return 7681;
 		else
 			return 3329;
@@ -242,7 +242,7 @@ package body kyber_pkg is
 
 	function KYBER_ETA return positive is
 	begin
-		if NIST_ROUND = 1 then
+		if P_NIST_ROUND = 1 then
 			return 7 - KYBER_K;
 		else
 			return 2;
@@ -251,7 +251,7 @@ package body kyber_pkg is
 
 	function KYBER_POLYCOMPRESSEDBYTES return positive is
 	begin
-		if NIST_ROUND = 1 then
+		if P_NIST_ROUND = 1 then
 			return 96;
 		else
 			return 128;
@@ -260,7 +260,7 @@ package body kyber_pkg is
 
 	function KYBER_POLYVECCOMPRESSEDBYTES return positive is
 	begin
-		if NIST_ROUND = 1 then
+		if P_NIST_ROUND = 1 then
 			return KYBER_K * 352;
 		else
 			return KYBER_K * 320;
@@ -307,39 +307,56 @@ package body kyber_pkg is
 		end if;
 	end function;
 
-	procedure full_adder(a : in std_logic; b : in std_logic; Cin : in std_logic; s : out std_logic; cout : out std_logic) is
+	procedure full_adder(a : in std_logic; b : in std_logic; cin : in std_logic; s : out std_logic; cout : out std_logic) is
 
 	begin
-		S    := A XOR B XOR Cin;
-		cout := (A AND B) OR (Cin AND A) OR (Cin AND B);
+		s    := a xor b xor cin;
+		cout := (a and b) OR (cin and a) OR (cin and b);
 	end procedure full_adder;
 
-	procedure carry_save_adder(x : in unsigned; y : in unsigned; z : in unsigned; signal s : out unsigned; signal cout : out std_logic) is
+	procedure carry_save_adder(x : in unsigned; y : in unsigned; z : in unsigned; signal sum : out unsigned; signal cout : out std_logic) is
 		constant w          : positive := x'length;
 		variable c1         : unsigned(w - 1 downto 0);
 		variable c2, s1, sx : unsigned(w downto 0);
 	begin
+		assert sum'length = w + 1 report "sum'length /= x'length + 1" severity failure;
 
-		s1(w) := '0';
 		for i in 0 to w - 1 loop
-			--			full_adder(x(i), y(i), z(i), s1(i), c1(i));
-			s1(i) := x(i) XOR y(i) XOR z(i);
-			c1(i) := (x(i) AND y(i)) OR (z(i) AND x(i)) OR (z(i) AND y(i));
-
-			--			full_adder(s1(i + 1), c1(i), c2(i), sx, c2(i + 1));
-			--			s(i + 1) <= sx;
+			full_adder(x(i), y(i), z(i), s1(i), c1(i));
 		end loop;
 
+		s1(w) := '0';
 		c2(0) := '0';
 
 		for i in 0 to w - 1 loop
-			c2(i + 1) := (s1(i + 1) AND c1(i)) OR (c2(i) AND s1(i + 1)) OR (c2(i) AND c1(i));
-			sx(i + 1) := s1(i + 1) XOR c1(i) XOR c2(i);
+			full_adder(s1(i + 1), c1(i), c2(i), sx(i + 1), c2(i + 1));
 		end loop;
 
 		sx(0) := s1(0);
-		s     <= sx(s'length - 1 downto 0);
+		sum   <= sx(sum'length - 1 downto 0);
 		cout  <= c2(w);
+	end procedure carry_save_adder;
+
+	procedure carry_save_adder(x : in unsigned; y : in unsigned; z : in unsigned; signal sum : out unsigned) is
+		constant w          : positive := x'length;
+		variable c2, c1, sx : unsigned(w - 1 downto 0);
+		variable s1         : unsigned(w downto 0);
+	begin
+		assert sum'length = w + 1 report "sum'length /= x'length + 1" severity failure;
+
+		for i in 0 to w - 1 loop
+			full_adder(x(i), y(i), z(i), s1(i), c1(i));
+		end loop;
+
+		s1(w) := '0';
+		c2(0) := '0';
+
+		for i in 0 to w - 2 loop
+			full_adder(s1(i + 1), c1(i), c2(i), sx(i + 1), c2(i + 1));
+		end loop;
+
+		sx(0) := s1(0);
+		sum   <= c2(w - 1) & sx;
 	end procedure carry_save_adder;
 
 	-------- IEEE 2008 (additions)

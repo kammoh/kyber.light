@@ -24,6 +24,7 @@ void poly_tomsg(unsigned char msg[KYBER_SYMBYTES], poly *r);
 void poly_getnoise(poly *r,const unsigned char *seed, unsigned char nonce);
 
 void poly_ntt(poly *r);
+void poly_nttx(poly *r);
 void poly_invntt(poly *r);
 void poly_basemul(poly *r, const poly *a, const poly *b);
 void poly_frommont(poly *r);

@@ -15,6 +15,7 @@ void polyvec_tobytes(unsigned char *r, polyvec *a);
 void polyvec_frombytes(polyvec *r, const unsigned char *a);
 
 void polyvec_ntt(polyvec *r);
+void polyvec_nttx(polyvec *r);
 void polyvec_invntt(polyvec *r);
 
 void polyvec_pointwise_acc(poly *r, const polyvec *a, const polyvec *b);

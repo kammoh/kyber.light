@@ -142,7 +142,7 @@ architecture rtl of ocram_sp is
 
 begin
 
-	gen_xilinx : if (TECHNOLOGY = XILINX) generate
+	gen_xilinx : if (P_TECHNOLOGY = XILINX) generate
 		subtype word_t is std_logic_vector(WORD_BITS - 1 downto 0);
 		type ram_t is array (0 to DEPTH - 1) of word_t;
 
@@ -164,7 +164,7 @@ begin
 		end process;
 	end generate gen_xilinx;
 
-	gen_saed32 : if (TECHNOLOGY = SAED32) generate
+	gen_saed32 : if (P_TECHNOLOGY = SAED32) generate
 		-- TODO generate optimum covering using different block size
 		-- TODO current implementation is only for special case used in KyberLight 1.x implementation
 		-- SAED32 Memory Compiler Block RAM

@@ -204,7 +204,7 @@ architecture RTL of cpa is
 	signal decompress_coefout_valid   : std_logic;
 	signal decompress_coefout_ready   : std_logic;
 	--
-	signal DUMMY_NIST_ROUND           : positive := NIST_ROUND;
+	signal DUMMY_NIST_ROUND           : positive := P_NIST_ROUND;
 
 begin
 
@@ -246,8 +246,8 @@ begin
 	polyvec_mac_inst : entity work.polyvec_mac
 		generic map(
 			--			G_PIPELINE_LEVELS  => G_PIPELINE_LEVELS,
-			G_NUM_RAM_A_BLOCKS     => KYBER_K + 1,
-			G_EXTERNAL_DIVIDER => True
+			G_NUM_RAM_A_BLOCKS => KYBER_K + 1,
+			G_INTERNAL_DIVIDER => False
 		)
 		port map(
 			clk            => clk,
@@ -369,33 +369,33 @@ begin
 						poly_rama_blk_cntr_reg <= (others => '0');
 
 						-- FIXME TESTING
-												
-												case to_integer(i_command) is
-													when CMD_RECV_PK =>
-														report ">> [command] recv_pk";
-														report "state => S_recv_pk";
-														state <= S_recv_AT_PK;
-													when CMD_START_ENC =>
-														report ">> [command] start_enc";
-														report "state => S_recv_coins";
-														state <= S_recv_coins;
-													when CMD_RECV_SK =>
-														report ">> [command] recv_sk";
-														report "state => S_recv_sk";
-														state <= S_recv_sk;
-													when CMD_START_DEC =>
-														report ">> [command] start_dec";
-														report "state => S_recv_ct_bp";
-														ct_byte_cntr <= (others => '0');
-														state        <= S_recv_ct_bp;
-													when others =>
-														null;
-												end case;
 
---						-- FIXME TESTING
---						report "state => S_recv_sk";
---						state        <= S_recv_sk;
---						ct_byte_cntr <= (others => '0');
+						case to_integer(i_command) is
+							when CMD_RECV_PK =>
+								report ">> [command] recv_pk";
+								report "state => S_recv_pk";
+								state <= S_recv_AT_PK;
+							when CMD_START_ENC =>
+								report ">> [command] start_enc";
+								report "state => S_recv_coins";
+								state <= S_recv_coins;
+							when CMD_RECV_SK =>
+								report ">> [command] recv_sk";
+								report "state => S_recv_sk";
+								state <= S_recv_sk;
+							when CMD_START_DEC =>
+								report ">> [command] start_dec";
+								report "state => S_recv_ct_bp";
+								ct_byte_cntr <= (others => '0');
+								state        <= S_recv_ct_bp;
+							when others =>
+								null;
+						end case;
+
+					--						-- FIXME TESTING
+					--						report "state => S_recv_sk";
+					--						state        <= S_recv_sk;
+					--						ct_byte_cntr <= (others => '0');
 
 					when S_recv_coins =>
 						if noisegen_done = '1' then
@@ -526,11 +526,11 @@ begin
 							report "state => S_init";
 							state <= S_init;
 						end if;
---						-- FIXME TESTING
---						report "state => S_recv_ct_bp";
---						state                  <= S_recv_ct_bp;
---						nonce_reg              <= (others => '0');
---						poly_rama_blk_cntr_reg <= (others => '0');
+						--						-- FIXME TESTING
+						--						report "state => S_recv_ct_bp";
+						--						state                  <= S_recv_ct_bp;
+						--						nonce_reg              <= (others => '0');
+						--						poly_rama_blk_cntr_reg <= (others => '0');
 
 				end case;
 			end if;

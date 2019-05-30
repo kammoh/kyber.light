@@ -172,6 +172,12 @@ void polyvec_ntt(polyvec *r)
   for(i=0;i<KYBER_K;i++)
     poly_ntt(&r->vec[i]);
 }
+void polyvec_nttx(polyvec *r)
+{
+  int i;
+  for(i=0;i<KYBER_K;i++)
+    poly_nttx(&r->vec[i]);
+}
 
 /*************************************************
 * Name:        polyvec_invntt
