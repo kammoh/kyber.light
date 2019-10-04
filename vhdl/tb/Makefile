@@ -3,10 +3,9 @@ SIM=ghdl
 PWD=$(shell pwd)
 
 
-VHDL_SOURCES = $(PWD)/../flopoco.vhdl
-TOPLEVEL = intconstmultoptternary_3329_12
-
-MODULE=test_const_mult
+VHDL_SOURCES ?= $(PWD)/../flopoco.vhdl
+TOPLEVEL ?= intconstmultoptternary_3329_12
+MODULE ?= test_const_mult
 
 include $(shell cocotb-config --makefiles)/Makefile.inc
 include $(shell cocotb-config --makefiles)/Makefile.sim
