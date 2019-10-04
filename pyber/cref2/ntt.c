@@ -51,6 +51,7 @@ int16_t zetas[128] = {
     2455, 220,  2142, 1670, 2144, 1799, 2051, 794,  1819, 2475, 2459, 478,
     3221, 3021, 996,  991,  958,  1869, 1522, 1628};
 
+int16_t zetas_inv2[128];
 int16_t zetas_inv[128] = {
     1701, 1807, 1460, 2371, 2338, 2333, 308,  108,  2851, 870,  854,  1510,
     2535, 1278, 1530, 1185, 1659, 1187, 3109, 874,  1335, 2111, 136,  1215,
@@ -88,14 +89,13 @@ void init_ntt() {
   for (i = 0; i < 128; ++i)
     zetas2[i] = tmp[tree[i]];
 
-  //   k = 0;
-  //   for(i = 64; i >= 1; i >>= 1)
-  //     for(j = i; j < 2*i; ++j)
-  //       zetas_inv[k++] = -tmp[128 - tree[j]];
+    k = 0;
+    for(i = 64; i >= 1; i >>= 1)
+      for(j = i; j < 2*i; ++j)
+        zetas_inv2[k++] =((
+            ((int32_t)KYBER_Q - tmp[128 - tree[j]] * 1) % KYBER_Q) *  1) % KYBER_Q;
 
-  //   zetas_inv[127] = MONT * (MONT * (KYBER_Q - 1) * ((KYBER_Q - 1)/128) %
-  //   KYBER_Q)
-  // % KYBER_Q;
+    zetas_inv2[127] = MONT * (MONT * (KYBER_Q - 1) * ((KYBER_Q - 1)/128) % KYBER_Q)% KYBER_Q;
 }
 
 /*
@@ -273,7 +273,7 @@ void ntt(int16_t r[256]) {
   }
 }
 
-void nttx(int16_t r[256]) {
+void nttx(int16_t r[256], int inverse) {
   int16_t t, zeta;
 
   int16_t tmp[256];
@@ -283,12 +283,20 @@ void nttx(int16_t r[256]) {
 
   int16_t *rs = r, *rd = tmp;
 
-  for (int len = 128; len >= 1; len >>= 1) {
-    int l = 128/len; // bit-reverse
+  int len = 128;
 
-    for (int i = 0; i < 128; i++) {
+  for (; ;) {
 
-      if (l == 128) {
+    int l = 128 / len; // bit-reverse
+
+    int i;
+    // if(inverse)
+    //   i = 128;
+    // else
+      i = 0;
+    for (; ;) {
+
+      if (! inverse && l == 128) {
         int16_t x1 = (rs[i + 128]);
         // if (x1 < -KYBER_Q) {
         //   x1 += 2 * KYBER_Q;
@@ -307,10 +315,15 @@ void nttx(int16_t r[256]) {
         //   x2 += KYBER_Q;
         // }
 
-        rd[2 * i + 1] = x1; // [2 * i + 1];//
-        rd[2 * i] = x2;           // [2 * i]; //
+        rd[2 * i + 1] = x1;
+        rd[2 * i] = x2;
       } else {
-        int k = l + (i % l);
+        int k = inverse ? len + (i % len) : l + (i % l);
+
+        if (inverse) {
+          printf("[I] l=%d k=%d  k_array=%d\n",l, k, k_array[r[i]][r[i + 128]]);
+        }
+
         zeta = zetas2[k];
 
         t = kred(kred((int32_t)zeta * rs[i + 128]));
@@ -347,7 +360,7 @@ void nttx(int16_t r[256]) {
           mint = x2;
         }
 
-        rd[2 * i + 1] = x1;
+        rd[2 * i + 1] =  x1;
         rd[2 * i] = x2;
       }
       ///////////////////////////////////////////////////
@@ -358,8 +371,28 @@ void nttx(int16_t r[256]) {
       //   printf("%d %d mint=%d maxt=%d\n", r[j], r[j + len], mint, maxt);
       //   exit(1);
       // }
+
+      // if(inverse){
+      //   if (i == 0)
+      //     break;
+      //   i--;
+      // } else{
+        if (i == 127)
+          break;
+        i++;
+      // }
     }
     swap_ptrs(&rs, &rd);
+    // if (inverse){
+    //   if(len == 128)
+    //     break;
+    //   len <<= 1;
+    // } else{
+      if (len == 1)
+        break;
+      len >>= 1;
+    // }
+    
   }
   // exit(1);
   // printf("maxt=%d mint=%d\n", maxt, mint);
@@ -378,23 +411,42 @@ void invntt(int16_t r[256]) {
   unsigned int start, len, j, k;
   int16_t t, zeta;
 
+  init_ntt();
+
+  // for(j = 0; j < 256; j++){
+  //   r[j] = j;
+  // }
+
+  
+
+
   k = 0;
   for (len = 2; len <= 128; len <<= 1) {
     for (start = 0; start < 256; start = j + len) {
-      zeta = zetas_inv[k];
+      zeta = zetas_inv2[k];
       for (j = start; j < start + len; ++j) {
         // printf("j=%d k=%d\n", j, k);
-        t = r[j];
-        r[j] = barrett_reduce(t + r[j + len]);
-        r[j + len] = t - r[j + len];
-        r[j + len] = fqmul(zeta, r[j + len]);
+        t = (r[j]);
+        while(t >= KYBER_Q){
+          t -= KYBER_Q;
+        }
+        while(t < 0){
+          t += KYBER_Q;
+        }
+        r[j] = ((int32_t)t + (r[j + len])) % KYBER_Q;
+        // r[j + len] = t - r[j + len];
+        r[j + len] = kred(((int32_t)zeta * (kred(t) - kred(r[j + len])))) %
+                     KYBER_Q; // r[j + len]);
+        // k_array[r[j]][r[j + len]] = k;
       }
       k++;
     }
   }
 
+
   for (j = 0; j < 256; ++j)
     r[j] = fqmul(r[j], zetas_inv[127]);
+
 }
 
 /*************************************************

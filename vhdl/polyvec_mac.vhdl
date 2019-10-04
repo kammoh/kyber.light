@@ -67,7 +67,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 use work.kyber_pkg.all;
-use work.ocram_sp;
+use work.ram_sp;
 
 entity polyvec_mac is
 	generic(
@@ -239,18 +239,18 @@ begin
 	--   x G_NUM_RAM_A_BLOCKS    --
 	--===========================--
 
-	ram_A : entity work.ocram_sp
+	ram_A : entity work.ram_sp
 		generic map(
 			DEPTH     => G_NUM_RAM_A_BLOCKS * (KYBER_K + 1) * KYBER_N,
 			WORD_BITS => KYBER_COEF_BITS
 		)
 		port map(
 			clk      => clk,
-			ce       => rama_ce,
-			we       => rama_we,
-			in_addr  => rama_addr,
-			in_data  => rama_din,
-			out_data => rama_dout
+			i_ce       => rama_ce,
+			i_we       => rama_we,
+			i_addr  => rama_addr,
+			i_data  => rama_din,
+			o_data => rama_dout
 		);
 
 	generate_rama_addr : if G_NUM_RAM_A_BLOCKS = 1 generate
@@ -261,18 +261,18 @@ begin
 	end generate;
 
 	gen_ramb : if not G_EXTERNAL_RAM generate
-		ram_B : entity work.ocram_sp
+		ram_B : entity work.ram_sp
 			generic map(
 				DEPTH     => KYBER_K * KYBER_N,
 				WORD_BITS => KYBER_COEF_BITS
 			)
 			port map(
 				clk      => clk,
-				ce       => ramb_ce,
-				we       => ramb_we,
-				in_addr  => ramb_addr,
-				in_data  => ramb_din,
-				out_data => ramb_dout
+				i_ce       => ramb_ce,
+				i_we       => ramb_we,
+				i_addr  => ramb_addr,
+				i_data  => ramb_din,
+				o_data => ramb_dout
 			);
 
 		ramb_din <= std_logic_vector(i_din_data);

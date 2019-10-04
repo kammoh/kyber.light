@@ -15,12 +15,6 @@ set CLOCK_NET                     clk
 set CLOCK_NAME                    ideal_clock
 set CLOCK_PERIOD                  6.000
 
-set DESIGN_REF_DATA_PATH          "/src/pqc/kyber.hw/rtk/saed32/"  ;#  Absolute path prefix variable for library/design data.
-                                       #  Use this variable to prefix the common absolute path  
-                                       #  to the common variables defined below.
-                                       #  Absolute paths are mandatory for hierarchical 
-                                       #  reference methodology flow.
-
 ##########################################################################################
 # Hierarchical Flow Design Variables
 ##########################################################################################

@@ -129,11 +129,12 @@ impl_global_alias!(sha3_256, 256);
 impl_global_alias!(sha3_384, 384);
 impl_global_alias!(sha3_512, 512);
 
+
 #[pymethods]
 impl Keccak {
     #[new]
-    pub fn __new__(obj: &PyRawObject, rate: usize, delim: u8) -> PyResult<()> {
-        obj.init(|| Keccak::new(rate, delim))
+    pub fn __new__(obj: &PyRawObject, rate: usize, delim: u8) {
+        obj.init(Keccak::new(rate, delim));
     }
 
     pub fn py_update(&mut self, input: &PyBytes) -> PyResult<()> {

@@ -70,7 +70,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.ocram_sp;
+use work.ram_sp;
 use work.kyber_pkg.all;
 
 entity cpa is

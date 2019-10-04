@@ -109,7 +109,10 @@ begin
 
 	a_hi <= unsigned(a(G_IN_WIDTH - 1 downto KYBER_COEF_BITS - 1));
 
-	quotient <= resize(cm0_out(minimum(cm0_out'length - 1, G_IN_WIDTH + 2) downto G_IN_WIDTH - KYBER_COEF_BITS + 1), quotient'length);
+	quotient <= resize(
+		cm0_out(MINIMUM(cm0_out'length - 1, G_IN_WIDTH + 2) downto G_IN_WIDTH - KYBER_COEF_BITS + 1),
+		quotient'length
+	);
 
 	generate_const_mults_26_13 : if pair(G_IN_WIDTH, KYBER_COEF_BITS) = pair(26, 13) generate
 		cm0_8736_15 : entity work.ConstMult_8736_14
@@ -149,16 +152,16 @@ begin
 
 	product <= unsigned(cm1_out(KYBER_COEF_BITS + 1 downto 0));
 
-	reg_proc : process(clk) is
-	begin
-		if rising_edge(clk) then
-			if rst = '1' then
-
-			else
-				
-			end if;
-		end if;
-	end process reg_proc;
+--	reg_proc : process(clk) is
+--	begin
+--		if rising_edge(clk) then
+--			if rst = '1' then
+--
+--			else
+--				
+--			end if;
+--		end if;
+--	end process reg_proc;
 
 	y0 <= unsigned(a(KYBER_COEF_BITS + 1 downto 0)) - product;
 
@@ -168,8 +171,8 @@ begin
 	--	y2 <= ('0' & y0) - (M & '0');
 	--
 	y  <= y0(KYBER_COEF_BITS - 1 downto 0) when y1(y1'left) = '1'
-		else y1(KYBER_COEF_BITS - 1 downto 0) when y2(y1'left) = '1'
-		else y2(KYBER_COEF_BITS - 1 downto 0);
+	      else y1(KYBER_COEF_BITS - 1 downto 0) when y2(y1'left) = '1'
+	      else y2(KYBER_COEF_BITS - 1 downto 0);
 	--
 	r  <= std_logic_vector(y);
 

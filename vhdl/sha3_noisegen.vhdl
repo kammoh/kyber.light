@@ -65,7 +65,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.ocram_sp;
+use work.ram_sp;
 use work.keccak_pkg.all;
 use work.kyber_pkg.all;
 
@@ -152,18 +152,18 @@ architecture RTL of sha3_noisegen is
 	signal keccak_dout_ready   : std_logic;
 
 begin
-	coins_ram : entity work.ocram_sp
+	coins_ram : entity work.ram_sp
 		generic map(
 			WORD_BITS => T_byte_slv'length,
 			DEPTH     => G_MAX_IN_BYTES
 		)
 		port map(
 			clk      => clk,
-			ce       => cram_ce,
-			we       => cram_we,
-			in_addr  => cram_in_addr,
-			in_data  => cram_in_data,
-			out_data => cram_out_data
+			i_ce       => cram_ce,
+			i_we       => cram_we,
+			i_addr  => cram_in_addr,
+			i_data  => cram_in_data,
+			o_data => cram_out_data
 		);
 
 	keccak_inst : entity work.keccak_core

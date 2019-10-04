@@ -4,13 +4,10 @@ name = "tiny-keccak"
 version = '1.0.0'
 authors = ['David Leon Gil', 'kamyar']
 
-[dependencies.pyo3]
-git = 'https://github.com/PyO3/pyo3'
-features = ["extension-module"]
-
 [dependencies]
-crunchy = "0.2"
-itertools = "0.8"
+crunchy = "0.2.2"
+itertools = "0.8.0"
+pyo3 = "0.7.0"
 
 [profile.dev]
 opt-level = 3  # Controls the --opt-level the compiler builds with

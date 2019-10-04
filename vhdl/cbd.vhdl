@@ -75,15 +75,15 @@ use work.kyber_pkg.all;
 
 entity cbd is
 	port(
-		-- in word stream
-		i_din_data      : in  T_byte_slv; -- keccak interface
+		-- input byte stream, from KECCAK
+		i_din_data      : in  T_byte_slv;
 		o_coeffout_data : out T_coef_slv
 	);
 end entity cbd;
 
 architecture RTL of cbd is
 
-	signal a, b      : unsigned(log2ceilnz(KYBER_ETA + 1) - 1 downto 0); -- each 0..KYBER_ETA
+	signal a, b      : unsigned(log2ceilnz(KYBER_ETA + 1) - 1 downto 0); -- range: [0..KYBER_ETA]
 	signal a_minus_b : signed(log2ceilnz(KYBER_ETA + 1) + 1 - 1 downto 0);
 begin
 

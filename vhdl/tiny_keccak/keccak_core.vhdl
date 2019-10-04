@@ -173,18 +173,18 @@ begin
 			dout                 => o_dout_data
 		);
 
-	state_mem : entity work.ocram_sp
+	state_mem : entity work.ram_sp
 		generic map(
 			DEPTH  => (25 + 1) * 64 / 8,
 			WORD_BITS => 8
 		)
 		port map(
 			clk      => clk,
-			ce       => mem_re,
-			we       => mem_we,
-			in_addr  => mem_addr,
-			in_data  => to_mem_din,
-			out_data => from_mem_dout
+			i_ce       => mem_re,
+			i_we       => mem_we,
+			i_addr  => mem_addr,
+			i_data  => to_mem_din,
+			o_data => from_mem_dout
 		);
 
 	controller : entity work.keccak_controller

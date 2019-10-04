@@ -34,7 +34,7 @@ if {$synopsys_program_name == "dc_shell"}  {
   # to save runtime and disk space.  The following setting only reflects the
   # default value and should be changed to a central location for best results.
 
-  set_app_var alib_library_analysis_path .
+  set_app_var alib_library_analysis_path /src/SAED32nm/alib.cache
 
   # Add any additional Design Compiler variables needed here
 

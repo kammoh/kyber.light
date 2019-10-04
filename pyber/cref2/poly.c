@@ -235,7 +235,7 @@ void poly_ntt(poly *r)
 }
 void poly_nttx(poly *r)
 {
-  nttx(r->coeffs);
+  nttx(r->coeffs, 0);
 //   poly_reduce(r);
 }
 

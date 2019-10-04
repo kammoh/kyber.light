@@ -1,7 +1,7 @@
-import  tiny_keccak
+import tiny_keccak
 
-k = tiny_keccak.Keccak(rate = 200 - 256 // 4 , delim=0x06)
-k = tiny_keccak.Keccak(rate = 200 , delim=0x06)
+k = tiny_keccak.Keccak(rate=200 - 256 // 4, delim=0x06)
+k = tiny_keccak.Keccak(rate=200, delim=0x06)
 
 # k.py_update(b'hello')
 # k.py_update(b' e')
@@ -23,14 +23,15 @@ def dump(sparse=True):
     # for i in range(0, 8):
     #     mem[i] = (k.state[0] >> (i*8)) & 0xff
 
-    for j in range(0,13):
+    for j in range(0, 13):
         if j == 0:
             s1 = "".zfill(64)
         else:
-            s1 = list(reversed(bin(k.state[2* j - 1] )[2:].zfill(64)))
-        s2 = list(reversed(bin(k.state[2* j] )[2:].zfill(64)))
+            s1 = list(reversed(bin(k.state[2 * j - 1])[2:].zfill(64)))
+        s2 = list(reversed(bin(k.state[2 * j])[2:].zfill(64)))
         for i in range(0, 16):
-            mem[j * 16 + i] = int(s2[4*i + 3]) * 128 + int(s1[4*i + 3]) * 64 + int(s2[4*i + 2]) * 32 + int(s1[4*i + 2]) * 16 + int(s2[4*i + 1]) * 8 + int(s1[4*i + 1]) * 4 + int(s2[4*i ]) * 2 + int(s1[4*i]) * 1
+            mem[j * 16 + i] = int(s2[4*i + 3]) * 128 + int(s1[4*i + 3]) * 64 + int(s2[4*i + 2]) * 32 + int(s1[4*i + 2]) * \
+                16 + int(s2[4*i + 1]) * 8 + int(s1[4*i + 1]) * 4 + int(s2[4*i]) * 2 + int(s1[4*i]) * 1
 
     for i in range(0, len(mem)):
         if (not sparse) or mem[i] != 0:
@@ -49,21 +50,17 @@ def dump(sparse=True):
 # k.slice_proc(2)
 # k.rho()
 
-for i in range(0,200):
-    k.py_update(bytes([i]))
+for i in range(0, 200):
+    k.py_update(bytes([i // 8 if(i % 8 == 0 and i < 21 * 8) else 0]))
 k.xorin()
-dump(sparse=False)
+print('\n'.join(format(x, '016X') for x in k.state))
+# dump(sparse=False)
 k.keccakf()
 # print("\n after 24 rounds:")
 # # print('\n'.join(format(x, '016X') for x in k.state))
-dump(sparse=False)
+# dump(sparse=False)
 
 print('\n'.join(format(x, '016X') for x in k.state))
 
 
-
 # print(k.py_finalize(32).hex())
-
-
-
-

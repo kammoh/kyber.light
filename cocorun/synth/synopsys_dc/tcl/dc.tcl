@@ -23,7 +23,7 @@ if {![shell_is_in_topographical_mode]} {
 #################################################################################
 
 if { $OPTIMIZATION_FLOW == "hplp"} {
- set_app_var hdlin_infer_multibit default_all
+  set_app_var hdlin_infer_multibit default_all
 }
 
 # Enable the support of via resistance for RC estimation to improve the timing 

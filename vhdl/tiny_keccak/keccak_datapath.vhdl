@@ -80,7 +80,7 @@ entity keccak_datapath is
 		in_do_hrotate        : in  std_logic;
 		in_do_vertical       : in  std_logic;
 		in_do_rho_out        : in  std_logic;
-		in_do_xorin             : in  std_logic;
+		in_do_xorin          : in  std_logic;
 		-- from Rho ROM through controller
 		in_rho0_mod          : in  unsigned(log2ceil(C_HALFWORD_WIDTH) - 1 downto 0);
 		in_rho1_mod          : in  unsigned(log2ceil(C_HALFWORD_WIDTH) - 1 downto 0);
@@ -114,7 +114,7 @@ architecture RTL of keccak_datapath is
 	signal deinterleaved_0, deinterleaved_1                            : T_halfword;
 	signal slice_unit_in, slice_unit_out                               : T_slice;
 	signal shift_reg_slice_vertical_in0, shift_reg_slice_vertical_out0 : std_logic_vector(11 downto 0);
-	signal shift_reg_slice_vertical_in1, shift_reg_slice_vertical_out1 : std_logic_vector(12 downto 0); 
+	signal shift_reg_slice_vertical_in1, shift_reg_slice_vertical_out1 : std_logic_vector(12 downto 0);
 
 begin
 
@@ -179,17 +179,17 @@ begin
 		slice_unit_in(0)                <= shift_reg_slice_vertical_out1(0);
 		shift_reg_slice_vertical_in1(0) <= slice_unit_out(0);
 		for k in 1 to 12 loop
-			slice_unit_in(2 * k - 1)        <= shift_reg_slice_vertical_out0(k - 1);
-			slice_unit_in(2 * k)            <= shift_reg_slice_vertical_out1(k);
+			slice_unit_in(2 * k - 1)            <= shift_reg_slice_vertical_out0(k - 1);
+			slice_unit_in(2 * k)                <= shift_reg_slice_vertical_out1(k);
 			shift_reg_slice_vertical_in0(k - 1) <= slice_unit_out(2 * k - 1);
-			shift_reg_slice_vertical_in1(k) <= slice_unit_out(2 * k);
+			shift_reg_slice_vertical_in1(k)     <= slice_unit_out(2 * k);
 		end loop;
 
 		-- out_data_to_mem
 		if in_do_setzero_mem = '1' then
 			out_data_to_mem <= (others => '0');
-		elsif in_do_xorin = '1'  then
-			if in_do_odd_lane = '1'  then
+		elsif in_do_xorin = '1' then
+			if in_do_odd_lane = '1' then
 				out_data_to_mem <= interleave(deinterleaved_0, deinterleaved_1 xor din);
 			else
 				out_data_to_mem <= interleave(deinterleaved_0 xor din, deinterleaved_1);
@@ -199,6 +199,6 @@ begin
 		end if;
 	end process;
 
-	dout <= deinterleaved_1 when in_do_odd_lane = '1'  else deinterleaved_0;
+	dout <= deinterleaved_1 when in_do_odd_lane = '1' else deinterleaved_0;
 
 end architecture RTL;

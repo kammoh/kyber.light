@@ -1,5 +1,5 @@
 
-PWD := $(shell pwd)
+#PWD := $(shell pwd)
 WORK_DIR := $(PWD)/work
 
 PKG_COMMON_SRCS := kyber_pkg.vhd
