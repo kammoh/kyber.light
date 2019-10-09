@@ -2,9 +2,8 @@ TOPLEVEL_LANG = vhdl
 SIM=ghdl
 # PWD=$(shell pwd)
 
-QHAT_BITS=13
 
-VHDL_SOURCES:=$(PWD)/../barrett_3329.vhdl $(PWD)/../IntConstMultOptTernary_10079_14.vhdl $(PWD)/../IntConstMultOptTernary_3329_$(QHAT_BITS).vhdl
+VHDL_SOURCES:=$(PWD)/../barrett_3329.vhdl $(PWD)/../IntConstMultOptTernary_10079_14.vhdl $(PWD)/../IntConstMultOptTernary_3329_12.vhdl
 TOPLEVEL:=barrett_3329
 MODULE:=barrett_tb
 
@@ -19,10 +18,10 @@ export COCOTB_REDUCED_LOG_FMT:=1
 include $(shell cocotb-config --makefiles)/Makefile.inc
 include $(shell cocotb-config --makefiles)/Makefile.sim
 
-default: gen_source sim
+# default: $(VHDL_SOURCES) sim
 
-gen_source: ../generate_barrett.py
-	cd ../ && ./generate_barrett.py
+# VHDL_SOURCES: ../generate_barrett.py
+# 	cd ../ && ./generate_barrett.py
 
 
 # yosys:

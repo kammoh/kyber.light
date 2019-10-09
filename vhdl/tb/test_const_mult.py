@@ -194,15 +194,17 @@ def test_const(dut):
 
     yield RisingEdge(clock)
 
-    x_in = dut.X
+    M = int(dut._name.split("_")[1])
+    
+    x_in = dut.x_in0
     in_width = x_in.value.n_bits
-    x_out = dut.R
+    x_out = getattr(dut, f'x_out0_c{M}')
 
     dut._log.info(f'input width={in_width} output bits = {x_out.value.n_bits}')
 
     for t in range(0, 10000):
         x = randint(0, 2**in_width - 1)
-        expected = 3329 * x
+        expected = M * x
         x_in <= x
 
         for _ in range(0, 2):
