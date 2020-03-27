@@ -1,0 +1,121 @@
+--===================================================================================================================--
+-----------------------------------------------------------------------------------------------------------------------
+--                                  
+--                                    8"""""o   8"""""   8""""o    8"""""o 
+--                                    8     "   8        8    8    8     " 
+--                                    8e        8eeeee   8eeee8o   8o     
+--                                    88        88       88    8   88   ee 
+--                                    88    e   88       88    8   88    8 
+--                                    68eeee9   888eee   88    8   888eee8 
+--                                  
+--                                  Cryptographic Engineering Research Group
+--                                          George Mason University
+--                                       https://cryptography.gmu.edu/
+--                                  
+-----------------------------------------------------------------------------------------------------------------------
+--! @copyright Copyright 2019 Kamyar Mohajerani. All rights reserved.
+--
+-- M = {{M}}
+-- n = {{n}}
+-- pipeline_levels = {{pipeline_levels}}
+-- generate_quotient = {{generate_quotient}}
+
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+entity {{entity_name}} is
+    port(clk, rst : in  std_logic;
+        io_in_data_u     : in  std_logic_vector({{2*n - 1}} downto 0);
+        io_in_valid      : in  std_logic;
+        io_in_ready      : out std_logic;
+        io_out_data_r    : out std_logic_vector({{n-1}} downto 0);
+        {% if generate_quotient %}
+        io_out_data_q    : out std_logic_vector({{n}} downto 0);
+        {% endif %}
+        io_out_valid     : out std_logic;
+        io_out_ready     : in  std_logic);
+end entity;
+
+architecture RTL of {{entity_name}} is
+    signal Uh                : std_logic_vector({{uh_bits - 1}} downto 0);
+    signal Ul                : std_logic_vector({{ul_bits - 1}} downto 0);
+    signal Ul_reg_0          : std_logic_vector({{ul_bits - 1}} downto 0);
+    signal Ul_reg            : std_logic_vector({{ul_bits - 1}} downto 0);
+    signal Uh_times_mu       : std_logic_vector({{uh_bits + mu_bits - 1}} downto 0);
+    signal q_hat             : std_logic_vector({{q_hat_bits - 1}} downto 0);
+{% if generate_quotient and out_regs%}
+    signal q_reg             : std_logic_vector({{n}} downto 0);
+    signal q_reg_in          : std_logic_vector({{n}} downto 0);
+{% endif %}
+    signal q_hat_reg         : std_logic_vector({{q_hat_bits - 1}} downto 0);
+    signal q_hat_reg_1       : std_logic_vector({{q_hat_bits - 1}} downto 0);
+    signal q_hat_times_M     : std_logic_vector({{q_hat_bits + n - 1}} downto 0);
+    signal q_hat_times_M_reg : unsigned({{n}} downto 0);
+    signal r_hat             : unsigned({{n}} downto 0);
+    signal r_hat_minus_M     : unsigned({{n}} downto 0);
+    {% if out_regs %}
+    signal r_reg             : std_logic_vector({{n-1}} downto 0);
+    signal r_reg_in          : std_logic_vector({{n-1}} downto 0);
+    {% endif %}
+    signal correction_n      : std_logic;
+    signal valid_pipe        : unsigned({{pipeline_levels - 1}} downto 0);
+    signal stall             : boolean;
+begin
+    const_mult_mu: entity work.{{flopoco_mult}}_{{mu}}_{{n - b}}
+        port map(
+                 {% if pipelined_mult %} clk           => clk, {% endif %}
+                 {{mult_in_port}}         => Uh,
+                 {{mult1_out_port}} => Uh_times_mu);
+    const_mult_M: entity work.{{flopoco_mult}}_{{M}}_{{q_hat_bits}}
+        port map(
+                 {% if pipelined_mult %} clk           => clk, {% endif %}
+                 {{mult_in_port}}         => q_hat_reg,
+                 {{mult2_out_port}} => q_hat_times_M);
+    process(clk)
+    begin
+        if rising_edge(clk) then
+            if rst = '1' then
+                valid_pipe <= (others => '0');
+            else
+                if not stall then
+                    valid_pipe        <= valid_pipe(valid_pipe'length - 2 downto 0) & io_in_valid;
+                    -- data registers
+                    Ul_reg_0          <= Ul;
+                    Ul_reg            <= Ul_reg_0;
+                    q_hat_reg         <= q_hat;
+                    q_hat_reg_1       <= q_hat_reg;
+                    q_hat_times_M_reg <= resize(unsigned(q_hat_times_M), q_hat_times_M_reg'length);
+
+{% if out_regs %}
+                    r_reg             <= r_reg_in;
+{% endif %}
+{% if generate_quotient and out_regs %}
+                    q_reg             <= q_reg_in;
+{% endif %}
+                end if;
+            end if;
+        end if;
+    end process;
+
+    stall         <= valid_pipe({{pipeline_levels - 1}}) = '1' and io_out_ready = '0';
+    Uh            <= io_in_data_u({{2*n - 1}} downto {{n+b}});
+    Ul            <= io_in_data_u({{ul_bits - 1}} downto 0);
+    q_hat         <= Uh_times_mu({{q_hat_bits + (a-b) - 1}} downto {{a-b}});
+    r_hat         <= unsigned(Ul_reg) - unsigned(q_hat_times_M_reg);
+    r_hat_minus_M <= r_hat - {{M}};
+    correction_n  <= r_hat_minus_M(r_hat_minus_M'length - 1); -- sign bit
+
+    {% if out_regs %}r_reg_in {% else %}io_out_data_r {% endif %} <= std_logic_vector(r_hat_minus_M({{n-1}} downto 0)) when correction_n = '0' else std_logic_vector(r_hat({{n-1}} downto 0));
+    
+    {% if generate_quotient %}
+    {% if out_regs %}q_reg_in {% else %}io_out_data_q {% endif %}      <= std_logic_vector(unsigned(q_hat_reg_1) + 1) when correction_n = '0' else q_hat_reg_1;
+        {% if out_regs %}
+    io_out_data_q        <= q_reg;
+        {% endif %}
+    {% endif %}
+    {% if out_regs %}
+    io_out_data_r        <= r_reg;
+    {% endif %}
+    io_out_valid <= valid_pipe({{pipeline_levels - 1}});
+    io_in_ready  <= '0' when stall else '1';
+end architecture;

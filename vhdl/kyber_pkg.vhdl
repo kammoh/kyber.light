@@ -365,7 +365,6 @@ package body kyber_pkg is
 
 	constant NAU        : UNSIGNED(0 downto 1) := (others => '0');
 	constant NAS        : SIGNED(0 downto 1)   := (others => '0');
-	constant NO_WARNING : BOOLEAN              := false; -- default to emit warnings
 	function MAX(left, right : INTEGER) return INTEGER is
 	begin
 		if left > right then

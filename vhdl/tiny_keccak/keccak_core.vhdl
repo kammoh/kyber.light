@@ -145,38 +145,38 @@ begin
 
 	datapath : entity work.keccak_datapath
 		port map(
-			clk                  => clk,
+			clk => clk,
+			in_do_setzero_mem => setzero_mem,
+			in_do_bypass_iochipi => bypass_iochipi,
+			in_do_theta => bypass_theta,
+			in_do_odd_lane => do_odd_lane,
+			in_do_shift_en0 => shift_en0,
+			in_do_shift_en1 => shift_en1,
+			in_do_hrotate => hrotate,
+			in_do_vertical => do_vertical,
+			in_do_rho_out => rho_out,
 			--		-- memory
 			--		in_data_from_mem         : in  t_word;
 			--		out_data_to_mem          : out t_word
 			--
-			in_do_xorin          => do_xorin,
-			in_do_odd_lane       => do_odd_lane,
-			in_do_setzero_mem    => setzero_mem,
-			in_do_bypass_iochipi => bypass_iochipi,
-			in_do_theta          => bypass_theta,
-			in_do_shift_en0      => shift_en0,
-			in_do_shift_en1      => shift_en1,
-			in_do_hrotate        => hrotate,
-			in_do_vertical       => do_vertical,
-			in_do_rho_out        => rho_out,
+			in_do_xorin => do_xorin,
 			--
-			in_rho0_mod          => rho0_mod,
-			in_rho1_mod          => rho1_mod,
+			in_rho0_mod => rho0_mod,
+			in_rho1_mod => rho1_mod,
 			--
-			in_iota_bit          => iota_bit,
+			in_iota_bit => iota_bit,
 			--
-			in_data_from_mem     => from_mem_dout,
-			out_data_to_mem      => to_mem_din,
+			in_data_from_mem => from_mem_dout,
+			out_data_to_mem => to_mem_din,
 			--
-			din                  => i_din_data,
-			dout                 => o_dout_data
+			din => i_din_data,
+			dout => o_dout_data
 		);
 
 	state_mem : entity work.ram_sp
 		generic map(
-			DEPTH  => (25 + 1) * 64 / 8,
-			WORD_BITS => 8
+			WORD_BITS => 8,
+			DEPTH => (25 + 1) * 64 / 8
 		)
 		port map(
 			clk      => clk,
@@ -189,40 +189,40 @@ begin
 
 	controller : entity work.keccak_controller
 		port map(
-			clk                 => clk,
-			rst                 => rst,
+			clk => clk,
+			rst => rst,
+			i_absorb => i_absorb,
+			i_squeeze => i_squeeze,
 			-- I/O control
-			i_init              => i_init,
-			i_absorb            => i_absorb,
-			i_squeeze           => i_squeeze,
-			o_done              => o_done,
-			i_din_valid         => i_din_valid,
-			o_din_ready         => o_din_ready,
-			o_dout_valid        => o_dout_valid,
-			i_dout_ready        => i_dout_ready,
-			i_rate              => i_rate,
+			i_init => i_init,
+			i_din_valid => i_din_valid,
+			o_din_ready => o_din_ready,
+			o_dout_valid => o_dout_valid,
+			i_dout_ready => i_dout_ready,
+			o_done => o_done,
+			i_rate => i_rate,
 			-- to datapath
 			o_do_bypass_iochipi => bypass_iochipi,
-			o_do_theta          => bypass_theta,
-			o_do_rho_out        => rho_out,
-			o_do_setzero_mem    => setzero_mem,
-			o_do_xorin          => do_xorin,
-			o_do_odd_lane       => do_odd_lane,
+			o_do_theta => bypass_theta,
+			o_do_rho_out => rho_out,
+			o_do_setzero_mem => setzero_mem,
+			o_do_xorin => do_xorin,
+			o_do_odd_lane => do_odd_lane,
 			--
-			o_do_shift_en0      => shift_en0,
-			o_do_shift_en1      => shift_en1,
-			o_do_hrotate        => hrotate,
-			o_do_vertical       => do_vertical,
+			o_do_shift_en0 => shift_en0,
+			o_do_shift_en1 => shift_en1,
+			o_do_hrotate => hrotate,
+			o_do_vertical => do_vertical,
 			-- to datapath Rho muxes
-			o_rho0r             => rho0_mod,
-			o_rho1r             => rho1_mod,
+			o_rho0r => rho0_mod,
+			o_rho1r => rho1_mod,
 			-- to ROMs
-			o_round             => round,
-			o_k                 => k,
+			o_round => round,
+			o_k => k,
 			-- to state memory
-			o_mem_addr          => mem_addr,
-			o_mem_we            => mem_we,
-			o_mem_ce            => mem_re
+			o_mem_addr => mem_addr,
+			o_mem_we => mem_we,
+			o_mem_ce => mem_re
 		);
 
 	iota_lut : entity work.iota_lut

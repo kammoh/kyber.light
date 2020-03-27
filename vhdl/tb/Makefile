@@ -2,11 +2,11 @@ TOPLEVEL_LANG = vhdl
 SIM=ghdl
 # PWD=$(shell pwd)
 
-QHAT_BITS=13
+# QHAT_BITS=13
 
-VHDL_SOURCES:=$(PWD)/../barrett_3329.vhdl $(PWD)/../IntConstMultOptTernary_10079_14.vhdl $(PWD)/../IntConstMultOptTernary_3329_$(QHAT_BITS).vhdl
-TOPLEVEL:=barrett_3329
-MODULE:=barrett_tb
+# VHDL_SOURCES:=$(PWD)/../barrett_3329.vhdl $(PWD)/../IntConstMultOptTernary_10079_14.vhdl $(PWD)/../IntConstMultOptTernary_3329_$(QHAT_BITS).vhdl
+# TOPLEVEL:=barrett_3329
+# MODULE:=barrett_tb
 
 WORKDIR=work
 
@@ -25,9 +25,9 @@ gen_source: ../generate_barrett.py
 	cd ../ && ./generate_barrett.py
 
 
-# yosys:
-# 	mkdir $(WORKDIR)
-# 	yosys -m ghdl -p 'ghdl --workdir=$(WORKDIR) -fexplicit $(VHDL_SOURCES) -e $(TOPLEVEL); synth_xilinx -flatten -retime; write_verilog $(TOPLEVEL).synth.v'
+yosys:
+	yosys -m ghdl -p 'ghdl -fexplicit $(VHDL_SOURCES) -e $(TOPLEVEL); synth_xilinx -top $(TOPLEVEL) -family xc7 -noiopad -flatten'
+	# ; write_verilog $(TOPLEVEL).synth.v'
 
 
 

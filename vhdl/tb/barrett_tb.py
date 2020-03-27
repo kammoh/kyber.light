@@ -10,77 +10,94 @@ from collections import deque
 from random import randint
 
 
-@cocotb.coroutine
-def reset_dut(reset_n, duration, is_neg=False):
+async def reset_dut(reset_n, duration, is_neg=False):
     reset_n <= (not is_neg)
-    yield Timer(duration, 'ns')
+    await Timer(duration, 'ns')
     reset_n <= is_neg
     reset_n._log.debug("Reset complete")
 
 
-M = 3329
+
 
 expected = deque()
 
-def golden(x):
-  return {'U': x, 'r': x % M, 'q': x // M}
-  
+
+
 def gen(min, max):
   while True:
-    yield randint(min, max)
+    yield {'u': randint(min, max)}
   
-@cocotb.coroutine
-def feeder(dut, portname, gen):
-  data = getattr(dut, portname)
+async def feeder(dut, portname, data_gen):
+  global expected
+  
+  in_width = getattr(dut, "io_in_data_u").value.n_bits # TODO FIXME change data_gen
+  
+  M = int(dut._name.split("_")[1])
+  def golden(x):
+    x = x['u']
+    return {'U': x, 'r': x % M, 'q': x // M}
+
+  
   valid = getattr(dut, portname + '_valid')
   ready = getattr(dut, portname + '_ready')
-  in_width = data.value.n_bits
 
-  for x in gen(0, 2**in_width - 1):
-      data <= x
+
+  for x in data_gen(0, 2**in_width - 1):
+      for p,v in x.items():
+        getattr(dut, portname + '_data_' + p) <= v
       valid <= 1
 
-      yield RisingEdge(dut.clk)
+      await RisingEdge(dut.clk)
       while(ready != True):
-        yield RisingEdge(dut.clk)
+        await RisingEdge(dut.clk)
 
       expected.append(golden(x))
 
 
 @cocotb.test()
-def test(dut):
+async def test(dut):
     """
     test constant reduction
     """
-    clock = dut.clk if hasattr(dut, 'clk') else None
-    reset = dut.rst if hasattr(dut, 'rst') else None
+    clock_name = 'clk'
+    reset_name = 'rst'
+    
+    outport_name = 'io_out'
+    
+    global expected
+    clock = dut.clk if hasattr(dut, clock_name) else None
+    reset = dut.rst if hasattr(dut, reset_name) else None
 
     cocotb.fork(Clock(clock, 1, 'ns').start())
 
-    dut.U_valid <= 0
-    dut.rq_ready <= 0
+    # dut.U_valid <= 0
     
-    yield reset_dut(reset, 3)
+    out_ready = getattr(dut, outport_name + '_ready')
+    out_valid = getattr(dut, outport_name + '_valid')
+    out_ready <= 0
+    
+    await reset_dut(reset, 3)
 
-    n = 30000
-    yield RisingEdge(dut.clk)
-    cocotb.fork(feeder(dut, 'U', gen))
+    n = 10000
+    await RisingEdge(dut.clk)
+    cocotb.fork(feeder(dut, 'io_in', gen))
 
 
     for t in range(0, n):
-      dut.rq_ready <= 1
+      out_ready <= 1
 
-      yield RisingEdge(dut.clk)
+      await RisingEdge(dut.clk)
 
       while len(expected) < 1:
-        yield RisingEdge(dut.clk)
+        await RisingEdge(dut.clk)
       exp = expected.popleft()
 
-      while(dut.rq_valid != True):
-        yield RisingEdge(dut.clk)
+      while(not out_valid.value):
+        await RisingEdge(dut.clk)
 
-      r = dut.r.value.integer
-      q = dut.q.value.integer
+      r = getattr(dut, outport_name + '_data_' + 'r').value.integer
+      q = getattr(dut, outport_name + '_data_' + 'q').value.integer if hasattr(dut,
+                                                                             outport_name + '_data_' + 'q') else exp['q']
       if r != exp['r'] or q != exp['q']:
           raise TestFailure(
               f"Output {t} didn't match! U={exp['U']} \n r:{r} expected:{exp['r']}\n q={q} expected={exp['q']}")

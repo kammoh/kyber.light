@@ -312,6 +312,8 @@ void poly_montgomery_reduce(poly *r)
   for(i=0;i<KYBER_N;i++)
     r->coeffs[i] = montgomery_reduce(r->coeffs[i]);
 }
+
+
 void poly_freeze(poly *r) {
   int i;
 
