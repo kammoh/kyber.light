@@ -59,12 +59,12 @@ def solve_ab(M):
     n = log2ceil(M)
 
     with Solver() as solver:
-      width = max(2*n + 1, n + 2 + n + 2 + 1)
+      width = 2*n + 5 # need to fit: u, uh*mu (n-beta + alpha + 1)
 
       u = Symbol('u', BVType(width))
       q = Symbol('q', BVType(width))
-      for alpha in range(n - 3, 2*n):
-        for beta in range(0, -n, -1):
+      for alpha in range(n - 3, n + 3): # n + 1?
+        for beta in range(0, -4, -1): # -2
             mu = 2**(n+alpha) // M
 
             uh = BVLShr(u, n + beta)
@@ -81,21 +81,20 @@ def solve_ab(M):
             solver.add_assertion(e > BV(1, width))
             res = solver.solve()
             if not res:
-                print(f"[] alpha={alpha} beta={beta}")
+                print(f"alpha={alpha} beta={beta}")
                 return alpha, beta
-            # else:
-            #     print(
-            #         f"alpha={alpha} beta={beta} {res}: u={solver.get_value(u)} e={solver.get_value(e)} q={solver.get_value(q)} q_hat={solver.get_value(q_hat)}, uh={solver.get_value(uh)} mu={mu}")
+            else:
+                if alpha == 12 and beta == -1:
+                  print(f"alpha={alpha} beta={beta} {res}: u={solver.get_value(u)} e={solver.get_value(e)} q={solver.get_value(q)} q_hat={solver.get_value(q_hat)}, uh={solver.get_value(uh)} mu={mu}")
+      
+      print("[BUG] Could not solve alpha and beta! This should never happen!")
+      raise Exception("Error: BUG")
                 
 a,b = solve_ab(M)
 
 # # TODO FIXME 
 # print("--- TODO: FIXME! REMEMBER TO FIX a,b SOLVER")
 
-# if M == 12289:
-#     a = 14
-
-# b=-1
 
 assert a - b > 0
 assert n + b > 0
